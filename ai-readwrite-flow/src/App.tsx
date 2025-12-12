@@ -11,6 +11,8 @@ import { appTitle } from './lib/constants'
 import useUiStore, { type TabKey } from './stores/uiStore'
 import useSettingsStore from './stores/settingsStore'
 import useReaderStore from './stores/readerStore'
+import useMetricsStore from './stores/metricsStore'
+import useLibraryStore from './stores/libraryStore'
 
 type Action = 'summarize' | 'explain' | 'chat'
 
@@ -19,14 +21,17 @@ const App = () => {
   const { activeTab, setActiveTab } = useUiStore()
   const { hydrate, model } = useSettingsStore()
   const { scrollMode, toggleScrollMode } = useReaderStore()
-  const [quickPrompt, setQuickPrompt] = useState('')
+  const { lastLatencyMs, lastTokens, lastModel } = useMetricsStore()
+  const { hydrate: hydrateLibrary } = useLibraryStore()
+  const [quickPrompt, setQuickPrompt] = useState<{ text: string; autoSend?: boolean }>()
   const [showTopBar, setShowTopBar] = useState(true)
   const [showNav, setShowNav] = useState(true)
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
 
   useEffect(() => {
     void hydrate()
-  }, [hydrate])
+    void hydrateLibrary()
+  }, [hydrate, hydrateLibrary])
 
   const navTabs: { id: TabKey; label: string }[] = useMemo(
     () => [
@@ -42,14 +47,19 @@ const App = () => {
     const prefixMap: Record<Action, string> = {
       summarize: 'Summarize this text:',
       explain: 'Explain this text:',
-      chat: 'Chat about this selected text:',
+      chat: 'Answer my question about the following text:',
     }
-    setQuickPrompt(`${prefixMap[action]}\n${text}`)
+    const quoted = `"${text}"`
+    const prompt =
+      action === 'chat'
+        ? `${prefixMap[action]} ${quoted}`
+        : `${prefixMap[action]} ${quoted}`
+    setQuickPrompt({ text: prompt, autoSend: action !== 'chat' })
     if (isMobile) setActiveTab('chat')
   }
 
   const handleEditorCommand = (prompt: string) => {
-    setQuickPrompt(prompt)
+    setQuickPrompt({ text: prompt, autoSend: false })
     if (isMobile) setActiveTab('chat')
   }
 
@@ -169,7 +179,7 @@ const App = () => {
                 <div className="h-full">
                   <ChatSidebar
                     quickPrompt={quickPrompt}
-                    onConsumeQuickPrompt={() => setQuickPrompt('')}
+                    onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
                   />
                 </div>
               </section>
@@ -211,6 +221,14 @@ const App = () => {
           <span className="ml-auto inline-flex items-center gap-1">
             <Smartphone className="size-4" />
             Mobile-first layout enabled
+          </span>
+          <span className="ml-4 inline-flex items-center gap-2 text-[11px] text-slate-400">
+            <span>Last request:</span>
+            <span>{lastModel ?? model}</span>
+            <span>|</span>
+            <span>{lastTokens ? `${lastTokens} tokens` : 'tokens n/a'}</span>
+            <span>|</span>
+            <span>{lastLatencyMs ? `${lastLatencyMs} ms` : 'latency n/a'}</span>
           </span>
         </div>
       </footer>

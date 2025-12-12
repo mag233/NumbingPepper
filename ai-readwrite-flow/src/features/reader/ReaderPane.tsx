@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { FileWarning, MousePointerClick } from 'lucide-react'
-import { convertFileSrc } from '@tauri-apps/api/core'
+import { convertFileSrc, invoke } from '@tauri-apps/api/core'
 import Card from '../../shared/components/Card'
 import useLibraryStore from '../../stores/libraryStore'
 import FloatingMenu from './FloatingMenu'
@@ -36,7 +36,9 @@ const ReaderPane = ({ onAction }: Props) => {
     y: 0,
     text: '',
   })
-  const { items, activeId } = useLibraryStore()
+  const { items, activeId, setLastPosition } = useLibraryStore()
+  const [scrollY, setScrollY] = useState(0)
+  const [fileSrc, setFileSrc] = useState<string | undefined>(undefined)
 
   const activeItem = useMemo(
     () => items.find((item) => item.id === activeId),
@@ -87,8 +89,17 @@ const ReaderPane = ({ onAction }: Props) => {
 
   useEffect(() => {
     setLoadError(null)
-    setPage(1)
-  }, [activeItem?.id, setPage])
+    if (activeItem?.lastReadPosition?.page) {
+      setPage(activeItem.lastReadPosition.page)
+      const storedScroll = activeItem.lastReadPosition.scroll_y
+      if (typeof storedScroll === 'number' && containerRef.current) {
+        containerRef.current.scrollTop = storedScroll
+        setScrollY(storedScroll)
+      }
+    } else {
+      setPage(1)
+    }
+  }, [activeItem?.id, activeItem?.lastReadPosition, setPage])
 
   const handleAction = (action: 'summarize' | 'explain' | 'chat') => {
     if (!menu.text) return
@@ -96,9 +107,52 @@ const ReaderPane = ({ onAction }: Props) => {
     setMenu((state) => ({ ...state, visible: false }))
   }
 
-  const hasPdf = !!activeItem?.url
-  const tauriFileUrl =
-    activeItem?.path && isTauri() ? convertFileSrc(activeItem.path, 'asset') : undefined
+  const normalizedPath =
+    activeItem?.filePath && typeof activeItem.filePath === 'string'
+      ? activeItem.filePath.replace(/\\/g, '/')
+      : undefined
+  const resolvedFile = activeItem?.url ?? normalizedPath
+  const isWebBlocked =
+    !isTauri() &&
+    normalizedPath !== undefined &&
+    !normalizedPath.startsWith('data:') &&
+    !normalizedPath.startsWith('blob:')
+  const hasPdf = !!fileSrc && !isWebBlocked
+
+  useEffect(() => {
+    setLoadError(null)
+    setFileSrc(undefined)
+    if (!activeItem?.id) return
+
+    if (!isTauri()) {
+      if (isWebBlocked) {
+        setLoadError('This file was imported in the app; re-import in web to view.')
+        return
+      }
+      setFileSrc(resolvedFile)
+      return
+    }
+
+    if (!normalizedPath) {
+      setFileSrc(resolvedFile)
+      return
+    }
+
+    void invoke<string>('read_file_base64', { path: normalizedPath })
+      .then((data) => {
+        setFileSrc(`data:application/pdf;base64,${data}`)
+      })
+      .catch((error) => {
+        console.error('[ReaderPane] read_file_base64 failed', error)
+        try {
+          const assetUrl = convertFileSrc(normalizedPath)
+          setFileSrc(assetUrl)
+        } catch (fallbackError) {
+          console.error('[ReaderPane] convertFileSrc fallback failed', fallbackError)
+          setLoadError('Failed to resolve PDF path.')
+        }
+      })
+  }, [activeItem?.id, normalizedPath, resolvedFile])
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (scrollMode === 'continuous') return
@@ -112,6 +166,14 @@ const ReaderPane = ({ onAction }: Props) => {
     }
   }
 
+  useEffect(() => {
+    if (!activeId) return
+    const handle = window.setTimeout(() => {
+      void setLastPosition(activeId, { page: currentPage, scroll_y: scrollY })
+    }, 300)
+    return () => window.clearTimeout(handle)
+  }, [activeId, currentPage, scrollY, setLastPosition])
+
   return (
     <Card title="Reader / PDF">
       <div
@@ -122,11 +184,18 @@ const ReaderPane = ({ onAction }: Props) => {
           <div
             className="flex max-h-[calc(100vh-200px)] flex-col gap-3 overflow-auto p-4"
             onWheel={handleWheel}
+            onScroll={(event) => setScrollY(event.currentTarget.scrollTop)}
           >
             <Document
-              file={tauriFileUrl ?? activeItem?.url ?? activeItem?.path}
-              onLoadError={(error) => setLoadError(error.message)}
-              onSourceError={(error) => setLoadError(error.message)}
+              file={fileSrc}
+              onLoadError={(error) => {
+                console.error('[ReaderPane] onLoadError', { error, fileSrc, activeItem })
+                setLoadError(`${error.message} | source: ${String(fileSrc ?? 'none')}`)
+              }}
+              onSourceError={(error) => {
+                console.error('[ReaderPane] onSourceError', { error, fileSrc, activeItem })
+                setLoadError(`${error.message} | source: ${String(fileSrc ?? 'none')}`)
+              }}
               onLoadSuccess={(data) => setPageCount(data.numPages)}
               loading={<p className="text-sm text-slate-400">Loading PDF...</p>}
               error={

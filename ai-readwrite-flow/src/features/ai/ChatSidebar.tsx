@@ -1,13 +1,14 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, Loader2, MessageCircle, RotateCcw, Send, Trash2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useChatStore from '../../stores/chatStore'
 import useSettingsStore from '../../stores/settingsStore'
 import { sendChatCompletion, type ChatMessageInput } from '../../lib/apiClient'
 import useTemplateStore from '../../stores/templateStore'
+import useMetricsStore from '../../stores/metricsStore'
 
 type Props = {
-  quickPrompt?: string
+  quickPrompt?: { text: string; autoSend?: boolean }
   onConsumeQuickPrompt?: () => void
 }
 
@@ -18,17 +19,30 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
   const { messages, addMessage, reset } = useChatStore()
   const { model, apiKey, baseUrl } = useSettingsStore()
   const { templates } = useTemplateStore()
+  const { setMetrics } = useMetricsStore()
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastPrompt, setLastPrompt] = useState<string | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
+  const messagesRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!quickPrompt) return
-    setDraft(quickPrompt)
+    const { text, autoSend } = quickPrompt
+    setDraft(text)
+    if (autoSend) {
+      void doSend(text)
+      setDraft('')
+    }
     onConsumeQuickPrompt?.()
   }, [quickPrompt, onConsumeQuickPrompt])
+
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight
+    }
+  }, [messages.length])
 
   const historyMessages: ChatMessageInput[] = useMemo(
     () =>
@@ -53,6 +67,11 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
     ])
 
     if (response.ok && response.content) {
+      setMetrics({
+        tokens: response.usage?.totalTokens,
+        latencyMs: response.latencyMs,
+        model,
+      })
       addMessage({
         id: '',
         role: 'assistant',
@@ -61,6 +80,11 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
       })
     } else {
       setError(response.error ?? 'Request failed')
+      setMetrics({
+        tokens: response.usage?.totalTokens,
+        latencyMs: response.latencyMs,
+        model,
+      })
     }
     setSending(false)
   }
@@ -96,7 +120,10 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
           <MessageCircle className="size-4 text-sky-300" />
           <span>Selected text is auto-appended to keep answers contextual.</span>
         </div>
-        <div className="grid flex-[2] gap-3 overflow-y-auto rounded-xl border border-slate-800/70 bg-slate-950/60 p-3">
+        <div
+          ref={messagesRef}
+          className="grid flex-[2] gap-3 overflow-y-auto rounded-xl border border-slate-800/70 bg-slate-950/60 p-3"
+        >
           {messages.length === 0 && (
             <p className="text-sm text-slate-500">No messages yet. Select text in Reader or ask a question.</p>
           )}

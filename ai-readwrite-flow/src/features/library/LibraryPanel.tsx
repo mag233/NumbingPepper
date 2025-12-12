@@ -1,7 +1,8 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { BookOpen, FolderDown, LibraryBig } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useLibraryStore from '../../stores/libraryStore'
+import { isTauri } from '../../lib/isTauri'
 
 type Props = {
   compact?: boolean
@@ -16,12 +17,29 @@ const formatSize = (size: number) => {
 
 const LibraryPanel = ({ compact = false, onOpen }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { items, activeId, addItems, setActive } = useLibraryStore()
+  const { items, activeId, importFiles, setActive } = useLibraryStore()
+  const [error, setError] = useState<string | null>(null)
+  const isDesktop = isTauri()
 
   const handleFiles = (fileList?: FileList | null) => {
     if (!fileList?.length) return
-    addItems(Array.from(fileList))
-    onOpen?.()
+    const files = Array.from(fileList)
+    void importFiles(files)
+      .then(() => {
+        setError(null)
+        onOpen?.()
+      })
+      .catch((err) => {
+        console.error(err)
+        setError(
+          err instanceof Error
+            ? err.message
+            : isTauri()
+              ? 'Import failed. Check app data permissions.'
+              : 'Import requires Tauri runtime; falling back to in-memory view.',
+        )
+        // Store handles non-Tauri fallback; nothing else needed here.
+      })
   }
 
   return (
@@ -54,11 +72,21 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
         }}
         className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-800/80 bg-slate-900/40 p-4"
       >
+        {error && (
+          <div className="rounded-lg border border-amber-500/70 bg-amber-500/10 p-2 text-xs text-amber-100">
+            {error}
+          </div>
+        )}
         {items.length === 0 && (
           <div className="flex items-center gap-3 text-sm text-slate-400">
             <LibraryBig className="size-5 text-slate-500" />
-            <p>Drag & drop PDFs or click Import. Files will be stored to $APP_DATA/library (pending command wiring).</p>
+            <p>Drag & drop PDFs or click Import. Files will be stored to the app data library with metadata persisted.</p>
           </div>
+        )}
+        {!isDesktop && items.length === 0 && (
+          <p className="text-xs text-amber-200">
+            Files imported on desktop are hidden here; re-import in web to view.
+          </p>
         )}
         {items.length > 0 && (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -77,9 +105,9 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
               >
                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
                   <BookOpen className="size-4 text-sky-300" />
-                  <span className="line-clamp-1">{item.name}</span>
+                  <span className="line-clamp-1">{item.title}</span>
                 </div>
-                <p className="text-xs text-slate-400">{formatSize(item.size)}</p>
+                <p className="text-xs text-slate-400">{formatSize(item.fileSize)}</p>
               </button>
             ))}
           </div>

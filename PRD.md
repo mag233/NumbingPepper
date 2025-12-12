@@ -1,160 +1,89 @@
-# Project Name: AI-ReadWrite-Flow (Alpha Phase)
-# Version: 2.1.0 (MVP)
+# AI-ReadWrite-Flow — Product Requirements
+**Version:** 3.2 (Alpha-bound)  
+**Status:** Active Development — explicit Alpha must-have vs can-slip
 
-## 1. Project Vision
-Local workspace where Reading (input) and Writing (output) happen side-by-side, glued by AI. Target runtime: Tauri v2 + React/TS. Platform focus is Desktop (Windows/Mac) first, but architecture must remain mobile-ready (iOS/Android).
+## 1. Vision & Principles
+- Local-first, privacy-friendly workspace bridging Reading (input) and Writing (output) with AI.
+- Platforms: Desktop-first (Windows/macOS) on Tauri v2; touch-friendly/mobile-ready (375px baseline) to keep future iOS/Android viable.
+- Discipline: logic before pixels; strict typing (no `any`); Zod for external data; files <250 lines, functions <30 lines, max 3 nesting levels.
 
-## 2. Core User Stories & Interaction (with status)
+## 2. Scope & Priority
+- **Alpha (must ship):** Settings save/test; library import with persistence; open PDFs; last-read restore; floating menu actions (summarize/explain/chat); buffered chat with retry + latency/tokens; highlight save + overlay; drafts/chats persisted; theme selection (light + presets); mobile tabs + desktop split; basic error boundaries; library path hygiene.
+- **Alpha-can-slip (P1 targets):** RAG “Ask the book” (global search) — not a blocker; highlight-to-note sidebar; gestures; advanced editor insertions; streaming chat; Flomo; OCR.
+- **Backlog (P2+):** Streaming, OCR, Flomo export, advanced block commands, EPUB, theme polish beyond presets, desktop keyboard gesture equivalents if desired.
 
-### Story A: The Reader (Contextual AI) - status: UI done; data wiring pending
-- Action: user selects text in a PDF; floating menu appears near the cursor with `[Summarize]`, `[Explain]`, `[Chat]`.
-- Result: clicking `[Explain]` opens the right sidebar; AI explains the selected text.
+## 3. Data Model (SQLite + store/localStorage fallback)
+- **settings (P0):** api_key, base_url, model, theme (`light`|`ocean`|`forest`|`sand`), updated_at.
+- **books (P0):** id (UUID), title, author, cover_path, file_path, format ('pdf'|'epub'), file_hash (sha256), file_size, mtime, last_read_position JSON `{ page: number; scroll_y?: number; zoom?: number }`, processed_for_search (bool), added_at.
+- **highlights (P0):** id, book_id FK, content, context_range JSON `{ page: number; rects: { x: number; y: number; width: number; height: number; normalized: true }[] }` (normalized 0–1), color ('yellow'|'red'|'blue'), note (nullable), created_at. Overlaps allowed.
+- **chats (P0):** id, session_id, role ('user'|'assistant'), content, reference_highlight_id (nullable), created_at.
+- **drafts (P1):** id, editor_doc JSON, updated_at.
+- **book_text_index (FTS5, P1/backlog for Alpha):** book_id, chunk, chunk_id, page, created_at. Fallback: skip RAG when empty/offline and state “No document context available.”
 
-### Story B: The Writer (AI Copilot) - status: TipTap + "/" menu done
-- Action: user types `/` in the editor; dropdown shows AI commands (e.g., Fix Grammar, Continue Writing).
-- Result: AI output is inserted into the editor at the cursor position.
+## 4. Storage Paths & Cache
+- Library root: `%APPDATA%/AI-ReadWrite-Flow/library/{bookId}/original.pdf` (Win) | `~/Library/Application Support/AI-ReadWrite-Flow/library/{bookId}/` (macOS) | `$XDG_DATA_HOME/AI-ReadWrite-Flow/library/{bookId}/` (Linux). Normalize separators.
+- Cache: `$APPDATA/.../cache/` for temp thumbnails/text chunks; soft cap 512MB with LRU eviction; never critical data.
+- Collision & dupes: scope files by `bookId`; preserve original filename inside folder. Store hash/size/mtime; if hash matches existing, surface “already imported” and reuse record (best-effort).
 
-### Story C: Setup (First Run) - status: UI + defaults done; real API call pending
-- Action: user configures the AI model.
-- Default config: API Base `https://xiaoai.plus/v1`, Model `gpt-5-mini`, Key entered by user.
-- Connectivity test: test button calls `/models` and shows latency/result.
+## 5. Functional Requirements
+### Settings & Connectivity (P0)
+- Defaults: base `https://xiaoai.plus/v1`, model `gpt-5-mini`, empty api_key. Test `/models`, show latency/model presence. Persist locally; guard empty key; buffered errors with retry.
 
-## 3. UI/UX Specifications (Mobile-First)
+### Library Import & Hydration (P0)
+- Drag/drop or picker. Copy file to library root; write `books` row. On partial copy failure, clean folder and show inline error. Permissions prompts surfaced. Hydrate list on launch. Goal: quickly reopen recent readings; dedupe via hash.
 
-### 3.1 Layout System
-- Desktop (>768px): Nav | Reader | Writer/Chat. Reader uses 60-65% of maximized window width; Nav is a narrow column (bookmarks/TOC/jump); Writer/Chat stacked on the right.
-- Mobile (<768px): tab navigation `[Library | Reader | Editor | Chat]`.
-- Implementation: use Tailwind responsive utilities or screen-width hooks for conditional rendering.
-- Top bar: AI config and local resource import side-by-side; allow collapsing the top bar on desktop.
-- Nav bar: left PDF nav (bookmarks/TOC/jump) is collapsible on desktop.
+### Reader Core (P0)
+- Render PDF via react-pdf; page nav + continuous scroll toggle; wheel scoped. Restore `last_read_position`. Floating menu on selection: Summarize/Explain/Chat/Save Highlight. Selection bounding uses normalized page coords (0–1); store zoom when available to aid re-projection.
 
-### 3.2 AI Sidebar
-- Behavior: persistent chat interface (UI done).
-- Context: automatically appends selected text to the prompt when active (wiring pending).
-- Error/loading UX: show spinner and inline error when API fails; allow retry without losing draft.
-- Layout: chat panel has its own scroll area; history and input roughly 2:1 height split; avoid unbounded panel growth.
+### Highlights & Notes (P0/P1)
+- Overlay colors: yellow/red/blue; z-index above text layer; allow text selection through when not hovered; hover shows outline. Overlaps allowed; render in insertion order. Save normalized context_range. Note editing inline in sidebar; delete with confirm. One highlight links to many chats via `reference_highlight_id`.
 
-## 4. Functional Modules (MVP)
+### AI Pipeline (P0 base, P1 extras)
+- Alpha uses buffered responses; streaming is backlog. Retry with capped exponential backoff (3 tries, max 2s backoff). Latency target p95 < 8s. Editor auto-insert sequence (opt-in): send → receive → append to cursor. Respect stored base/model/key; block empty key.
 
-### Module 1: Settings & System (Priority 0) - Status: Partial
-- Storage: SQLite `settings` table with fallback to localStorage (done; tauri-plugin-sql + tauri-plugin-store configured).
-- Connectivity: test button hits `/models` (implemented via fetch); save/hydrate flows work. Not yet wired into chat/completion pipeline.
-- DX: `tauri:dev` / `tauri:build` scripts and strict TS (done).
+### RAG / “Ask the Book” (Backlog, not Alpha-blocking)
+- Chunk ~800–1200 chars, 10–15% overlap; top-K = 3–5. Prompt template: system preamble + user question + cited chunks (`[p{page}] excerpt`). If FTS empty/offline, fall back to normal chat and state no context. Not an Alpha blocker.
 
-### Module 2: Library (Priority 1) - Status: UI-only
-- Drag & drop/import UI works and tracks files in memory.
-- Copy to `$APP_DATA/library` via Tauri command and metadata persistence in SQLite are not implemented.
-- Placement in top bar alongside AI config is done.
+### Writer / Editor (P1)
+- TipTap with `/` commands; insert AI outputs; persist drafts to `drafts`. `/import-highlights` modal uses current book highlights; `/chat-selection` sends selected editor text to AI (P2). Auto-insert follows buffered pipeline.
 
-### Module 3: Reader (Priority 2) - Status: Partial
-- `react-pdf` render works; floating menu on text selection is functional.
-- Page nav + continuous scroll toggle exist; wheel is scoped when not in continuous mode.
-- Precise selection bounding across pages/zoom, pagination polish, and persistence of position/highlights are not implemented.
+### Gestures & Theme (P1)
+- Mobile gestures: swipe left delete in Library; swipe right back in Reader (low priority). Desktop equivalents may be keyboard shortcuts later; otherwise mobile-only. Theme persisted in settings; default light; presets `light|ocean|forest|sand`. Respect OS preference only on first run if unset; user override sticks.
 
-### Module 4: Editor (Priority 2) - Status: Partial
-- TipTap + "/" command menu work; commands insert prompt text and set quick prompt.
-- Real AI insertion and draft persistence are not implemented.
+### Extraction & Indexing (P1)
+- Rust background task extracts text on import; UI non-blocking; show progress/error. Insert chunks into `book_text_index`; if fail, mark processed_for_search false and continue core flows.
 
-### Module 5: AI Request Pipeline (Priority 0.5) - Status: Not started
-- ChatSidebar still uses mock assistant replies; no streaming/buffering or error handling.
-- Reader/Writer prompts are forwarded as quick prompts only; no real API calls beyond `/models` test.
+### Error Boundaries & Resilience (P0)
+- Wrap Reader, Editor, Chat; show friendly fallback with “Reload panel.” Network failures show inline retry; keep drafts intact. Avoid logging secrets.
 
-## 5. Success Metrics (current status)
-1. App launches and connects to SQLite. - Met (settings table migration + store fallback in place).
-2. User can save API key and successfully ping the `gpt-5-mini` model (live call). - Partially met (testConnection hits `/models`; chat pipeline not using it).
-3. PDF text selection triggers the floating menu correctly (basic success; precise coordinates/pagination pending). - Met at basic level.
-4. Resizing to mobile width switches layout to tabs. - Met.
-5. AI responses flow into ChatSidebar and optionally editor with error handling. - Not met (mock only, no error states).
-6. Core flows remain stable under network failure and recovery. - Not evaluated; no error handling implemented for AI calls.
+### Telemetry/Logging (Low priority)
+- Local-only (console or rolling file, 7-day retention) with redaction of secrets; optional disable. Non-core.
 
-# Version: 3.0.0 (Full Scope / Alpha Phase)
-- Context: MVP verified. Moving to persistence, lightweight RAG, and mobile polish.
+### OCR (Backlog)
+- For scanned PDFs: run Tesseract via Rust; output plain text per page (readable). Store alongside book folder; optional ingest into FTS when available.
 
-## 1. Project Vision
-- Persistence: every highlight, note, and chat history must be saved locally and restored on reopen.
-- Depth: AI should understand the whole book, not only selected text (basic retrieval-augmented generation using local search).
-- Mobile-native: interface feels native on touch screens (gestures, touch targets).
-- Data foundation: use SQLite via `tauri-plugin-sql` for all persistent data and search.
+### Flomo (P1/backlog)
+- Button on chat bubble to POST structured payload (quote, question, AI reply, optional note) with markdown stripped. Validate URL presence; surface toast on success/error.
 
-## 2. Core User Stories & Interaction (with status)
+## 6. AI Prompt Contract (Baseline)
+- System prompt defines assistant role/safety. Selection-based: `Explain this text: "<quote>"`. Global query: plain question. When RAG active, append cited chunks with `[p{page}]` tags and require citations; if none, state lack of context.
 
-### Story A: Study Session - status: design ready; build pending
-- Open a book (e.g., The Great Gatsby); app restores position to the last page/scroll.
-- User selects a paragraph; floating menu appears; user clicks "Save Highlight"; highlight turns yellow.
-- User clicks the highlight -> menu appears -> clicks "Ask AI"; right sidebar opens with system prompt: "User is asking about this specific text: [Text]. Context: [Book Title]."
+## 7. Testing Plan
+- **Manual P0 smoke (run by QA):** first-run settings save/test; import PDF; reopen restores last page; select text → floating menu actions; chat success + retry; highlight save + overlay on reopen; theme persists; mobile tabs at 375px render correctly.
+- **Automated (dev-owned):** unit for stores (settings/library/reader/chat/drafts), apiClient fetch behaviors (mocked), selection → normalized coords helpers, Rust command tests for import/copy. Mock Tauri plugins; no real file/network in unit tests.
 
-### Story B: Ask the Book (Global Search) - status: design ready; build pending
-- User opens Chat Sidebar with no selection and types "Summarize the main conflict."
-- System detects no selection, queries `book_text_index` (FTS) for relevant chunks, injects top 3 excerpts into the prompt, and AI responds with citations.
+## 8. Performance Targets
+- Import 100MB PDF copy < 20s on baseline laptop; main thread blocks < 100ms at kickoff. Reader render p95 < 200ms per page nav. Virtualize lists when >100 items (library/highlights/chat) to keep scroll smooth.
 
-### Story C: Mobile Native Navigation - status: design ready; build pending
-- Swipe left on a book in Library to delete; swipe right in Reader to go back.
-- All tappable elements meet 44x44 px targets; chat/editor/reader remain usable on small screens.
+## 9. Security & Privacy
+- API key stored locally (SQLite/store); no encryption now. Do not log keys. Validate base_url as HTTPS and disallow localhost/file to reduce SSRF; if override needed, add explicit allowlist toggle. Track future task: key encryption at rest.
 
-## 3. UI/UX Specifications (Mobile + Desktop)
+## 10. Open Questions
+- EPUB timing (Alpha or later)?
+- Single-window sufficient for Alpha?
 
-### 3.1 Layout & Navigation
-- Annotation sidebar: highlights can be pinned as notes; clicking a highlight scrolls the Note/Chat panel to its entry.
-- Reader shows highlight overlays at stored coordinates; reopening a book restores highlights and scroll/page.
-- Left nav (bookmarks/TOC/jump) remains collapsible; top bar can collapse to maximize Reader.
-
-### 3.2 Visuals, Accessibility, Gestures
-- Themes: light/dark toggle using Tailwind `dark:` classes.
-- Touch and gesture support: swipe left/right behaviors as above; ensure scroll areas remain independent (reader vs page).
-- Responsiveness: maintain desktop split layout and mobile tabs; keep chat panel scrollable with a balanced history/input ratio.
-
-### 3.3 Interaction Flows (reference)
-
-#### Flow 1: The Study Session
-- Open "The Great Gatsby.pdf"; app restores position to page 42.
-- User selects a paragraph; floating menu appears; user clicks "Save Highlight"; highlight turns yellow.
-- User clicks the highlight -> menu appears -> clicks "Ask AI"; right sidebar opens with the system prompt above.
-
-#### Flow 2: The Ask Book (Global Search)
-- User opens Chat Sidebar with no text selected and types a question (e.g., "Summarize the main conflict.").
-- System detects no selection, queries `book_text_index` for "conflict," and injects top excerpts into the prompt.
-- AI responds with citations.
-
-## 4. Functional Modules (Full Scope)
-
-### Module 0: Data & Schema (Priority 0) - Status: Not started
-- Use SQLite via `tauri-plugin-sql` for all persistence.
-- Tables:
-  - `books`: id (UUID), title, author, cover_path, file_path, format ('pdf'|'epub'), last_read_position (JSON `{ page, scroll_y }` or CFI), processed_for_search (boolean).
-  - `highlights`: id (UUID), book_id (FK), content, context_range (JSON: coordinates/locator), color ('yellow'|'red'|'blue'), note (nullable), created_at.
-  - `chats`: id (UUID), session_id, role ('user'|'assistant'), content, reference_highlight_id (FK, nullable).
-  - `book_text_index` (FTS5): stores extracted text chunks for retrieval.
-
-### Module A: Advanced Reader (Persistence) - Priority 1 - Status: Not started
-- Persist highlights with PDF coordinates (Rect: x, y, w, h) and restore them visually on reopen.
-- Annotation sidebar with pinned notes; clicking a highlight scrolls to the linked note/chat entry.
-
-### Module B: The Brain (Local RAG Lite) - Priority 1 - Status: Not started
-- Extraction: when adding a book, extract raw text in background (Rust).
-- Indexing: store text chunks in `book_text_index` (SQLite FTS5).
-- Retrieval: for "chat with document," run keyword search, inject top chunks into the system prompt, and send to `gpt-5-mini`.
-
-### Module C: Editor (Block-Based) - Priority 2 - Status: Not started
-- Upgrade from plain Markdown to block-based editing (Notion-style).
-- Slash Command 2.0: `/import-highlights` opens a modal to insert highlights from the current book; `/chat-selection` sends selected editor text to AI for rewriting.
-
-### Module D: UI/UX & Mobile Polish - Priority 2 - Status: Partial (desktop/mobile layout base exists)
-- Light/dark theme toggle; gesture support (swipe left delete in Library; swipe right back in Reader); touch targets >=44x44 px.
-
-### Module E: Engineering Hardening - Priority 2 - Status: Not started
-- Rust backend handles heavy tasks (file parsing, text extraction) on background threads to keep UI responsive.
-- Virtualization (e.g., react-window) for Library when >100 books.
-- Error boundaries wrap Reader and Editor so one crash does not kill the app.
-
-### Module F: Technical Refactoring Guide (Support) - Status: Not started
-- Move heavy lifting (file parsing, text extraction) to Rust threads; do not block the UI.
-- Use virtualization for large Library views; guard Reader/Editor with error boundaries.
-- Keep chat/editor/reader scroll areas scoped to avoid whole-page scroll conflicts.
-
-## 5. Success Metrics (current status)
-1. Opening a previously read book restores last position and all highlights at correct coordinates. - Not started.
-2. Background text extraction completes and builds `book_text_index`; "Ask the book" queries return relevant excerpts and citations. - Not started.
-3. Highlight-to-note/chat linking works both ways (clicking highlight scrolls to note; clicking note focuses highlight). - Not started.
-4. Block-based editor supports slash commands including highlight import and chat-selection rewrite. - Not started.
-5. Mobile gestures work and touch targets meet 44x44 px; light/dark theme toggle persists. - Not started (only base responsive layout exists).
-6. Reader/Editor failures are isolated by error boundaries; UI remains responsive while extraction runs in Rust. - Not started.
+## 11. Success Criteria (Alpha)
+- Settings persist; connectivity test passes with valid key.
+- Import persists book; reopen shows last position and highlights overlaid.
+- Chat buffered with retry and metrics; floating menu actions round-trip successfully.
+- Theme and layout adapt between desktop split and mobile tabs without UI breakage.
