@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
+import { Document, pdfjs } from 'react-pdf'
 import { FileWarning, MousePointerClick } from 'lucide-react'
-import { convertFileSrc, invoke } from '@tauri-apps/api/core'
 import Card from '../../shared/components/Card'
 import useLibraryStore from '../../stores/libraryStore'
 import FloatingMenu from './FloatingMenu'
-import { isTauri } from '../../lib/isTauri'
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import useReaderStore from '../../stores/readerStore'
+import useHighlightStore from '../../stores/highlightStore'
+import { selectionToHighlight } from './services/selectionToHighlight'
+import { type Highlight, type HighlightRect } from './types'
+import PdfPageWithHighlights from './components/PdfPageWithHighlights'
+import { usePdfFileSource } from './hooks/usePdfFileSource'
 
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -23,6 +26,8 @@ type MenuState = {
   x: number
   y: number
   text: string
+  page?: number
+  rect?: HighlightRect
 }
 
 const ReaderPane = ({ onAction }: Props) => {
@@ -37,13 +42,14 @@ const ReaderPane = ({ onAction }: Props) => {
     text: '',
   })
   const { items, activeId, setLastPosition } = useLibraryStore()
+  const { byBookId, hydrate: hydrateHighlights, add: addHighlight } = useHighlightStore()
   const [scrollY, setScrollY] = useState(0)
-  const [fileSrc, setFileSrc] = useState<string | undefined>(undefined)
 
   const activeItem = useMemo(
     () => items.find((item) => item.id === activeId),
     [items, activeId],
   )
+  const { fileSrc, blockedReason } = usePdfFileSource(activeItem)
 
   useEffect(() => {
     const resize = () => {
@@ -75,11 +81,14 @@ const ReaderPane = ({ onAction }: Props) => {
       const range = selection.getRangeAt(0)
       const rect = range.getBoundingClientRect()
       const hostRect = node.getBoundingClientRect()
+      const info = selectionToHighlight()
       setMenu({
         visible: true,
         text,
         x: rect.left - hostRect.left,
         y: rect.top - hostRect.top,
+        page: info?.page,
+        rect: info?.rect,
       })
     }
 
@@ -88,6 +97,7 @@ const ReaderPane = ({ onAction }: Props) => {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadError(null)
     if (activeItem?.lastReadPosition?.page) {
       setPage(activeItem.lastReadPosition.page)
@@ -101,58 +111,48 @@ const ReaderPane = ({ onAction }: Props) => {
     }
   }, [activeItem?.id, activeItem?.lastReadPosition, setPage])
 
-  const handleAction = (action: 'summarize' | 'explain' | 'chat') => {
+  useEffect(() => {
+    if (!activeId) return
+    void hydrateHighlights(activeId)
+  }, [activeId, hydrateHighlights])
+
+  const clearSelection = () => {
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+  }
+
+  const handleAction = async (action: 'summarize' | 'explain' | 'chat' | 'highlight') => {
     if (!menu.text) return
+    if (action === 'highlight') {
+      if (!activeId || !menu.page || !menu.rect) return
+      const highlight: Highlight = {
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        bookId: activeId,
+        content: menu.text,
+        color: 'yellow',
+        note: null,
+        contextRange: { page: menu.page, rects: [menu.rect], zoom: null },
+        createdAt: Date.now(),
+      }
+      await addHighlight(highlight)
+      clearSelection()
+      setMenu((state) => ({ ...state, visible: false }))
+      return
+    }
     onAction(action, menu.text)
     setMenu((state) => ({ ...state, visible: false }))
   }
 
-  const normalizedPath =
-    activeItem?.filePath && typeof activeItem.filePath === 'string'
-      ? activeItem.filePath.replace(/\\/g, '/')
-      : undefined
-  const resolvedFile = activeItem?.url ?? normalizedPath
-  const isWebBlocked =
-    !isTauri() &&
-    normalizedPath !== undefined &&
-    !normalizedPath.startsWith('data:') &&
-    !normalizedPath.startsWith('blob:')
-  const hasPdf = !!fileSrc && !isWebBlocked
+  const highlights = activeId ? (byBookId[activeId] ?? []) : []
+  const highlightsForPage = (page: number) =>
+    highlights.filter((h) => h.contextRange.page === page)
+
+  const hasPdf = Boolean(fileSrc) && !blockedReason
 
   useEffect(() => {
-    setLoadError(null)
-    setFileSrc(undefined)
-    if (!activeItem?.id) return
-
-    if (!isTauri()) {
-      if (isWebBlocked) {
-        setLoadError('This file was imported in the app; re-import in web to view.')
-        return
-      }
-      setFileSrc(resolvedFile)
-      return
-    }
-
-    if (!normalizedPath) {
-      setFileSrc(resolvedFile)
-      return
-    }
-
-    void invoke<string>('read_file_base64', { path: normalizedPath })
-      .then((data) => {
-        setFileSrc(`data:application/pdf;base64,${data}`)
-      })
-      .catch((error) => {
-        console.error('[ReaderPane] read_file_base64 failed', error)
-        try {
-          const assetUrl = convertFileSrc(normalizedPath)
-          setFileSrc(assetUrl)
-        } catch (fallbackError) {
-          console.error('[ReaderPane] convertFileSrc fallback failed', fallbackError)
-          setLoadError('Failed to resolve PDF path.')
-        }
-      })
-  }, [activeItem?.id, normalizedPath, resolvedFile])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoadError(blockedReason ?? null)
+  }, [blockedReason])
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (scrollMode === 'continuous') return
@@ -206,15 +206,20 @@ const ReaderPane = ({ onAction }: Props) => {
             >
               {scrollMode === 'continuous' && pageCount > 0 ? (
                 Array.from({ length: pageCount }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="mb-6 rounded-lg border border-slate-800/60 bg-slate-900/60 p-2"
-                  >
-                    <Page pageNumber={idx + 1} width={pageWidth} />
+                  <div key={idx} className="mb-6">
+                    <PdfPageWithHighlights
+                      pageNumber={idx + 1}
+                      width={pageWidth}
+                      highlights={highlightsForPage(idx + 1)}
+                    />
                   </div>
                 ))
               ) : (
-                <Page pageNumber={currentPage} width={pageWidth} />
+                <PdfPageWithHighlights
+                  pageNumber={currentPage}
+                  width={pageWidth}
+                  highlights={highlightsForPage(currentPage)}
+                />
               )}
             </Document>
             <p className="text-xs text-slate-400">

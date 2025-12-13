@@ -16,7 +16,7 @@
 | 8  | Todo         | P0       | Define and migrate SQLite schemas for settings/books/highlights/chats/drafts/book_text_index.              | High — schema impacts persistence and RAG. |
 | 9  | Todo         | P0       | Implement file copy into `$APP_DATA/library`, persist metadata (hash/size/mtime) in SQLite, hydrate on load.| Medium — OS path handling and partial copy cleanup. |
 | 10 | In Progress  | P1       | Add PDF pagination polish and accurate text selection bounding for floating menu.                           | Medium — PDF coords across zoom/scroll. |
-| 11 | Todo         | P0       | Save/restore last_read_position (page/scroll/zoom) per book.                                               | Medium — needs reliable viewport capture. |
+| 11 | Done         | P0       | Save/restore last_read_position (page/scroll/zoom) per book.                                               | Medium — implemented page+scroll; zoom pending. |
 | 12 | Todo         | P0       | Persist highlights with normalized coordinates; render overlays on reopen; allow delete/edit note.          | Medium — coordinate math and overlay UX. |
 | 13 | Todo         | P0       | Persist chat history and writer drafts; add basic telemetry/logging (local-only).                           | Medium — shapes must align with future linking. |
 | 14 | Todo         | P0       | Add error boundaries for Reader/Editor/Chat with reload affordance.                                         | Low |
@@ -40,5 +40,11 @@
 - Library/Reader/Writer/Chat surfaces implemented with mobile tabs and desktop split.
 - Reader has page nav + continuous scroll toggle and floating menu; selection bounding accuracy/persistence still pending.
 - ChatSidebar calls live API with loading/error/retry, auto-scrolls to latest, shows token/latency metrics, supports custom prompt templates.
-- Library import is in-memory only; file copy + SQLite metadata persistence are not yet wired.
-- Pending Alpha must-haves: schema/migrations, library persistence, last-read restore, highlight persistence, chat/draft persistence, theme presets, error boundaries, tests.
+- Library import persists to app data via Tauri (hash/mtime/size) with hash dedupe; web imports store data URLs to survive refresh; web hides desktop-only entries to avoid broken previews.
+- Reader saves/restores last_read_position (page + scroll); uses base64 load or asset URL in app; web shows guidance if a desktop-only file is selected.
+- Pending Alpha must-haves: highlights persistence/overlays, chat/draft persistence, error boundaries, tests, theme presets, pagination precision, performance guards.
+
+## Backlog (New Proposals)
+1. Context-aware LLM function — automatically take context from the reader.
+2. Multi-round chat / chat history.
+3. Support for screenshots/figures/pictures.

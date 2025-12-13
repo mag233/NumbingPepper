@@ -10,7 +10,12 @@
 ## 2. Scope & Priority
 - **Alpha (must ship):** Settings save/test; library import with persistence; open PDFs; last-read restore; floating menu actions (summarize/explain/chat); buffered chat with retry + latency/tokens; highlight save + overlay; drafts/chats persisted; theme selection (light + presets); mobile tabs + desktop split; basic error boundaries; library path hygiene.
 - **Alpha-can-slip (P1 targets):** RAG “Ask the book” (global search) — not a blocker; highlight-to-note sidebar; gestures; advanced editor insertions; streaming chat; Flomo; OCR.
-- **Backlog (P2+):** Streaming, OCR, Flomo export, advanced block commands, EPUB, theme polish beyond presets, desktop keyboard gesture equivalents if desired.
+- **Backlog (P2+):** Streaming, OCR, Flomo export, advanced block commands, EPUB, theme polish beyond presets, desktop keyboard gesture equivalents if desired, highlight UI polish (floating menu spacing/visibility/touch targets).
+
+**Backlog (New Proposals):**
+1. Context-aware LLM function — automatically take context from the reader.
+2. Multi-round chat / chat history.
+3. Support for screenshots/figures/pictures.
 
 ## 3. Data Model (SQLite + store/localStorage fallback)
 - **settings (P0):** api_key, base_url, model, theme (`light`|`ocean`|`forest`|`sand`), updated_at.
@@ -37,6 +42,19 @@
 
 ### Highlights & Notes (P0/P1)
 - Overlay colors: yellow/red/blue; z-index above text layer; allow text selection through when not hovered; hover shows outline. Overlaps allowed; render in insertion order. Save normalized context_range. Note editing inline in sidebar; delete with confirm. One highlight links to many chats via `reference_highlight_id`.
+- Data shape for highlights (SQLite):
+  - `id` (UUID), `book_id` FK, `content` (text), `color` ('yellow'|'red'|'blue'), `note` (nullable), `context_range` JSON:
+    ```json
+    {
+      "page": number,
+      "rects": [
+        { "x": number, "y": number, "width": number, "height": number, "normalized": true }
+      ],
+      "zoom": number | null
+    }
+    ```
+- Overlap handling/render: draw rect overlays per page; order by created_at so newer highlights sit above older; apply slight padding and hover outline; maintain pointer-events: none except on hover to minimize text blockage.
+- Chat/draft linking: `chats.reference_highlight_id` (nullable) links a chat message to a highlight; drafts remain independent but can insert highlight content via commands.
 
 ### AI Pipeline (P0 base, P1 extras)
 - Alpha uses buffered responses; streaming is backlog. Retry with capped exponential backoff (3 tries, max 2s backoff). Latency target p95 < 8s. Editor auto-insert sequence (opt-in): send → receive → append to cursor. Respect stored base/model/key; block empty key.
@@ -46,6 +64,7 @@
 
 ### Writer / Editor (P1)
 - TipTap with `/` commands; insert AI outputs; persist drafts to `drafts`. `/import-highlights` modal uses current book highlights; `/chat-selection` sends selected editor text to AI (P2). Auto-insert follows buffered pipeline.
+- When text is selected in Writer, surface contextual actions (e.g., Simplify, Concise style, Fix grammar) alongside existing "/" commands.
 
 ### Gestures & Theme (P1)
 - Mobile gestures: swipe left delete in Library; swipe right back in Reader (low priority). Desktop equivalents may be keyboard shortcuts later; otherwise mobile-only. Theme persisted in settings; default light; presets `light|ocean|forest|sand`. Respect OS preference only on first run if unset; user override sticks.
@@ -87,3 +106,8 @@
 - Import persists book; reopen shows last position and highlights overlaid.
 - Chat buffered with retry and metrics; floating menu actions round-trip successfully.
 - Theme and layout adapt between desktop split and mobile tabs without UI breakage.
+
+## Current Progress (Brief)
+- Desktop: imports persist to app data with hash/mtime/size and render in Reader; last_read_position (page + scroll) saves/restores. Tauri load path uses base64/asset URL fallback.
+- Web: imports made on web are stored as data URLs and survive refresh; desktop-imported files are hidden to avoid broken previews; Reader shows guidance if a desktop-only file is selected.
+- Outstanding: highlights persistence/overlays, chat/draft persistence, error boundaries, tests, theme presets, pagination precision, performance guards, RAG/indexing (backlog).

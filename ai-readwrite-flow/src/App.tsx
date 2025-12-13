@@ -109,7 +109,7 @@ const App = () => {
               {activeTab === 'chat' && (
                 <ChatSidebar
                   quickPrompt={quickPrompt}
-                  onConsumeQuickPrompt={() => setQuickPrompt('')}
+                  onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
                 />
               )}
             </div>
@@ -205,7 +205,7 @@ const App = () => {
                 <div className="h-full">
                   <ChatSidebar
                     quickPrompt={quickPrompt}
-                    onConsumeQuickPrompt={() => setQuickPrompt('')}
+                    onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
                   />
                 </div>
               </section>

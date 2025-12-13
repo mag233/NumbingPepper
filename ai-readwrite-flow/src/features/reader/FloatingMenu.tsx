@@ -1,10 +1,10 @@
-import { MessageSquare, Sparkles, StickyNote } from 'lucide-react'
+import { Highlighter, MessageSquare, Sparkles, StickyNote } from 'lucide-react'
 
 type FloatingMenuProps = {
   x: number
   y: number
   text: string
-  onAction: (action: 'summarize' | 'explain' | 'chat') => void
+  onAction: (action: 'summarize' | 'explain' | 'chat' | 'highlight') => void
 }
 
 const FloatingMenu = ({ x, y, text, onAction }: FloatingMenuProps) => (
@@ -33,6 +33,13 @@ const FloatingMenu = ({ x, y, text, onAction }: FloatingMenuProps) => (
     >
       <MessageSquare className="size-4" />
       Chat
+    </button>
+    <button
+      onClick={() => onAction('highlight')}
+      className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-amber-600"
+    >
+      <Highlighter className="size-4" />
+      Highlight
     </button>
   </div>
 )

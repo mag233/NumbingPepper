@@ -142,13 +142,13 @@ const useLibraryStore = create<LibraryState>((set, get) => ({
   },
   hydrate: async () => {
     const books = await loadBooks()
-    const withUrls = books.map((book) => {
+    const withUrls: LibraryItem[] = books.map((book) => {
       if (book.filePath.startsWith('data:')) return { ...book, url: book.filePath }
       if (!isTauri()) {
         // Web cannot read native paths; mark them as hidden for web to avoid broken selection.
         return { ...book, url: undefined }
       }
-      return book
+      return { ...book, url: undefined }
     })
     const visible = isTauri()
       ? withUrls

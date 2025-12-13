@@ -43,7 +43,7 @@ const persistTemplates = (templates: PromptTemplate[]) => {
 const createId = () =>
   (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`)
 
-const useTemplateStore = create<TemplateState>((set, get) => ({
+const useTemplateStore = create<TemplateState>((set) => ({
   templates: loadTemplates(),
   addTemplate: (name, prompt) =>
     set((state) => {

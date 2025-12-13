@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, Loader2, MessageCircle, RotateCcw, Send, Trash2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useChatStore from '../../stores/chatStore'
@@ -27,23 +27,6 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const messagesRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!quickPrompt) return
-    const { text, autoSend } = quickPrompt
-    setDraft(text)
-    if (autoSend) {
-      void doSend(text)
-      setDraft('')
-    }
-    onConsumeQuickPrompt?.()
-  }, [quickPrompt, onConsumeQuickPrompt])
-
-  useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight
-    }
-  }, [messages.length])
-
   const historyMessages: ChatMessageInput[] = useMemo(
     () =>
       messages.map((msg) => ({
@@ -53,41 +36,44 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
     [messages],
   )
 
-  const doSend = async (content: string) => {
-    const userMessage = content.trim()
-    if (!userMessage || sending) return
-    setError(null)
-    setSending(true)
-    setLastPrompt(userMessage)
-    addMessage({ id: '', role: 'user', content: userMessage, createdAt: Date.now() })
+  const doSend = useCallback(
+    async (content: string) => {
+      const userMessage = content.trim()
+      if (!userMessage || sending) return
+      setError(null)
+      setSending(true)
+      setLastPrompt(userMessage)
+      addMessage({ id: '', role: 'user', content: userMessage, createdAt: Date.now() })
 
-    const response = await sendChatCompletion(baseUrl, apiKey, model, [
-      ...historyMessages,
-      { role: 'user', content: userMessage },
-    ])
+      const response = await sendChatCompletion(baseUrl, apiKey, model, [
+        ...historyMessages,
+        { role: 'user', content: userMessage },
+      ])
 
-    if (response.ok && response.content) {
-      setMetrics({
-        tokens: response.usage?.totalTokens,
-        latencyMs: response.latencyMs,
-        model,
-      })
-      addMessage({
-        id: '',
-        role: 'assistant',
-        content: response.content,
-        createdAt: Date.now(),
-      })
-    } else {
-      setError(response.error ?? 'Request failed')
-      setMetrics({
-        tokens: response.usage?.totalTokens,
-        latencyMs: response.latencyMs,
-        model,
-      })
-    }
-    setSending(false)
-  }
+      if (response.ok && response.content) {
+        setMetrics({
+          tokens: response.usage?.totalTokens,
+          latencyMs: response.latencyMs,
+          model,
+        })
+        addMessage({
+          id: '',
+          role: 'assistant',
+          content: response.content,
+          createdAt: Date.now(),
+        })
+      } else {
+        setError(response.error ?? 'Request failed')
+        setMetrics({
+          tokens: response.usage?.totalTokens,
+          latencyMs: response.latencyMs,
+          model,
+        })
+      }
+      setSending(false)
+    },
+    [addMessage, apiKey, baseUrl, historyMessages, model, sending, setMetrics],
+  )
 
   const handleSend = (event: FormEvent) => {
     event.preventDefault()
@@ -100,6 +86,24 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
     setDraft(lastPrompt)
     void doSend(lastPrompt)
   }
+
+  useEffect(() => {
+    if (!quickPrompt) return
+    const { text, autoSend } = quickPrompt
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft(text)
+    if (autoSend) {
+      void doSend(text)
+      setDraft('')
+    }
+    onConsumeQuickPrompt?.()
+  }, [quickPrompt, onConsumeQuickPrompt, doSend])
+
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight
+    }
+  }, [messages.length])
 
   return (
     <Card
