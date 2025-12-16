@@ -26,6 +26,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
   const [lastPrompt, setLastPrompt] = useState<string | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const messagesRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const historyMessages: ChatMessageInput[] = useMemo(
     () =>
@@ -95,6 +96,13 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
     if (autoSend) {
       void doSend(text)
       setDraft('')
+    } else {
+      window.setTimeout(() => {
+        const el = inputRef.current
+        if (!el) return
+        el.focus()
+        el.setSelectionRange(el.value.length, el.value.length)
+      }, 0)
     }
     onConsumeQuickPrompt?.()
   }, [quickPrompt, onConsumeQuickPrompt, doSend])
@@ -181,6 +189,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
             </div>
           )}
           <textarea
+            ref={inputRef}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             rows={3}

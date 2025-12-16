@@ -18,3 +18,32 @@ body {
 a {
   @apply text-sky-300 transition hover:text-sky-200;
 }
+
+/* Reader / react-pdf: selection + text layer hygiene (mitigate selection “ghosting”) */
+.react-pdf__Page__textContent {
+  line-height: 1;
+}
+
+.react-pdf__Page__textContent span {
+  line-height: 1;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+.react-pdf__Page__textContent ::selection {
+  background: rgba(59, 130, 246, 0.35);
+}
+
+/* Reader: find-in-document highlighting */
+.arwf-find-rect {
+  position: absolute;
+  background: rgba(250, 204, 21, 0.28);
+  border-radius: 2px;
+}
+
+.arwf-find-rect-active {
+  outline: 2px solid rgba(56, 189, 248, 0.65);
+  outline-offset: -1px;
+}

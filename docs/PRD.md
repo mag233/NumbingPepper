@@ -41,20 +41,26 @@
 - Render PDF via react-pdf; page nav + continuous scroll toggle; wheel scoped. Restore `last_read_position`. Floating menu on selection: Summarize/Explain/Chat/Save Highlight. Selection bounding uses normalized page coords (0–1); store zoom when available to aid re-projection.
 
 ### Highlights & Notes (P0/P1)
-- Overlay colors: yellow/red/blue; z-index above text layer; allow text selection through when not hovered; hover shows outline. Overlaps allowed; render in insertion order. Save normalized context_range. Note editing inline in sidebar; delete with confirm. One highlight links to many chats via `reference_highlight_id`.
+- Overlay colors: yellow/red/blue; z-index above text layer; allow text selection through when not hovered; hover shows outline. Overlaps allowed; render in insertion order (or explicit merge rules). Save normalized context_range. Note editing inline in sidebar; delete with confirm.
 - Data shape for highlights (SQLite):
   - `id` (UUID), `book_id` FK, `content` (text), `color` ('yellow'|'red'|'blue'), `note` (nullable), `context_range` JSON:
     ```json
     {
-      "page": number,
+      "page": 1,
       "rects": [
-        { "x": number, "y": number, "width": number, "height": number, "normalized": true }
+        { "x": 0.12, "y": 0.34, "width": 0.22, "height": 0.05, "normalized": true }
       ],
-      "zoom": number | null
+      "zoom": null
     }
     ```
-- Overlap handling/render: draw rect overlays per page; order by created_at so newer highlights sit above older; apply slight padding and hover outline; maintain pointer-events: none except on hover to minimize text blockage.
-- Chat/draft linking: `chats.reference_highlight_id` (nullable) links a chat message to a highlight; drafts remain independent but can insert highlight content via commands.
+- Overlap handling/render:
+  - Must support multi-rect highlights (one rect per line fragment).
+  - Must clip rects to page bounds and prevent line-to-line overlap (vertical clamp).
+  - Repeated highlights should either merge (recommended) or cap alpha to avoid “dark stacking”.
+- Interactions:
+  - Click to select an existing highlight (single select).
+  - Popover actions: change color, delete, add/edit note, ask AI about highlight.
+  - One highlight can link to many chat messages (via `chats.reference_highlight_id`).
 
 ### AI Pipeline (P0 base, P1 extras)
 - Alpha uses buffered responses; streaming is backlog. Retry with capped exponential backoff (3 tries, max 2s backoff). Latency target p95 < 8s. Editor auto-insert sequence (opt-in): send → receive → append to cursor. Respect stored base/model/key; block empty key.
@@ -63,11 +69,13 @@
 - Chunk ~800–1200 chars, 10–15% overlap; top-K = 3–5. Prompt template: system preamble + user question + cited chunks (`[p{page}] excerpt`). If FTS empty/offline, fall back to normal chat and state no context. Not an Alpha blocker.
 
 ### Writer / Editor (P1)
-- TipTap with `/` commands; insert AI outputs; persist drafts to `drafts`. `/import-highlights` modal uses current book highlights; `/chat-selection` sends selected editor text to AI (P2). Auto-insert follows buffered pipeline.
+- TipTap with `/` commands; insert AI outputs; persist drafts to `drafts`.
+- `/import-highlights` modal uses current book highlights; `/chat-selection` sends selected editor text to AI (P2).
 - When text is selected in Writer, surface contextual actions (e.g., Simplify, Concise style, Fix grammar) alongside existing "/" commands.
 
 ### Gestures & Theme (P1)
-- Mobile gestures: swipe left delete in Library; swipe right back in Reader (low priority). Desktop equivalents may be keyboard shortcuts later; otherwise mobile-only. Theme persisted in settings; default light; presets `light|ocean|forest|sand`. Respect OS preference only on first run if unset; user override sticks.
+- Mobile gestures: swipe left delete in Library; swipe right back in Reader (low priority). Desktop equivalents may be keyboard shortcuts later; otherwise mobile-only.
+- Theme persisted in settings; default light; presets `light|ocean|forest|sand`. Respect OS preference only on first run if unset; user override sticks.
 
 ### Extraction & Indexing (P1)
 - Rust background task extracts text on import; UI non-blocking; show progress/error. Insert chunks into `book_text_index`; if fail, mark processed_for_search false and continue core flows.
@@ -88,8 +96,8 @@
 - System prompt defines assistant role/safety. Selection-based: `Explain this text: "<quote>"`. Global query: plain question. When RAG active, append cited chunks with `[p{page}]` tags and require citations; if none, state lack of context.
 
 ## 7. Testing Plan
-- **Manual P0 smoke (run by QA):** first-run settings save/test; import PDF; reopen restores last page; select text → floating menu actions; chat success + retry; highlight save + overlay on reopen; theme persists; mobile tabs at 375px render correctly.
-- **Automated (dev-owned):** unit for stores (settings/library/reader/chat/drafts), apiClient fetch behaviors (mocked), selection → normalized coords helpers, Rust command tests for import/copy. Mock Tauri plugins; no real file/network in unit tests.
+- **Manual P0 smoke (run by you):** first-run settings save/test; import PDF; reopen restores last page; select text → floating menu actions; chat success + retry; highlight save + overlay on reopen; theme persists; mobile tabs at 375px render correctly.
+- **Automated (dev-owned):** unit for stores (settings/library/reader/chat/drafts/highlights), apiClient fetch behaviors (mocked), selection → normalized rect helpers, Rust command tests for import/copy. Mock Tauri plugins; no real file/network in unit tests.
 
 ## 8. Performance Targets
 - Import 100MB PDF copy < 20s on baseline laptop; main thread blocks < 100ms at kickoff. Reader render p95 < 200ms per page nav. Virtualize lists when >100 items (library/highlights/chat) to keep scroll smooth.
@@ -108,6 +116,6 @@
 - Theme and layout adapt between desktop split and mobile tabs without UI breakage.
 
 ## Current Progress (Brief)
-- Desktop: imports persist to app data with hash/mtime/size and render in Reader; last_read_position (page + scroll) saves/restores. Tauri load path uses base64/asset URL fallback.
-- Web: imports made on web are stored as data URLs and survive refresh; desktop-imported files are hidden to avoid broken previews; Reader shows guidance if a desktop-only file is selected.
-- Outstanding: highlights persistence/overlays, chat/draft persistence, error boundaries, tests, theme presets, pagination precision, performance guards, RAG/indexing (backlog).
+- Desktop: imports persist to app data with hash/mtime/size and render in Reader; last_read_position (page + scroll) saves/restores.
+- Web: web imports are stored as data URLs and survive refresh; desktop-imported files are hidden to avoid broken previews.
+- Highlight persistence exists but geometry/overlap/merge and interactions (select/edit/delete) are still being hardened.

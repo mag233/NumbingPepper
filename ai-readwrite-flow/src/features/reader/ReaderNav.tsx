@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { BookCopy, ChevronLeft, ChevronRight, List, RefreshCw } from 'lucide-react'
+import { BookCopy, ChevronLeft, ChevronRight, List, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useReaderStore from '../../stores/readerStore'
+import FindInDocument from './components/FindInDocument'
 
 type Props = {
   onJump?: (page: number) => void
@@ -23,7 +24,7 @@ const ReaderNav = ({
   onToggleNav,
   navVisible,
 }: Props) => {
-  const { currentPage, pageCount, setPage } = useReaderStore()
+  const { currentPage, pageCount, setPage, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode } = useReaderStore()
   const [inputPage, setInputPage] = useState<number | ''>('')
 
   const jumpTo = (page: number) => {
@@ -108,6 +109,57 @@ const ReaderNav = ({
             </button>
           </div>
         </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span>Zoom</span>
+            <button
+              className="text-slate-400 hover:text-sky-200"
+              onClick={resetZoom}
+              aria-label="Reset zoom"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className={navButton} onClick={zoomOut} aria-label="Zoom out">
+              <ZoomOut className="size-4" />
+            </button>
+            <span className="rounded-lg border border-slate-800/70 bg-slate-900/70 px-3 py-1 text-sm">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button className={navButton} onClick={zoomIn} aria-label="Zoom in">
+              <ZoomIn className="size-4" />
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">Shortcut: Ctrl/⌘ + (+ / − / 0)</p>
+          <div className="flex items-center gap-2">
+            <button
+              className={`${navButton} ${fitMode === 'manual' ? 'border-sky-500 text-sky-100' : ''}`}
+              onClick={() => setFitMode('manual')}
+            >
+              Manual
+            </button>
+            <button
+              className={`${navButton} ${fitMode === 'fitWidth' ? 'border-sky-500 text-sky-100' : ''}`}
+              onClick={() => setFitMode('fitWidth')}
+            >
+              Fit width
+            </button>
+            <button
+              className={`${navButton} ${fitMode === 'fitPage' ? 'border-sky-500 text-sky-100' : ''}`}
+              onClick={() => {
+                if (scrollMode === 'continuous') onToggleScrollMode()
+                setFitMode('fitPage')
+              }}
+              title={scrollMode === 'continuous' ? 'Will switch to paged scroll for Fit page.' : undefined}
+            >
+              Fit page
+            </button>
+          </div>
+        </div>
+
+        <FindInDocument scrollMode={scrollMode} onToggleScrollMode={onToggleScrollMode} onJump={onJump} />
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs text-slate-400">

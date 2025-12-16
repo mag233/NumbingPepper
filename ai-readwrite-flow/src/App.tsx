@@ -14,7 +14,7 @@ import useReaderStore from './stores/readerStore'
 import useMetricsStore from './stores/metricsStore'
 import useLibraryStore from './stores/libraryStore'
 
-type Action = 'summarize' | 'explain' | 'chat'
+type Action = 'summarize' | 'explain' | 'chat' | 'questions'
 
 const App = () => {
   const isMobile = useMediaQuery('(max-width: 767px)')
@@ -47,13 +47,17 @@ const App = () => {
     const prefixMap: Record<Action, string> = {
       summarize: 'Summarize this text:',
       explain: 'Explain this text:',
-      chat: 'Answer my question about the following text:',
+      chat: 'Context:',
+      questions: 'Context:',
     }
     const quoted = `"${text}"`
-    const prompt =
-      action === 'chat'
-        ? `${prefixMap[action]} ${quoted}`
-        : `${prefixMap[action]} ${quoted}`
+    const prompt = (() => {
+      if (action === 'chat') return `${prefixMap[action]}\n${quoted}\n\nInstruction:\n`
+      if (action === 'questions') {
+        return `${prefixMap[action]}\n${quoted}\n\nInstruction:\nGenerate 8 active-recall questions. Return a numbered list. Do not answer.\n`
+      }
+      return `${prefixMap[action]} ${quoted}`
+    })()
     setQuickPrompt({ text: prompt, autoSend: action !== 'chat' })
     if (isMobile) setActiveTab('chat')
   }

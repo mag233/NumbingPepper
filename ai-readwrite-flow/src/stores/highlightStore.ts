@@ -6,6 +6,7 @@ import {
   updateHighlightNote,
 } from '../lib/db'
 import { type Highlight, type HighlightColor } from '../features/reader/types'
+import { normalizeHighlightRects, rectSetsOverlap } from '../features/reader/services/highlightGeometry'
 
 type HighlightState = {
   byBookId: Record<string, Highlight[]>
@@ -30,12 +31,52 @@ const useHighlightStore = create<HighlightState>((set, get) => ({
     set((state) => ({ byBookId: updateMap(state.byBookId, bookId, highlights) }))
   },
   add: async (highlight) => {
-    await persistHighlight(highlight)
+    const current = get().byBookId[highlight.bookId] ?? []
+    const samePage = current.filter((h) => h.contextRange.page === highlight.contextRange.page)
+    const overlaps = samePage.filter((h) =>
+      rectSetsOverlap(h.contextRange.rects, highlight.contextRange.rects),
+    )
+
+    if (overlaps.length === 0) {
+      const normalized = {
+        ...highlight,
+        contextRange: {
+          ...highlight.contextRange,
+          rects: normalizeHighlightRects(highlight.contextRange.rects),
+        },
+      }
+      await persistHighlight(normalized)
+      set((state) => {
+        const next = [...(state.byBookId[highlight.bookId] ?? []).filter((h) => h.id !== highlight.id), normalized].sort(
+          (a, b) => a.createdAt - b.createdAt,
+        )
+        return { byBookId: updateMap(state.byBookId, highlight.bookId, next) }
+      })
+      return
+    }
+
+    const primary = overlaps.reduce((min, h) => (h.createdAt < min.createdAt ? h : min), overlaps[0])
+    const mergedRects = normalizeHighlightRects([
+      ...primary.contextRange.rects,
+      ...highlight.contextRange.rects,
+      ...overlaps.flatMap((h) => h.contextRange.rects),
+    ])
+    const merged: Highlight = {
+      ...primary,
+      content: primary.content === highlight.content ? primary.content : `${primary.content}\n${highlight.content}`,
+      contextRange: { ...primary.contextRange, rects: mergedRects },
+    }
+
+    // Remove the extra highlights that were merged into the primary.
+    const toDelete = overlaps.filter((h) => h.id !== primary.id).map((h) => h.id)
+    for (const id of toDelete) {
+      await deleteHighlight(id)
+    }
+    await persistHighlight(merged)
+
     set((state) => {
-      const current = state.byBookId[highlight.bookId] ?? []
-      const next = [...current.filter((h) => h.id !== highlight.id), highlight].sort(
-        (a, b) => a.createdAt - b.createdAt,
-      )
+      const filtered = (state.byBookId[highlight.bookId] ?? []).filter((h) => !toDelete.includes(h.id))
+      const next = filtered.map((h) => (h.id === primary.id ? merged : h)).sort((a, b) => a.createdAt - b.createdAt)
       return { byBookId: updateMap(state.byBookId, highlight.bookId, next) }
     })
   },
@@ -72,4 +113,3 @@ const useHighlightStore = create<HighlightState>((set, get) => ({
 }))
 
 export default useHighlightStore
-

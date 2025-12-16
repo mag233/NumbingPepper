@@ -14,6 +14,7 @@ export type LastReadPosition = {
   page: number
   scroll_y?: number
   zoom?: number
+  fit_mode?: 'manual' | 'fitWidth' | 'fitPage'
 }
 
 export type BookRecord = {
@@ -57,8 +58,7 @@ const ensureStore = async () => {
   try {
     store = await Store.load(STORE_FILE)
     return store
-  } catch (error) {
-    console.warn('Tauri store load failed', error)
+  } catch {
     return null
   }
 }
@@ -170,6 +170,10 @@ const parsePosition = (raw: unknown): LastReadPosition | undefined => {
         page: pos.page as number,
         scroll_y: typeof pos.scroll_y === 'number' ? pos.scroll_y : undefined,
         zoom: typeof pos.zoom === 'number' ? pos.zoom : undefined,
+        fit_mode:
+          pos.fit_mode === 'manual' || pos.fit_mode === 'fitWidth' || pos.fit_mode === 'fitPage'
+            ? pos.fit_mode
+            : undefined,
       }
     }
   } catch (error) {

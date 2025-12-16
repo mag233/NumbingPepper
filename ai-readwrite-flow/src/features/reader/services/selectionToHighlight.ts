@@ -1,4 +1,5 @@
 import { type HighlightRect, type SelectionInfo } from '../types'
+import { normalizeHighlightRects } from './highlightGeometry'
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 
@@ -15,6 +16,9 @@ const closestPageNode = (node: Node | null): Element | null => {
   const element = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement
   return element?.closest('.react-pdf__Page') ?? null
 }
+
+const closestPageHost = (node: Element | null): Element | null =>
+  node?.closest('[data-arwf-page-host]') ?? null
 
 const normalizeRect = (rect: DOMRect, hostRect: DOMRect): HighlightRect => {
   const width = hostRect.width || 1
@@ -35,18 +39,20 @@ export const selectionToHighlight = (): SelectionInfo | undefined => {
   if (!text) return undefined
 
   const range = selection.getRangeAt(0)
-  const rect = range.getBoundingClientRect()
-  if (!rect.width || !rect.height) return undefined
-
   const pageNode = closestPageNode(range.commonAncestorContainer)
   const page = parsePageNumber(pageNode) ?? 1
-  const hostRect = (pageNode ?? document.documentElement).getBoundingClientRect()
+  const hostNode = closestPageHost(pageNode) ?? pageNode ?? document.documentElement
+  const hostRect = hostNode.getBoundingClientRect()
   if (!hostRect.width || !hostRect.height) return undefined
+
+  const rects = Array.from(range.getClientRects())
+    .filter((r) => r.width > 0 && r.height > 0)
+    .map((r) => normalizeRect(r, hostRect))
+  if (!rects.length) return undefined
 
   return {
     text,
     page,
-    rect: normalizeRect(rect, hostRect),
+    rects: normalizeHighlightRects(rects),
   }
 }
-

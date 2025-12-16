@@ -33,6 +33,5 @@ export type Highlight = z.infer<typeof highlightSchema>
 export type SelectionInfo = {
   text: string
   page: number
-  rect: HighlightRect
+  rects: HighlightRect[]
 }
-
