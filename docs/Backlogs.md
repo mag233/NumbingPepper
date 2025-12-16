@@ -24,3 +24,7 @@
 
 ## Reader Find (known issues)
 - Some PDFs show minor misalignment for the first match on a page in Find-in-document (likely TextLayer transforms/kerning). Non-blocker; track via `docs/QA.md` (28-QA-009).
+
+## Library Management (planned)
+- Safe deletion: "Remove from library" (DB-only) and optional "Delete local file" (desktop-only, double confirm).
+- Organization: tags/collections for grouping and filtering PDFs (P2/backlog).

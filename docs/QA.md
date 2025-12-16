@@ -63,11 +63,14 @@
 | 29-QA-001 | Panel crash recovery | Trigger a panel crash in DEV: set localStorage `arwf:crash=reader` (or `chat`), then reload; click “Reload panel”; clear the flag and reload again | Panel shows friendly error with “Reload panel”; clicking reload restores the panel; app shell remains usable | Pass | Use crash flag; module-level `throw` is not catchable by boundaries. |
 | 29-QA-002 | TOC/outline quick jump | Open a PDF known to have an outline (bookmarks) → check TOC list in left nav → click an item | Outline list renders; clicking jumps to target page; if in continuous mode, app switches to paged for stable jumps | Pass | Uses physical PDF pages; printed page labels may differ (tracked as Task 28.6). |
 
-## 2025-12-16 — Library duplicate detection + recents (Task 19)
+## 2025-12-16 – Library duplicate detection + recents (Task 19)
 
 | ID | Scenario | Steps | Expected | Result | Notes |
 | -- | -------- | ----- | -------- | ------ | ----- |
-| 19-QA-001 | Duplicate import message | Import the same PDF twice (drag/drop or Import button) | Second import shows “Already imported” and selects existing book | Pending | Needs implementation (Task 19.2). |
-| 19-QA-002 | No duplicate records | Import the same PDF twice | Library contains only one record for that PDF | Pending | Hash-based identity (Task 19.1). |
-| 19-QA-003 | Filename collision | Import two different PDFs with the same filename | Both appear as separate books and open correctly | Pending | Uses `bookId` folder isolation. |
-| 19-QA-004 | Recents order | Open Book A → Book B → Book A | Library recents order reflects last opened | Pending | Requires `last_opened_at`. |
+| 19-QA-001 | Duplicate import message | Import PDF A → import PDF B → import PDF A again | Shows “Already imported…” and does not add a new record | Pass | Hash-based dedupe works even when another import happens in between. |
+| 19-QA-002 | No duplicate records | Import the same PDF twice | Library contains only one record for that PDF | Pass | Verified on app + web. |
+| 19-QA-003 | Filename collision | Import two different PDFs with the same filename | Both appear as separate books and open correctly | Pass (unit) | Covered by `ai-readwrite-flow/src/features/library/services/libraryImport.test.ts`. Still recommended to spot-check in UI. |
+| 19-QA-004 | Recents order | Open Book A → Book B → Book A | Library recents order reflects last opened | Pass (unit) | Covered by `ai-readwrite-flow/src/stores/libraryStore.test.ts`. Still recommended to spot-check in UI. |
+| 19-QA-005 | Move to Trash + restore | In Library, select a book → Move to Trash → confirm → switch to Trash view → Restore | Book disappears from Library, appears in Trash; Restore brings it back and it opens | Pass | Restore works; Trash title rendering fixed. |
+| 19-QA-006 | Delete app copy (destructive) | In Trash view, select a book → Delete app copy → confirm twice | Book disappears from Trash; its app-data folder is removed (desktop only) | Pass | Desktop-only; destructive path gated by double confirmation. |
+| 19-QA-007 | List scroll + select without opening | With >=4 books, select Book A (for actions) without changing the preview; list should scroll after ~3 items; click Open to switch preview | Panel does not grow indefinitely; preview stays stable until Open; actions apply to selected item | Pending | New UX improvement requested after Task 19.6. |

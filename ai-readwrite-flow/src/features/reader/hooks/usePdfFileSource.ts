@@ -50,6 +50,11 @@ export const usePdfFileSource = (activeItem?: ActiveItem): Result => {
       return
     }
 
+    if (normalizedPath?.startsWith('data:') || normalizedPath?.startsWith('blob:')) {
+      setFileSrc(resolvedFile)
+      return
+    }
+
     if (!normalizedPath) {
       setFileSrc(resolvedFile)
       return

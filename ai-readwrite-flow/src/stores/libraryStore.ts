@@ -1,147 +1,62 @@
-import { invoke } from '@tauri-apps/api/core'
 import { create } from 'zustand'
 import {
-  findBookByHash,
   loadBooks,
-  persistBook,
-  type BookRecord,
+  loadDeletedBooks,
+  removeBook,
+  restoreBook,
   type LastReadPosition,
+  softDeleteBook,
+  updateLastOpenedAt,
   updateLastReadPosition,
 } from '../lib/db'
 import { isTauri } from '../lib/isTauri'
-
-export type LibraryItem = BookRecord & { url?: string }
+import {
+  type ImportSummary,
+  type LibraryItem,
+  importFilesTauri,
+  importFilesWeb,
+} from '../features/library/services/libraryImport'
 
 type LibraryState = {
   items: LibraryItem[]
+  trashItems: LibraryItem[]
   activeId?: string
-  importFiles: (files: File[]) => Promise<void>
+  importFiles: (files: File[]) => Promise<ImportSummary>
   hydrate: () => Promise<void>
   setActive: (id: string) => void
   setLastPosition: (bookId: string, position: LastReadPosition) => Promise<void>
+  removeFromLibrary: (bookId: string) => Promise<void>
+  restoreFromTrash: (bookId: string) => Promise<void>
+  deleteLocalFile: (bookId: string) => Promise<void>
 }
 
-type TauriImportResult = {
-  id: string
-  file_name: string
-  file_path: string
-  file_hash: string
-  file_size: number
-  mtime: number
-  format: string
-  added_at: number
+const mergeUniqueById = (next: LibraryItem[], existing: LibraryItem[]) => {
+  const filtered = existing.filter((item) => !next.some((n) => n.id === item.id))
+  return [...next, ...filtered]
 }
-
-const titleFromName = (name: string) => name.replace(/\.[^/.]+$/, '') || name
-
-const mapImportToRecord = (entry: TauriImportResult): BookRecord => ({
-  id: entry.id,
-  title: titleFromName(entry.file_name),
-  filePath: entry.file_path,
-  format: entry.format,
-  fileHash: entry.file_hash,
-  fileSize: entry.file_size,
-  mtime: entry.mtime,
-  addedAt: entry.added_at,
-  processedForSearch: false,
-})
 
 const useLibraryStore = create<LibraryState>((set, get) => ({
   items: [],
+  trashItems: [],
   activeId: undefined,
   importFiles: async (files) => {
-    if (!files.length) return
-    if (!isTauri()) {
-      const now = Date.now()
-      const toDataUrl = async (file: File) => {
-        const buffer = await file.arrayBuffer()
-        const bytes = new Uint8Array(buffer)
-        let binary = ''
-        const chunk = 0x8000
-        for (let i = 0; i < bytes.length; i += chunk) {
-          binary += String.fromCharCode(...bytes.subarray(i, i + chunk))
-        }
-        return `data:application/pdf;base64,${btoa(binary)}`
-      }
-      const fallbacks: LibraryItem[] = []
-      for (const file of files) {
-        const dataUrl = await toDataUrl(file)
-        const id = crypto.randomUUID ? crypto.randomUUID() : `${now}-${Math.random()}`
-        const record: LibraryItem = {
-          id,
-          title: titleFromName(file.name),
-          filePath: dataUrl,
-          format: 'pdf',
-          fileSize: file.size,
-          addedAt: now,
-          url: dataUrl,
-        }
-        fallbacks.push(record)
-        void persistBook(record)
-      }
-      set((state) => ({
-        items: [...fallbacks, ...state.items],
-        activeId: fallbacks[0]?.id ?? state.activeId,
-      }))
-      return
-    }
-
+    if (!files.length) return { imported: 0, deduped: 0 }
     const paths = files
       .map((file) => (file as unknown as { path?: string })?.path)
       .filter((p): p is string => Boolean(p))
-    let results: TauriImportResult[] = []
-
-    if (paths.length) {
-      results = await invoke<TauriImportResult[]>('copy_to_library', { paths })
-    } else {
-      const toBase64 = async (file: File) => {
-        const buffer = await file.arrayBuffer()
-        const bytes = new Uint8Array(buffer)
-        let binary = ''
-        const chunk = 0x8000
-        for (let i = 0; i < bytes.length; i += chunk) {
-          binary += String.fromCharCode(...bytes.subarray(i, i + chunk))
-        }
-        return btoa(binary)
-      }
-      const payload = await Promise.all(
-        files.map(async (file) => ({
-          name: file.name,
-          data_base64: await toBase64(file),
-        })),
-      )
-      results = await invoke<TauriImportResult[]>('copy_files_payload', { files: payload })
-    }
-
-    const deduped: LibraryItem[] = []
-
-    for (const entry of results) {
-      const record = mapImportToRecord(entry)
-      const existing = record.fileHash ? await findBookByHash(record.fileHash) : undefined
-      if (existing) {
-        deduped.push(existing)
-        // If duplicated, best-effort cleanup of the extra copy.
-        if (existing.filePath !== record.filePath) {
-          void invoke('remove_path', { path: record.filePath })
-        }
-        continue
-      }
-      await persistBook(record)
-      deduped.push(record)
-    }
-
-    set((state) => {
-      const filtered = state.items.filter(
-        (item) => !deduped.some((next) => next.id === item.id),
-      )
-      return {
-        items: [...deduped, ...filtered],
-        activeId: deduped[0]?.id ?? state.activeId,
-      }
-    })
+    const filesWithoutPath = files.filter((file) => !(file as unknown as { path?: string })?.path)
+    const result = isTauri()
+      ? await importFilesTauri(filesWithoutPath, paths)
+      : await importFilesWeb(files)
+    set((state) => ({
+      items: mergeUniqueById(result.imported, state.items),
+      activeId: result.imported[0]?.id ?? state.activeId,
+    }))
+    return result.summary
   },
   hydrate: async () => {
     const books = await loadBooks()
+    const deleted = await loadDeletedBooks()
     const withUrls: LibraryItem[] = books.map((book) => {
       if (book.filePath.startsWith('data:')) return { ...book, url: book.filePath }
       if (!isTauri()) {
@@ -150,15 +65,33 @@ const useLibraryStore = create<LibraryState>((set, get) => ({
       }
       return { ...book, url: undefined }
     })
+    const deletedWithUrls: LibraryItem[] = deleted.map((book) => {
+      if (book.filePath.startsWith('data:')) return { ...book, url: book.filePath }
+      if (!isTauri()) return { ...book, url: undefined }
+      return { ...book, url: undefined }
+    })
     const visible = isTauri()
       ? withUrls
       : withUrls.filter((book) => typeof book.url === 'string' && book.url.startsWith('data:'))
+    const visibleTrash = isTauri()
+      ? deletedWithUrls
+      : deletedWithUrls.filter((book) => typeof book.url === 'string' && book.url.startsWith('data:'))
     set((state) => ({
       items: visible,
+      trashItems: visibleTrash,
       activeId: state.activeId ?? visible[0]?.id,
     }))
   },
-  setActive: (id) => set({ activeId: id }),
+  setActive: (id) => {
+    set({ activeId: id })
+    const openedAt = Date.now()
+    set((state) => ({
+      items: [...state.items]
+        .map((book) => (book.id === id ? { ...book, lastOpenedAt: openedAt } : book))
+        .sort((a, b) => (b.lastOpenedAt ?? b.addedAt) - (a.lastOpenedAt ?? a.addedAt)),
+    }))
+    void updateLastOpenedAt(id, openedAt)
+  },
   setLastPosition: async (bookId, position) => {
     if (!bookId) return
     const { items } = get()
@@ -168,6 +101,42 @@ const useLibraryStore = create<LibraryState>((set, get) => ({
       ),
     })
     await updateLastReadPosition(bookId, position)
+  },
+  removeFromLibrary: async (bookId) => {
+    if (!bookId) return
+    set((state) => ({
+      items: state.items.filter((book) => book.id !== bookId),
+      trashItems: [...state.trashItems, ...(state.items.filter((b) => b.id === bookId) ?? [])],
+      activeId:
+        state.activeId === bookId ? state.items.find((b) => b.id !== bookId)?.id : state.activeId,
+    }))
+    await softDeleteBook(bookId, Date.now())
+  },
+  restoreFromTrash: async (bookId) => {
+    if (!bookId) return
+    const restored = get().trashItems.find((b) => b.id === bookId)
+    set((state) => ({
+      trashItems: state.trashItems.filter((book) => book.id !== bookId),
+      items: restored ? mergeUniqueById([restored], state.items) : state.items,
+      activeId: state.activeId ?? restored?.id,
+    }))
+    await restoreBook(bookId)
+  },
+  deleteLocalFile: async (bookId) => {
+    if (!bookId) return
+    const item = get().items.find((b) => b.id === bookId) ?? get().trashItems.find((b) => b.id === bookId)
+    if (!item) return
+    const parentDir = item.filePath.replace(/[\\/][^\\/]+$/, '')
+    set((state) => ({
+      items: state.items.filter((b) => b.id !== bookId),
+      trashItems: state.trashItems.filter((b) => b.id !== bookId),
+      activeId: state.activeId === bookId ? state.items.find((b) => b.id !== bookId)?.id : state.activeId,
+    }))
+    await removeBook(bookId)
+    if (isTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core')
+      void invoke('remove_path', { path: parentDir })
+    }
   },
 }))
 

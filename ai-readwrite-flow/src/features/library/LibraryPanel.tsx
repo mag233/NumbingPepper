@@ -1,32 +1,61 @@
-import { useRef, useState } from 'react'
-import { BookOpen, FolderDown, LibraryBig } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { FolderDown, LibraryBig, Trash2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useLibraryStore from '../../stores/libraryStore'
 import { isTauri } from '../../lib/isTauri'
-
+import LibraryBookList from './components/LibraryBookList'
+import LibrarySelectionPanel, { type PendingDelete } from './components/LibrarySelectionPanel'
 type Props = {
   compact?: boolean
   onOpen?: () => void
 }
 
-const formatSize = (size: number) => {
-  if (size > 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`
-  if (size > 1024) return `${(size / 1024).toFixed(1)} KB`
-  return `${size} B`
-}
-
 const LibraryPanel = ({ compact = false, onOpen }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { items, activeId, importFiles, setActive } = useLibraryStore()
+  const { items, trashItems, activeId, importFiles, setActive, removeFromLibrary, restoreFromTrash, deleteLocalFile } =
+    useLibraryStore()
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null)
+  const [view, setView] = useState<'library' | 'trash'>('library')
+  const [trashSelectedId, setTrashSelectedId] = useState<string | null>(null)
+  const [librarySelectedId, setLibrarySelectedId] = useState<string | null>(activeId ?? null)
   const isDesktop = isTauri()
+  const list = view === 'trash' ? trashItems : items
+  const resolvedLibrarySelectedId = useMemo(() => {
+    if (view !== 'library') return null
+    const candidate = librarySelectedId ?? activeId ?? items[0]?.id ?? null
+    if (!candidate) return null
+    if (items.some((item) => item.id === candidate)) return candidate
+    return activeId ?? items[0]?.id ?? null
+  }, [view, librarySelectedId, activeId, items])
+
+  const selectedId = view === 'trash' ? trashSelectedId : resolvedLibrarySelectedId
+  const activeItem = useMemo(() => list.find((i) => i.id === selectedId), [list, selectedId])
+  const openItemTitle = useMemo(() => items.find((i) => i.id === activeId)?.title, [items, activeId])
+
+  useEffect(() => {
+    if (!pendingDelete) return
+    const handle = window.setTimeout(() => setPendingDelete(null), 2500)
+    return () => window.clearTimeout(handle)
+  }, [pendingDelete])
+
+  const switchView = (next: 'library' | 'trash') => {
+    setPendingDelete(null)
+    setInfo(null)
+    setTrashSelectedId(null)
+    setView(next)
+  }
 
   const handleFiles = (fileList?: FileList | null) => {
     if (!fileList?.length) return
     const files = Array.from(fileList)
     void importFiles(files)
-      .then(() => {
+      .then((summary) => {
         setError(null)
+        setInfo(summary.deduped ? `Already imported: reused ${summary.deduped} existing book(s).` : null)
+        setView('library')
+        setLibrarySelectedId(null)
         onOpen?.()
       })
       .catch((err) => {
@@ -38,21 +67,66 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
               ? 'Import failed. Check app data permissions.'
               : 'Import requires Tauri runtime; falling back to in-memory view.',
         )
+        setInfo(null)
         // Store handles non-Tauri fallback; nothing else needed here.
       })
   }
 
+  const runRemove = async (id: string) => {
+    await removeFromLibrary(id)
+    setPendingDelete(null)
+    setInfo('Moved to Trash.')
+  }
+
+  const runRestore = async (id: string) => {
+    await restoreFromTrash(id)
+    setTrashSelectedId(null)
+    setInfo('Restored to Library.')
+  }
+
+  const runDelete = async (id: string) => {
+    await deleteLocalFile(id)
+    setPendingDelete(null)
+    setInfo('Deleted app copy.')
+  }
+
+  const selectLibrary = (id: string) => {
+    setPendingDelete(null)
+    setLibrarySelectedId(id)
+  }
+
+  const selectTrash = (id: string) => {
+    setPendingDelete(null)
+    setTrashSelectedId(id)
+  }
+
+  const openFromLibrary = (id: string) => {
+    setPendingDelete(null)
+    setLibrarySelectedId(id)
+    setActive(id)
+    onOpen?.()
+  }
+
   return (
     <Card
-      title="Library"
+      title={view === 'trash' ? 'Trash' : 'Library'}
       action={
-        <button
-          onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-800/80 px-3 py-1 text-xs text-slate-200 hover:border-sky-400 hover:text-sky-200"
-        >
-          <FolderDown className="size-4" />
-          Import
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => switchView(view === 'library' ? 'trash' : 'library')}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-800/80 px-3 py-1 text-xs text-slate-200 hover:border-sky-400 hover:text-sky-200"
+          >
+            <Trash2 className="size-4" />
+            {view === 'library' ? `Trash (${trashItems.length})` : 'Back to Library'}
+          </button>
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-800/80 px-3 py-1 text-xs text-slate-200 hover:border-sky-400 hover:text-sky-200"
+          >
+            <FolderDown className="size-4" />
+            Add PDF...
+          </button>
+        </div>
       }
       className={compact ? 'p-3' : ''}
     >
@@ -77,6 +151,11 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
             {error}
           </div>
         )}
+        {info && (
+          <div className="rounded-lg border border-slate-700/70 bg-slate-900/70 p-2 text-xs text-slate-200">
+            {info}
+          </div>
+        )}
         {items.length === 0 && (
           <div className="flex items-center gap-3 text-sm text-slate-400">
             <LibraryBig className="size-5 text-slate-500" />
@@ -88,33 +167,44 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
             Files imported on desktop are hidden here; re-import in web to view.
           </p>
         )}
-        {items.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {items.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActive(item.id)
-                  onOpen?.()
-                }}
-                className={`flex flex-col items-start gap-1 rounded-xl border px-3 py-2 text-left transition hover:border-sky-500 hover:bg-slate-900 ${
-                  activeId === item.id
-                    ? 'border-sky-500/70 bg-slate-900'
-                    : 'border-slate-800/70 bg-slate-900/40'
-                }`}
-              >
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-                  <BookOpen className="size-4 text-sky-300" />
-                  <span className="line-clamp-1">{item.title}</span>
-                </div>
-                <p className="text-xs text-slate-400">{formatSize(item.fileSize)}</p>
-              </button>
-            ))}
-          </div>
+        {list.length > 0 && (
+          <LibraryBookList
+            items={list}
+            selectedId={selectedId}
+            activeId={activeId ?? null}
+            onSelect={(id) => {
+              if (view === 'trash') {
+                selectTrash(id)
+                return
+              }
+              selectLibrary(id)
+            }}
+            onOpen={(id) => {
+              if (view === 'trash') {
+                selectTrash(id)
+                return
+              }
+              openFromLibrary(id)
+            }}
+          />
+        )}
+        {activeItem && (
+          <LibrarySelectionPanel
+            view={view}
+            selectedItem={activeItem}
+            openItemTitle={openItemTitle}
+            canOpenSelected={view === 'library' && activeId !== activeItem.id}
+            isDesktop={isDesktop}
+            pendingDelete={pendingDelete}
+            setPendingDelete={setPendingDelete}
+            onOpenSelected={() => openFromLibrary(activeItem.id)}
+            onMoveToTrash={(id) => void runRemove(id)}
+            onRestore={(id) => void runRestore(id)}
+            onDeleteAppCopy={(id) => void runDelete(id)}
+          />
         )}
       </div>
     </Card>
   )
 }
-
 export default LibraryPanel

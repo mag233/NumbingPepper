@@ -14,7 +14,7 @@ State/store changes:
 Edge cases:
 Failure modes:
 Web vs Desktop differences (if any):
-Verifiable Criteria
+# Verifiable Criteria
 Unit tests (Vitest): what to test + files to add
 Manual acceptance steps (numbered):
 Expected observable results:

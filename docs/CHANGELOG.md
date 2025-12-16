@@ -18,3 +18,6 @@
 - Docs: expanded Writer requirements in `docs/PRD.md`, added `docs/writer-srs.md`, and added Task 18 breakdown in `docs/TASKS.md` (Writer deferred until Task 29 complete).
 - Reader/Chat: added per-panel error boundaries with a “Reload panel” recovery action (Task 29.1).
 - Reader: show PDF outline/TOC (if present) in the left nav for quick page jumps (Task 29.4).
+- Library: hash-based de-duplication on import (no extra copy), recent-open tracking, and safe deletion actions (remove vs delete local file) (Task 19).
+- Library: added Trash/Restore (soft delete) to avoid “removed but app copy still exists” confusion; destructive delete now labeled as deleting the app copy (Task 19.6).
+- Library: constrain library list height with scrolling; add selection-for-actions without switching the current preview (explicit Open to switch) (Task 19.7).

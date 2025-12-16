@@ -37,6 +37,10 @@
 
 ### Library Import & Hydration (P0)
 - Drag/drop or picker. Copy file to library root; write `books` row. On partial copy failure, clean folder and show inline error. Permissions prompts surfaced. Hydrate list on launch. Goal: quickly reopen recent readings; dedupe via hash.
+- Library management (P1+):
+  - Show and sort by **recently opened** (backed by `books.last_opened_at`).
+  - Safe cleanup: **Trash** (soft delete) + **Restore**; optional **Delete app copy** (desktop only, double confirm).
+  - Organization (P2/backlog): tags/collections for grouping and filtering PDFs (not Alpha-critical).
 
 ### Reader Core (P0)
 - Render PDF via react-pdf; page nav + continuous scroll toggle; wheel scoped. Restore `last_read_position`. Floating menu on selection: Summarize/Explain/Chat/Save Highlight. Selection bounding uses normalized page coords (0–1); store zoom when available to aid re-projection.
