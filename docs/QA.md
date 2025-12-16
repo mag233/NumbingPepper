@@ -30,12 +30,44 @@
 | 28-QA-004 | Fit page | In paged scroll, click Fit page | Page fits available viewport height; no highlight drift | Pass | Verified. |
 | 28-QA-005 | Copy selection | Select text in PDF → click Copy in floating menu | Clipboard contains selected text; button shows “Copied” briefly | Pass | Verified. |
 | 28-QA-006 | Copy newline cleanup | Select text spanning a wrapped line → Copy | Clipboard does not contain a hard line break mid-sentence | Pass | Verified. |
-| 28-QA-007 | Find-in-document | In ReaderNav, search for a unique word → Next/Prev | Jumps to pages with matches; highlights matches; “active” match stays stable | In Progress | Known issues observed previously: missing highlight on first jump; active highlight jumped. Fix shipped (active hit tracking + longer retry); re-test needed. |
+| 28-QA-007 | Find-in-document | In ReaderNav, search for a unique word → Next/Prev | Jumps to pages with matches; highlights matches; “active” match stays stable | Deferred | Non-blocker for now; remaining issues tracked under Task 28.4 backlog. |
 
 ## 2025-12-16 — Reader Find-in-document follow-ups (Task 28.4)
 
 | ID | Scenario | Steps | Expected | Result | Notes |
 | -- | -------- | ----- | -------- | ------ | ----- |
-| 28-QA-008 | Find should not scroll window | Search → Next/Prev several times | App header/top controls do not “disappear”; only the PDF viewport scrolls | Pending | Fix: stop using `scrollIntoView` (which can scroll the window); scroll the PDF container only. |
-| 28-QA-009 | Find highlight stability | On pages with multiple matches, Next/Prev repeatedly | “Active” (blue) highlight stays on the correct match; no drifting | Partial | Some pages still show minor misalignment on first match; needs further investigation (likely layout settling / font metrics). |
-| 28-QA-010 | Find intermittent missing highlight | Click Find, then Next/Prev across multiple pages | Hit page should render yellow highlight reliably without extra clicks | Partial | Still occasionally missing until another click; treat as non-blocker and keep tracking. |
+| 28-QA-008 | Find should not scroll window | Search → Next/Prev several times | App header/top controls do not disappear; only the PDF viewport scrolls | Pass | Fixed by scrolling the PDF container (not the window). |
+| 28-QA-009 | Find highlight stability | On pages with multiple matches, Next/Prev repeatedly | “Active” (blue) highlight stays on the correct match; no drifting | Partial | Some PDFs show minor misalignment on first match; treat as non-blocker for Alpha. |
+| 28-QA-010 | Find intermittent missing highlight | Click Find, then Next/Prev across multiple pages | Hit page renders yellow highlight reliably without extra clicks | Partial | Still occasionally missing until another click; track as non-blocker. |
+
+## 2025-12-16 — Chat History + Writer Drafts Persistence (Task 13)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 13-QA-001 | Chat persists after restart/refresh | Open a book → send 2 messages → refresh/restart | Messages still visible | Pass | Desktop uses SQLite; web uses localStorage fallback. |
+| 13-QA-002 | Chat is per book | Open Book A → send message → open Book B → switch back | Book B chat is separate; switching back restores A | Pass | Session id is `book:{bookId}`; no book uses `global`. |
+| 13-QA-003 | Draft persists after restart/refresh | Open Writer → type text → refresh/restart | Draft restored | Pass | Draft saves with debounce; switching books flushes pending save. |
+| 13-QA-004 | Draft is per book | Book A write “A” → Book B write “B” → switch back | Correct draft restored per book | Pending | Not re-tested yet. |
+
+## 2025-12-16 — Writer UX Gaps (Defer until Reader complete)
+
+| ID | Issue | Impact | Decision |
+| -- | ----- | ------ | -------- |
+| 18-QA-001 | Writer right-side chat follows PDF selection | Confusing coupling; Writer lacks independent workflow | Defer Writer UX until Reader milestones completed; keep draft persistence to prevent data loss. |
+| 18-QA-002 | Writer lacks core editing features (outline/entries, error controls, navigation) | Writer not usable beyond demo | Defer to post-Reader; track as Task 18 breakdown when resumed. |
+
+## 2025-12-16 — Reader/Chat Error Boundaries (Task 29.1)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 29-QA-001 | Panel crash recovery | Trigger a panel crash in DEV: set localStorage `arwf:crash=reader` (or `chat`), then reload; click “Reload panel”; clear the flag and reload again | Panel shows friendly error with “Reload panel”; clicking reload restores the panel; app shell remains usable | Pass | Use crash flag; module-level `throw` is not catchable by boundaries. |
+| 29-QA-002 | TOC/outline quick jump | Open a PDF known to have an outline (bookmarks) → check TOC list in left nav → click an item | Outline list renders; clicking jumps to target page; if in continuous mode, app switches to paged for stable jumps | Pass | Uses physical PDF pages; printed page labels may differ (tracked as Task 28.6). |
+
+## 2025-12-16 — Library duplicate detection + recents (Task 19)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 19-QA-001 | Duplicate import message | Import the same PDF twice (drag/drop or Import button) | Second import shows “Already imported” and selects existing book | Pending | Needs implementation (Task 19.2). |
+| 19-QA-002 | No duplicate records | Import the same PDF twice | Library contains only one record for that PDF | Pending | Hash-based identity (Task 19.1). |
+| 19-QA-003 | Filename collision | Import two different PDFs with the same filename | Both appear as separate books and open correctly | Pending | Uses `bookId` folder isolation. |
+| 19-QA-004 | Recents order | Open Book A → Book B → Book A | Library recents order reflects last opened | Pending | Requires `last_opened_at`. |

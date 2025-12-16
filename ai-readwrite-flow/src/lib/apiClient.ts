@@ -1,4 +1,5 @@
 import { defaultBaseUrl, defaultModel } from './constants'
+import { logEvent } from './logger'
 
 export type ConnectionResult = {
   ok: boolean
@@ -96,6 +97,11 @@ export const sendChatCompletion = async (
     })
 
     if (!response.ok) {
+      void logEvent('warn', 'Chat completion HTTP error', {
+        status: response.status,
+        baseUrl: safeBase,
+        model: model || defaultModel,
+      })
       return { ok: false, error: `Request failed with status ${response.status}` }
     }
 
@@ -110,6 +116,10 @@ export const sendChatCompletion = async (
         }
       : undefined
     if (!content) {
+      void logEvent('warn', 'Chat completion empty content', {
+        baseUrl: safeBase,
+        model: model || defaultModel,
+      })
       return {
         ok: false,
         error: 'Empty response from model',
@@ -119,6 +129,11 @@ export const sendChatCompletion = async (
     }
     return { ok: true, content, latencyMs: Math.round(performance.now() - started), usage }
   } catch (error) {
+    void logEvent('error', 'Chat completion exception', {
+      baseUrl: safeBase,
+      model: model || defaultModel,
+      message: error instanceof Error ? error.message : 'Unknown error',
+    })
     return {
       ok: false,
       error: error instanceof Error ? error.message : 'Unknown error',

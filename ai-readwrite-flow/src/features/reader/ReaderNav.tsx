@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { BookCopy, ChevronLeft, ChevronRight, List, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useReaderStore from '../../stores/readerStore'
@@ -24,12 +24,21 @@ const ReaderNav = ({
   onToggleNav,
   navVisible,
 }: Props) => {
-  const { currentPage, pageCount, setPage, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode } = useReaderStore()
+  const { currentPage, pageCount, setPage, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode, outline, outlineStatus, outlineError } =
+    useReaderStore()
   const [inputPage, setInputPage] = useState<number | ''>('')
+
+  const tocLines = useMemo(() => outline.slice(0, 400), [outline])
 
   const jumpTo = (page: number) => {
     setPage(page)
     onJump?.(page)
+  }
+
+  const jumpFromToc = (page: number | null) => {
+    if (!page) return
+    if (scrollMode === 'continuous') onToggleScrollMode()
+    jumpTo(page)
   }
 
   return (
@@ -166,10 +175,36 @@ const ReaderNav = ({
             <List className="size-4" />
             <span>TOC / Bookmarks</span>
           </div>
-          <div className="space-y-1 rounded-lg border border-slate-800/70 bg-slate-900/70 p-3 text-xs text-slate-300">
-            <p>TOC / bookmarks data pending integration. Page jump works today.</p>
-            <p className="text-slate-500">Future: parse PDF outlines to show chapters and jump.</p>
-          </div>
+          {outlineStatus === 'loading' ? (
+            <p className="rounded-lg border border-slate-800/70 bg-slate-900/70 p-2 text-xs text-slate-400">
+              Loading outline…
+            </p>
+          ) : outlineStatus === 'error' ? (
+            <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-100">
+              Outline error: {outlineError || 'unknown'}
+            </p>
+          ) : tocLines.length ? (
+            <div className="max-h-64 overflow-auto rounded-lg border border-slate-800/70 bg-slate-900/70 p-2 text-xs text-slate-200">
+              {tocLines.map((item, idx) => (
+                <button
+                  key={`${idx}-${item.title}`}
+                  onClick={() => jumpFromToc(item.page)}
+                  disabled={!item.page}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ paddingLeft: 8 + item.depth * 10 }}
+                  title={item.page ? `Go to page ${item.page}` : 'No page destination'}
+                >
+                  <span className="truncate">{item.title}</span>
+                  {item.page && <span className="ml-auto text-[11px] text-slate-400">{item.page}</span>}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1 rounded-lg border border-slate-800/70 bg-slate-900/70 p-3 text-xs text-slate-300">
+              <p>No outline available for this PDF.</p>
+              <p className="text-slate-500">Use Find or Page jump instead.</p>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <BookCopy className="size-4" />
             <span>Saved marks</span>

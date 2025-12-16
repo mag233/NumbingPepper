@@ -4,6 +4,9 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Command, Sparkles, Wand2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
+import useLibraryStore from '../../stores/libraryStore'
+import { useDraftPersistence } from './hooks/useDraftPersistence'
+import { draftIdForBook } from './services/draftIds'
 
 type Props = {
   onCommand: (prompt: string) => void
@@ -17,6 +20,8 @@ const commands = [
 
 const EditorPane = ({ onCommand }: Props) => {
   const [showMenu, setShowMenu] = useState(false)
+  const { activeId } = useLibraryStore()
+  const draftId = useMemo(() => draftIdForBook(activeId), [activeId])
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -27,6 +32,8 @@ const EditorPane = ({ onCommand }: Props) => {
     content:
       '<p>Welcome to AI-ReadWrite-Flow: write here, chat on the right, read on the left.</p><p>Try typing / to open commands.</p>',
   })
+
+  useDraftPersistence({ editor, draftId })
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {

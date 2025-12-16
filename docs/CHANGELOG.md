@@ -12,3 +12,9 @@
 - Reader: added Find-in-document (paged-mode search with next/prev and in-page highlighting).
 - Reader: Find highlight now tracks an “active” hit (blue outline) and retries longer until the text layer is measurable to reduce “no highlight on first jump”.
 - Known: multi-column PDFs can still produce gutter-bridging highlight rects; tracked as a non-blocker in `docs/QA.md`.
+- Chat: persist messages per book session (`session_id=book:{bookId}`) with localStorage fallback for web dev.
+- Writer: persist TipTap draft per book (`drafts.id=book:{bookId}`) with debounce + flush on book switch; localStorage fallback for web dev.
+- Logging: added local-only event logging with secret redaction and 7-day retention; stores to localStorage and to a `app_logs` SQLite table (created if missing).
+- Docs: expanded Writer requirements in `docs/PRD.md`, added `docs/writer-srs.md`, and added Task 18 breakdown in `docs/TASKS.md` (Writer deferred until Task 29 complete).
+- Reader/Chat: added per-panel error boundaries with a “Reload panel” recovery action (Task 29.1).
+- Reader: show PDF outline/TOC (if present) in the left nav for quick page jumps (Task 29.4).

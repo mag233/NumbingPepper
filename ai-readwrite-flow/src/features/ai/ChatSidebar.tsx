@@ -6,6 +6,8 @@ import useSettingsStore from '../../stores/settingsStore'
 import { sendChatCompletion, type ChatMessageInput } from '../../lib/apiClient'
 import useTemplateStore from '../../stores/templateStore'
 import useMetricsStore from '../../stores/metricsStore'
+import useLibraryStore from '../../stores/libraryStore'
+import { chatSessionIdForBook } from './services/chatSession'
 
 type Props = {
   quickPrompt?: { text: string; autoSend?: boolean }
@@ -16,10 +18,11 @@ const bubbleClass =
   'rounded-xl border px-3 py-2 text-sm shadow-sm border-slate-800/70 bg-slate-900/70'
 
 const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
-  const { messages, addMessage, reset } = useChatStore()
+  const { messages, addMessage, clear, hydrate } = useChatStore()
   const { model, apiKey, baseUrl } = useSettingsStore()
   const { templates } = useTemplateStore()
   const { setMetrics } = useMetricsStore()
+  const { activeId } = useLibraryStore()
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,6 +40,10 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
     [messages],
   )
 
+  useEffect(() => {
+    void hydrate(chatSessionIdForBook(activeId))
+  }, [activeId, hydrate])
+
   const doSend = useCallback(
     async (content: string) => {
       const userMessage = content.trim()
@@ -44,7 +51,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
       setError(null)
       setSending(true)
       setLastPrompt(userMessage)
-      addMessage({ id: '', role: 'user', content: userMessage, createdAt: Date.now() })
+      await addMessage({ id: '', role: 'user', content: userMessage, createdAt: Date.now(), referenceHighlightId: null })
 
       const response = await sendChatCompletion(baseUrl, apiKey, model, [
         ...historyMessages,
@@ -57,11 +64,12 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
           latencyMs: response.latencyMs,
           model,
         })
-        addMessage({
+        await addMessage({
           id: '',
           role: 'assistant',
           content: response.content,
           createdAt: Date.now(),
+          referenceHighlightId: null,
         })
       } else {
         setError(response.error ?? 'Request failed')
@@ -118,7 +126,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
       title="AI Chat"
       action={
         <button
-          onClick={reset}
+          onClick={() => void clear()}
           className="inline-flex items-center gap-2 rounded-lg border border-slate-800/70 px-2 py-1 text-xs text-slate-300 hover:border-red-400 hover:text-red-200"
         >
           <Trash2 className="size-4" />

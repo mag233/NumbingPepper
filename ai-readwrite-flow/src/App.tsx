@@ -6,6 +6,7 @@ import ReaderPane from './features/reader/ReaderPane'
 import ReaderNav from './features/reader/ReaderNav'
 import EditorPane from './features/editor/EditorPane'
 import ChatSidebar from './features/ai/ChatSidebar'
+import PanelErrorBoundary from './shared/components/PanelErrorBoundary'
 import { useMediaQuery } from './lib/hooks/useMediaQuery'
 import { appTitle } from './lib/constants'
 import useUiStore, { type TabKey } from './stores/uiStore'
@@ -108,13 +109,19 @@ const App = () => {
               {activeTab === 'library' && (
                 <LibraryPanel compact onOpen={() => setActiveTab('reader')} />
               )}
-              {activeTab === 'reader' && <ReaderPane onAction={handleReaderAction} />}
+              {activeTab === 'reader' && (
+                <PanelErrorBoundary title="Reader">
+                  <ReaderPane onAction={handleReaderAction} />
+                </PanelErrorBoundary>
+              )}
               {activeTab === 'editor' && <EditorPane onCommand={handleEditorCommand} />}
               {activeTab === 'chat' && (
-                <ChatSidebar
-                  quickPrompt={quickPrompt}
-                  onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
-                />
+                <PanelErrorBoundary title="Chat">
+                  <ChatSidebar
+                    quickPrompt={quickPrompt}
+                    onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
+                  />
+                </PanelErrorBoundary>
               )}
             </div>
           </section>
@@ -178,13 +185,17 @@ const App = () => {
                   </div>
                 )}
                 <div className="min-h-[86vh]">
-                  <ReaderPane onAction={handleReaderAction} />
+                  <PanelErrorBoundary title="Reader">
+                    <ReaderPane onAction={handleReaderAction} />
+                  </PanelErrorBoundary>
                 </div>
                 <div className="h-full">
-                  <ChatSidebar
-                    quickPrompt={quickPrompt}
-                    onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
-                  />
+                  <PanelErrorBoundary title="Chat">
+                    <ChatSidebar
+                      quickPrompt={quickPrompt}
+                      onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
+                    />
+                  </PanelErrorBoundary>
                 </div>
               </section>
             )}
@@ -207,10 +218,12 @@ const App = () => {
                   <EditorPane onCommand={handleEditorCommand} />
                 </div>
                 <div className="h-full">
-                  <ChatSidebar
-                    quickPrompt={quickPrompt}
-                    onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
-                  />
+                  <PanelErrorBoundary title="Chat">
+                    <ChatSidebar
+                      quickPrompt={quickPrompt}
+                      onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
+                    />
+                  </PanelErrorBoundary>
                 </div>
               </section>
             )}

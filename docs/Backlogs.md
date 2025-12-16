@@ -21,3 +21,6 @@
 
 ## Reader Highlight Geometry (known issues)
 - Multi-column PDFs: some selections spanning columns still produce highlight rects that bridge the gutter. Non-blocker; defer for later refinement.
+
+## Reader Find (known issues)
+- Some PDFs show minor misalignment for the first match on a page in Find-in-document (likely TextLayer transforms/kerning). Non-blocker; track via `docs/QA.md` (28-QA-009).

@@ -16,6 +16,7 @@
 1. Context-aware LLM function — automatically take context from the reader.
 2. Multi-round chat / chat history.
 3. Support for screenshots/figures/pictures.
+4. Chat UI improvements (e.g., markdown rendering, code blocks, auto size).
 
 ## 3. Data Model (SQLite + store/localStorage fallback)
 - **settings (P0):** api_key, base_url, model, theme (`light`|`ocean`|`forest`|`sand`), updated_at.
@@ -69,9 +70,26 @@
 - Chunk ~800–1200 chars, 10–15% overlap; top-K = 3–5. Prompt template: system preamble + user question + cited chunks (`[p{page}] excerpt`). If FTS empty/offline, fall back to normal chat and state no context. Not an Alpha blocker.
 
 ### Writer / Editor (P1)
-- TipTap with `/` commands; insert AI outputs; persist drafts to `drafts`.
-- `/import-highlights` modal uses current book highlights; `/chat-selection` sends selected editor text to AI (P2).
-- When text is selected in Writer, surface contextual actions (e.g., Simplify, Concise style, Fix grammar) alongside existing "/" commands.
+**Status note:** Writer UX is **deferred until Reader completion** (`docs/TASKS.md` Task 29). Alpha only guarantees local draft persistence to prevent data loss.
+
+**P0 (usable writing) — requirements**
+- Large editing area suitable for long-form writing.
+- Persist last edit locally; restore after refresh/restart/crash.
+- Saved entries (“documents”) with:
+  - Default title: first line is the title.
+  - In-editor tags: auto-detect `#tag` and `#tag/subtag`.
+
+**P1 (AI-assisted writing) — requirements**
+- Highlight/selection actions (examples): Simplify, Concise, Rewrite, Translate, Explain.
+- Right-side AI assistant chat for writing (shortcuts TBD).
+- Markdown support: at minimum import/export; full markdown-native editing optional (define fidelity expectations).
+
+**P2 (integrations & personalization) — requirements**
+- One-click export to Flomo (API), with clear failure handling.
+- Quick synonyms/translation via remote LLM first; local model optional later.
+- “Can my writing be learned?” requires an explicit privacy-first definition; default is **no server-side training**. Consider local-only “style profile” prompts or local retrieval over drafts.
+
+See `docs/writer-srs.md` for testable details and acceptance criteria.
 
 ### Gestures & Theme (P1)
 - Mobile gestures: swipe left delete in Library; swipe right back in Reader (low priority). Desktop equivalents may be keyboard shortcuts later; otherwise mobile-only.

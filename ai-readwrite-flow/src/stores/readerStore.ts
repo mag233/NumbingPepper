@@ -3,6 +3,8 @@ import { clampZoom, resetZoom, zoomIn, zoomOut } from '../features/reader/servic
 
 export type FitMode = 'manual' | 'fitWidth' | 'fitPage'
 export type FindActiveHit = { page: number; ordinal: number }
+export type OutlineEntry = { title: string; page: number | null; depth: number }
+export type OutlineStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 type ReaderState = {
   currentPage: number
@@ -25,6 +27,13 @@ type ReaderState = {
   bumpFindToken: () => void
   findActiveHit: FindActiveHit | null
   setFindActiveHit: (hit: FindActiveHit | null) => void
+  outline: OutlineEntry[]
+  outlineStatus: OutlineStatus
+  outlineError: string | null
+  setOutlineLoading: () => void
+  resetOutline: () => void
+  setOutline: (outline: OutlineEntry[]) => void
+  setOutlineError: (message: string) => void
 }
 
 const clamp = (value: number, min: number, max: number) =>
@@ -63,6 +72,13 @@ const useReaderStore = create<ReaderState>((set, get) => ({
   bumpFindToken: () => set((state) => ({ findToken: state.findToken + 1 })),
   findActiveHit: null,
   setFindActiveHit: (hit) => set({ findActiveHit: hit }),
+  outline: [],
+  outlineStatus: 'idle',
+  outlineError: null,
+  setOutlineLoading: () => set({ outlineStatus: 'loading', outlineError: null }),
+  resetOutline: () => set({ outline: [], outlineStatus: 'idle', outlineError: null }),
+  setOutline: (outline) => set({ outline, outlineStatus: 'ready', outlineError: null }),
+  setOutlineError: (message) => set({ outline: [], outlineStatus: 'error', outlineError: message }),
 }))
 
 export default useReaderStore

@@ -15,15 +15,15 @@
 | 7  | Done        | P1       | Wire real AI calls using saved API key/base/model (ChatSidebar).                                             | Medium — streaming deferred. |
 | 8  | Done        | P0       | Define and migrate SQLite schemas for settings/books/highlights/chats/drafts/book_text_index.               | High — schema impacts persistence and future RAG. |
 | 9  | Done        | P0       | Implement file copy into `$APP_DATA/library`, persist metadata (hash/size/mtime) in SQLite, hydrate on load.| Medium — OS paths, permissions, partial copy cleanup. |
-| 10 | In Progress | P1       | Add PDF pagination polish and accurate text selection bounding for floating menu.                            | Medium — PDF coords across zoom/scroll. |
+| 10 | Backlog     | P2       | Reader selection UX polish (reduce adjacent-line overlap; predictable menu bounds).                          | Low — non-blocker; some PDFs still overlap. |
 | 11 | Done        | P0       | Save/restore `last_read_position` (page/scroll/zoom/fit_mode) per book.                                      | Medium — continuous vs paged restore details. |
 | 12 | In Progress | P0       | Highlights: persistence + overlays + interactions (see breakdown below).                                     | Medium — geometry edge cases + perf. |
-| 13 | Todo        | P0       | Persist chat history and writer drafts; add basic telemetry/logging (local-only).                            | Medium — shapes must align with future linking. |
-| 14 | Todo        | P0       | Add error boundaries for Reader/Editor/Chat with reload affordance.                                          | Low |
+| 13 | In Progress | P0       | Persist chat history and writer drafts; add basic telemetry/logging (local-only).                            | Medium — 13-QA-001..003 pass; 13-QA-004 pending. Writer UX deferred until Reader complete. |
+| 14 | Done        | P0       | Add error boundaries for Reader/Chat (and Writer later) with reload affordance.                              | Low |
 | 15 | Todo        | P1       | Add smoke tests (stores/hooks/api client); mock Tauri plugins.                                               | Medium — harness setup needed. |
 | 16 | Todo        | P1       | Performance guards: virtualization for large lists (>100), main-thread budget on import.                    | Medium — needs profiling and thresholds. |
 | 17 | Todo        | P1       | Theme presets (light/ocean/forest/sand) with persistence and OS-pref initial detect.                        | Low |
-| 18 | Todo        | P1       | Writer/Editor: persist drafts; `/` commands for highlight import and chat-selection (buffered insert).      | Medium — editor integration with storage. |
+| 18 | Backlog     | P1       | Writer/Editor: entries+tags, AI actions, writer chat, markdown, Flomo export, personalization (deferred).     | High — scope creep; define spec+acceptance first (see Task 18 breakdown + `docs/writer-srs.md`). |
 | 19 | Todo        | P1       | Library duplicate detection via hash; graceful collision handling and recent-open tracking.                 | Low |
 | 20 | Backlog     | P1       | RAG “Ask the book” global search using FTS; prompt with citations; fallback when empty/offline.             | High — requires extraction/indexing. |
 | 21 | Backlog     | P1       | Extraction & indexing: Rust background text extraction, chunking, insert into FTS with progress.            | High — Rust worker and error reporting. |
@@ -34,13 +34,13 @@
 | 26 | Backlog     | P2       | EPUB support and multi-theme polish beyond presets.                                                          | Low |
 | 27 | Backlog     | P2       | Security hardening: base_url allowlist/SSRF guard, future key encryption task.                               | Medium — track for later. |
 | 28 | In Progress | P1       | Reader: PDF ergonomics (zoom/fit/copy/find/shortcuts) and UX polish.                                         | Medium — PDF.js constraints + UX expectations. |
+| 29 | Todo        | P0       | Reader hardening & completion (stability, TOC/outline, error boundaries, UX polish).                         | Medium — depends on PDF.js text layer behavior + resilient UI. |
 
 ## Progress Notes
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
-- Settings panel pre-fills defaults (`https://xiaoai.plus/v1`, `gpt-5-mini`); connectivity test implemented.
 - Library import persists to app data via Tauri (hash/mtime/size); web imports store data URLs to survive refresh; web hides desktop-only entries.
 - Reader saves/restores `last_read_position` (page + scroll + zoom + fit mode); app/web PDF loading paths are separated.
-- Highlights: persistence, click-to-select, popover edit/delete/recolor/note, and highlight-linked AI actions are implemented; remaining work is geometry edge cases + polish.
+- Task 13: chat history persists per book; draft persistence exists (Writer UX intentionally deferred).
 
 ## Task 12 Breakdown (Highlights) — Specification & Verifiable
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) | Tracking |
@@ -48,7 +48,7 @@
 | 12.1 | In Progress | P0 | Geometry correctness | Multi-rect; normalize to stable per-page host; clamp to bounds; prevent line overlap; choose merge vs alpha-cap rule | Pass for new highlights; verify layout toggles don’t shift persisted highlights | `docs/QA.md` |
 | 12.2 | Done | P0 | Interaction model | Click-to-select single highlight; popover: recolor/delete/note/actions | Popover works; delete confirm; Ask AI focuses input | `docs/QA.md` |
 | 12.3 | Done | P0 | Persistence & restore | Write-through create/edit/delete; hydrate by book; skip invalid rows | Restart/refresh restores; note persists | `docs/QA.md` |
-| 12.4 | In Progress | P1 | Performance | Progressive rendering in continuous scroll; avoid heavy work on scroll | Verify smooth scroll on >=50 pages; no long UI freezes | `docs/QA.md` |
+| 12.4 | Backlog | P2 | Performance | Progressive rendering in continuous scroll; avoid heavy work on scroll | Verify smooth scroll on >=50 pages; no long UI freezes | `docs/QA.md` |
 
 ## Task 10 Notes (Selection UX)
 - 10.1 (P1): Investigate and mitigate selection “ghosting/double shading” and adjacent-line overlap during drag-select (web + app). Track via `docs/QA.md` (10-QA-001).
@@ -59,12 +59,42 @@
 | 28.1 | Done | P1 | Zoom controls | Zoom in/out/reset; persist per book session | Buttons + shortcuts work; no overlay drift | `docs/QA.md` |
 | 28.2 | Done | P1 | Fit modes | Fit width / fit page toggles for paged mode | Fit page works (incl. from continuous via auto-switch) | `docs/QA.md` |
 | 28.3 | Done | P1 | Copy selection | Copy selected text with user feedback | “Copied” feedback; soft line breaks cleaned | `docs/QA.md` |
-| 28.4 | In Progress | P1 | Find-in-document | Search text with next/prev; highlight matches; stable active hit | Search count works; Next/Prev jump; active hit outlined and stable | `docs/QA.md` (28-QA-007, 28-QA-008, 28-QA-009, 28-QA-010) |
+| 28.4 | Backlog | P2 | Find-in-document | Search text with next/prev; highlight matches; stable active hit | Search count works; Next/Prev jump; active hit outlined and stable | `docs/QA.md` (28-QA-007..010) |
 | 28.5 | Backlog | P2 | Page tools | Rotate page / download export current PDF | Actions work and don’t break persistence |  |
+| 28.6 | Backlog | P2 | Page labels | If PDF provides printed page labels (PageLabels), show them alongside physical page numbers and allow jump by label | TOC + Jump to reflect labels without breaking anchors |  |
+
+## Task 29 Breakdown (Reader hardening & completion — before returning to Writer)
+| ID | Status | Priority | Item | Spec (summary) | Verify |
+| -- | ------ | -------- | ---- | -------------- | ------ |
+| 29.1 | Done | P0 | Error boundaries (Reader/Chat) | Failures show fallback + “Reload panel” without losing state | Pass (`docs/QA.md` 29-QA-001) |
+| 29.2 | In Progress | P0 | Highlights correctness | New highlights accurate; persistence stable across zoom/layout; popover UX solid | `docs/QA.md` (12-QA-001..009) |
+| 29.3 | Backlog | P2 | Find stability | No header jump; mostly stable highlight; known PDF outliers tracked | `docs/QA.md` (28-QA-007..010) |
+| 29.4 | Done | P1 | TOC/outline | Parse PDF outline (if present) for quick jump | Pass (`docs/QA.md` 29-QA-002) |
+| 29.5 | Backlog | P2 | Selection UX | Reduce adjacent-line selection overlap; menu feels consistent | `docs/QA.md` (10-QA-001) |
+
+## Task 18 Breakdown (Writer — deferred until Task 29 complete)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify |
+| -- | ------ | -------- | -------- | -------------- | ------ |
+| 18.1 | Backlog | P1 | Entry model + list | Add “entries” list; first line is title; switch between entries | Manual: create/switch/rename/delete |
+| 18.2 | Backlog | P1 | Tag extraction | Auto-detect `#tag` and `#tag/subtag` from editor content; filter by tag | Manual: type tags; list updates |
+| 18.3 | Backlog | P1 | Writer chat decoupling | Writer chat session independent from Reader book selection (opt-in link) | Manual: switch PDFs; writer chat unchanged |
+| 18.4 | Backlog | P1 | Selection AI actions | Highlight text → actions (Simplify/Concise/Rewrite/Translate/Explain) with safe insert/undo | Manual: action inserts; undo works |
+| 18.5 | Backlog | P1 | Markdown I/O | Import/export markdown for an entry; define fidelity limitations | Manual: round-trip a sample |
+| 18.6 | Backlog | P2 | Flomo export | Export entry/selection to Flomo with templates + retry + success/failure feedback | Manual: success + failure paths |
+| 18.7 | Backlog | P2 | Synonyms/translation | Quick lookup via remote LLM first; local model optional later | Manual: action returns output |
+| 18.8 | Backlog | P2 | Personalization | Define “learn my writing” as local-only style profile or local retrieval; default off | Manual: enable/disable and effect |
+
+## Task 19 Breakdown (Library duplicate detection + recent-open tracking)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) | Tracking |
+| -- | ------ | -------- | -------- | -------------- | --------------- | -------- |
+| 19.1 | Todo | P1 | Canonical file identity | Canonical identity uses `file_hash` (sha256) primary; store `file_size` + `mtime` for diagnostics; hash computed consistently across platforms | Import same PDF twice shows “Already imported” | `docs/QA.md` (19-QA-001) |
+| 19.2 | Todo | P1 | Duplicate detection on import | On import: compute hash → check existing by hash → if found, do not copy again; select existing book and show UX message | Import same file twice; library has one record | `docs/QA.md` (19-QA-002) |
+| 19.3 | Todo | P1 | Collision handling | Different PDFs with same filename must not overwrite; preserve original filename in metadata; book storage remains scoped by `bookId` | Import two PDFs with same filename; both open correctly | `docs/QA.md` (19-QA-003) |
+| 19.4 | Todo | P1 | Recent-open tracking | Add `last_opened_at` to `books`; update on open; allow sorting by recent | Open A→B→A; recent order reflects opens | `docs/QA.md` (19-QA-004) |
+| 19.5 | Todo | P1 | Tests | Unit tests cover hash match, “already imported” selection, and recent-open update; mock web/app differences | `npm test` passes | Vitest |
 
 ### Mapping / Tracking Rules (Highlights)
 - Authoritative spec: `docs/reader-highlighting-srs.md`
-- Implementation checkpoints: `docs/TASKS.md` tables above
 - Cross-cutting risks: `docs/RISKS.md`
 - Record notable behavior changes: `docs/CHANGELOG.md`
 

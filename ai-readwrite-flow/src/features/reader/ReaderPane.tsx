@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Document, pdfjs } from 'react-pdf'
-import { FileWarning, MousePointerClick } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useLibraryStore from '../../stores/libraryStore'
 import FloatingMenu from './FloatingMenu'
@@ -9,13 +8,16 @@ import useReaderStore from '../../stores/readerStore'
 import useHighlightStore from '../../stores/highlightStore'
 import PdfPageWithHighlights from './components/PdfPageWithHighlights'
 import { usePdfFileSource } from './hooks/usePdfFileSource'
-import HighlightPopover from './components/HighlightPopover'
+import SelectedHighlightPopover from './components/SelectedHighlightPopover'
+import ReaderEmptyState from './components/ReaderEmptyState'
 import { useHighlightPopover } from './hooks/useHighlightPopover'
 import { useSelectionMenu } from './hooks/useSelectionMenu'
 import { isNearBottom, nextRenderCount } from './services/continuousRender'
 import { useZoomShortcuts } from './hooks/useZoomShortcuts'
 import { getPageRenderSize } from './services/fitMode'
 import { useFindHighlight } from './hooks/useFindHighlight'
+import { extractPdfOutline } from './services/pdfOutline'
+import { usePagedWheelFlip } from './hooks/usePagedWheelFlip'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc
@@ -27,7 +29,7 @@ const ReaderPane = ({ onAction }: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [pageWidth, setPageWidth] = useState(720)
   const [docError, setDocError] = useState<{ src: string; message: string } | null>(null)
-  const { currentPage, setPage, setPageCount, pageCount, scrollMode, zoom, fitMode, setFitMode, setZoomValue, findQuery, findToken, findActiveHit } = useReaderStore()
+  const { currentPage, setPage, setPageCount, pageCount, scrollMode, zoom, fitMode, setFitMode, setZoomValue, findQuery, findToken, findActiveHit, resetOutline, setOutline, setOutlineLoading, setOutlineError } = useReaderStore()
   const { items, activeId, setLastPosition } = useLibraryStore()
   const { byBookId, hydrate: hydrateHighlights, add: addHighlight, remove: removeHighlight, setColor: setHighlightColor, setNote: setHighlightNote } = useHighlightStore()
   const [scrollY, setScrollY] = useState(0)
@@ -77,10 +79,12 @@ const ReaderPane = ({ onAction }: Props) => {
     }
   }, [activeItem?.id, activeItem?.lastReadPosition, setFitMode, setPage, setZoomValue])
   useEffect(() => {
+    resetOutline()
+  }, [activeItem?.id, resetOutline])
+  useEffect(() => {
     if (!activeId) return
     void hydrateHighlights(activeId)
   }, [activeId, hydrateHighlights])
-
   const highlights = useMemo(() => (activeId ? (byBookId[activeId] ?? []) : []), [activeId, byBookId])
   const highlightsByPage = useMemo(() => {
     const map: Record<number, typeof highlights> = {}
@@ -114,7 +118,6 @@ const ReaderPane = ({ onAction }: Props) => {
     setHighlightColor,
     setHighlightNote,
   })
-
   const hasPdf = Boolean(fileSrc) && !blockedReason
   const loadError = blockedReason ?? (docError?.src === String(fileSrc ?? '') ? docError.message : null)
 
@@ -126,26 +129,13 @@ const ReaderPane = ({ onAction }: Props) => {
     return () => window.clearTimeout(handle)
   }, [activeId, currentPage, fitMode, scrollY, setLastPosition, zoom])
 
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-    if (scrollMode === 'continuous') return
-    if (!pageCount) return
-
-    const onWheel = (event: WheelEvent) => {
-      const canScroll = el.scrollHeight > el.clientHeight + 2
-      if (canScroll) return
-      const direction = event.deltaY > 0 ? 1 : -1
-      const next = currentPage + direction
-      if (next < 1 || next > pageCount) return
-      event.preventDefault()
-      event.stopPropagation()
-      setPage(next)
-    }
-
-    el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel as EventListener)
-  }, [currentPage, pageCount, scrollMode, setPage])
+  usePagedWheelFlip({
+    scrollRef,
+    enabled: scrollMode === 'paged',
+    currentPage,
+    pageCount,
+    setPage,
+  })
 
   const effectiveFitMode = scrollMode === 'continuous' && fitMode === 'fitPage' ? 'fitWidth' : fitMode
   const availableHeight = scrollMode === 'paged' && effectiveFitMode === 'fitPage' ? scrollViewportHeight - 160 : undefined
@@ -158,22 +148,19 @@ const ReaderPane = ({ onAction }: Props) => {
         ref={containerRef}
         className="relative rounded-xl border border-slate-800/70 bg-slate-900/50"
       >
-        {selectedHighlight && highlightPopover && activeId && (
-          <HighlightPopover
-            key={selectedHighlight.id}
-            highlight={selectedHighlight}
-            x={highlightPopover.x}
-            y={highlightPopover.y}
-            onClose={closeHighlightPopover}
-            onAskAi={askAi}
-            onSummarize={summarize}
-            onExplain={explain}
-            onGenerateQuestions={generateQuestions}
-            onDelete={remove}
-            onSetColor={setColor}
-            onSetNote={setNote}
-          />
-        )}
+        <SelectedHighlightPopover
+          activeId={activeId}
+          selectedHighlight={selectedHighlight}
+          popover={highlightPopover}
+          onClose={closeHighlightPopover}
+          onAskAi={askAi}
+          onSummarize={summarize}
+          onExplain={explain}
+          onGenerateQuestions={generateQuestions}
+          onDelete={remove}
+          onSetColor={setColor}
+          onSetNote={setNote}
+        />
         {hasPdf ? (
           <div
             ref={scrollRef}
@@ -204,6 +191,12 @@ const ReaderPane = ({ onAction }: Props) => {
                 setPageCount(data.numPages)
                 setRenderedPages(Math.min(3, data.numPages))
                 setDocError(null)
+                setOutlineLoading()
+                void extractPdfOutline(data)
+                  .then((outline) => setOutline(outline))
+                  .catch((error: unknown) =>
+                    setOutlineError(error instanceof Error ? error.message : 'Outline extraction failed'),
+                  )
               }}
               loading={<p className="text-sm text-slate-400">Loading PDF...</p>}
               error={
@@ -244,21 +237,7 @@ const ReaderPane = ({ onAction }: Props) => {
             )}
           </div>
         ) : (
-          <div className="space-y-3 text-sm text-slate-300">
-            <div className="flex items-center gap-2 rounded-lg border border-slate-800/70 bg-slate-900/70 p-3">
-              <FileWarning className="size-5 text-amber-400" />
-              <p>No PDF selected. Import from Library and click a file to open.</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
-              <MousePointerClick className="size-4" />
-              Try selecting text below; the floating menu will appear.
-            </div>
-            <p className="rounded-lg bg-slate-900/70 p-3 leading-relaxed text-slate-200">
-              AI-ReadWrite-Flow keeps reading and writing side by side: Reader on the left, Writer and
-              Chat on the right. Select any text to invoke the floating menu, quickly summarize, explain,
-              or start a chat while keeping context in sync.
-            </p>
-          </div>
+          <ReaderEmptyState />
         )}
 
         {menu.visible && <FloatingMenu x={menu.x} y={menu.y} text={menu.text} copyStatus={menu.copyStatus} onAction={handleAction} />}
