@@ -47,10 +47,11 @@
 ## Task 12 Breakdown (Highlights) - Specification & Verifiable
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) | Tracking |
 | -- | ------ | -------- | -------- | -------------- | --------------- | -------- |
-| 12.1 | In Progress | P0 | Geometry correctness | Multi-rect; normalize to stable per-page host; clamp to bounds; prevent line overlap; choose merge vs alpha-cap rule | Pass for new highlights; verify layout toggles don't shift persisted highlights | `docs/QA.md` |
+| 12.1 | Done | P0 | Geometry correctness | Multi-rect; normalize to stable per-page host; clamp to bounds; prevent line overlap (vertical gap trimming); choose merge vs alpha-cap rule | Pass for new highlights; layout toggles don't shift persisted highlights | `docs/QA.md` |
 | 12.2 | Done | P0 | Interaction model | Click-to-select single highlight; popover: recolor/delete/note/actions | Popover works; delete confirm; Ask AI focuses input | `docs/QA.md` |
 | 12.3 | Done | P0 | Persistence & restore | Write-through create/edit/delete; hydrate by book; skip invalid rows | Restart/refresh restores; note persists | `docs/QA.md` |
 | 12.4 | Backlog | P2 | Performance | Progressive rendering in continuous scroll; avoid heavy work on scroll | Verify smooth scroll on >=50 pages; no long UI freezes | `docs/QA.md` |
+| 12.5 | Backlog | P2 | Multi-column gutter | Improve rect splitting so highlights spanning columns do not fill the gutter | Multi-column highlight should not bridge gutter | `docs/QA.md` (12-QA-009) |
 
 ## Task 10 Notes (Selection UX)
 - 10.1 (P1): Investigate and mitigate selection "ghosting/double shading" and adjacent-line overlap during drag-select (web + app). Track via `docs/QA.md` (10-QA-001).
@@ -63,28 +64,31 @@
 | 28.3 | Done | P1 | Copy selection | Copy selected text with user feedback | "Copied" feedback; soft line breaks cleaned | `docs/QA.md` |
 | 28.4 | Backlog | P2 | Find-in-document | Search text with next/prev; highlight matches; stable active hit | Search count works; Next/Prev jump; active hit outlined and stable | `docs/QA.md` (28-QA-007..010) |
 | 28.5 | Backlog | P2 | Page tools | Rotate page / download export current PDF | Actions work and don't break persistence |  |
-| 28.6 | Backlog | P2 | Page labels | If PDF provides printed page labels (PageLabels), show them alongside physical page numbers and allow jump by label | TOC + Jump reflect labels without breaking anchors |  |
+| 28.6 | Done | P2 | Page labels | If PDF provides printed page labels (PageLabels), show them alongside physical page numbers and allow jump by label | Pass (`docs/QA.md` 28-QA-011) |  |
 
 ## Task 29 Breakdown (Reader hardening & completion - before returning to Writer)
 | ID | Status | Priority | Item | Spec (summary) | Verify |
 | -- | ------ | -------- | ---- | -------------- | ------ |
 | 29.1 | Done | P0 | Error boundaries (Reader/Chat) | Failures show fallback + "Reload panel" without losing state | Pass (`docs/QA.md` 29-QA-001) |
-| 29.2 | In Progress | P0 | Highlights correctness | New highlights accurate; persistence stable across zoom/layout; popover UX solid | `docs/QA.md` (12-QA-001..009) |
+| 29.2 | Done | P0 | Highlights correctness | New highlights accurate; persistence stable across zoom/layout; popover UX solid | Pass with known non-blockers tracked (`docs/QA.md` 12-QA-009, 10-QA-001) |
 | 29.3 | Backlog | P2 | Find stability | No header jump; mostly stable highlight; known PDF outliers tracked | `docs/QA.md` (28-QA-007..010) |
 | 29.4 | Done | P1 | TOC/outline | Parse PDF outline (if present) for quick jump | Pass (`docs/QA.md` 29-QA-002) |
-| 29.5 | Backlog | P2 | Selection UX | Reduce adjacent-line selection overlap; menu feels consistent | `docs/QA.md` (10-QA-001) |
+| 29.5 | Done | P1 | Selection UX | Reduce adjacent-line selection overlap during drag-select via custom selection overlay; keep menu consistent | Pass (`docs/QA.md` 10-QA-002); remaining native overlap edge cases tracked under 10-QA-001 |
 
 ## Task 18 Breakdown (Writer - deferred until Task 29 complete)
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify |
 | -- | ------ | -------- | -------- | -------------- | ------ |
-| 18.1 | Backlog | P1 | Entry model + list | Add "entries" list; first line is title; switch between entries | Manual: create/switch/rename/delete |
-| 18.2 | Backlog | P1 | Tag extraction | Auto-detect `#tag` and `#tag/subtag` from editor content; filter by tag | Manual: type tags; list updates |
-| 18.3 | Backlog | P1 | Writer chat decoupling | Writer chat session independent from Reader book selection (opt-in link) | Manual: switch PDFs; writer chat unchanged |
-| 18.4 | Backlog | P1 | Selection AI actions | Highlight text -> actions (Simplify/Concise/Rewrite/Translate/Explain) with safe insert/undo | Manual: action inserts; undo works |
-| 18.5 | Backlog | P1 | Markdown I/O | Import/export markdown for an entry; define fidelity limitations | Manual: round-trip a sample |
-| 18.6 | Backlog | P2 | Flomo export | Export entry/selection to Flomo with templates + retry + success/failure feedback | Manual: success + failure paths |
-| 18.7 | Backlog | P2 | Synonyms/translation | Quick lookup via remote LLM first; local model optional later | Manual: action returns output |
-| 18.8 | Backlog | P2 | Personalization | Define "learn my writing" as local-only style profile or local retrieval; default off | Manual: enable/disable and effect |
+| 18.1 | Done | P1 | Writer data model | Define Projects/Content/Context/References/ContextMembership tables + TS contracts + Zod validation | Unit: `writingRepo.test.ts` + `writingTypes.ts` Zod parsing; Desktop: migrations v10–v14 added |
+| 18.2 | Done | P1 | Projects list + active project | Create/select/rename/delete project; persist active project; Writer no longer follows Reader book selection | Pass (`docs/QA.md` 18-QA-001) |
+| 18.3 | Done | P1 | Content + Context persistence | Persist Content and Context per project; Context supports Clear + Undo last append | Pass (`docs/QA.md` 18-QA-002, 18-QA-003) |
+| 18.4 | Done | P1 | References + context inclusion | Reference cards (manual + from Reader); include/exclude toggle + stable order; click ref jumps to Reader | Pass (`docs/QA.md` 18-QA-004) |
+| 18.5 | Done | P1 | Reader → Writer actions | From Reader selection menu or highlight popover: Add to context + Add to project(reference); if no active project prompt choose/create; no tab switch | Pass (`docs/QA.md` 18-QA-005); Partial (`docs/QA.md` 18-QA-006) |
+| 18.6 | Done | P1 | Writer assistant chat | Collapsible multi-round writer chat; per-project history; decoupled from Reader by default; prompt presets scaffold (TBD list) | Pass (`docs/QA.md` 18-QA-007, 18-QA-008) |
+| 18.7 | Done | P1 | Tags extraction | Extract `#tag` and `#tag/subtag` from Content; filter projects by tag (prefix matches for nested) | Pass (`docs/QA.md` 18-QA-009) |
+| 18.8 | Backlog | P2 | Markdown preview | Edit/Preview toggle (preview render is read-only) | Manual: preview renders; switching back keeps text unchanged |
+| 18.9 | Backlog | P2 | Flomo export | Export entry/selection to Flomo with templates + retry + success/failure feedback | Manual: success + failure paths |
+| 18.10 | Backlog | P2 | Synonyms/translation | Quick lookup via remote LLM first; local model optional later | Manual: action returns output |
+| 18.11 | Backlog | P2 | Personalization | Define "learn my writing" as local-only style profile or local retrieval; default off | Manual: enable/disable and effect |
 
 ## Task 19 Breakdown (Library duplicate detection + recent-open tracking)
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) | Tracking |
@@ -95,7 +99,7 @@
 | 19.4 | Done | P1 | Recent-open tracking | Add `last_opened_at` to `books`; update on open; allow sorting by recent | Open A -> B -> A; recent order reflects opens | `docs/QA.md` (19-QA-004) |
 | 19.5 | Done | P1 | Tests | Unit tests cover hash match, "already imported" selection, and recent-open update; mock web/app differences | `npm test` passes | Vitest |
 | 19.6 | Done | P1 | Trash + restore + delete app copy | Replace hard remove with Trash (soft delete) + Restore; destructive "Delete app copy" is desktop-only and double-confirm | Move to Trash, restore, delete app copy behave as expected | `docs/QA.md` (19-QA-005..006) |
-| 19.7 | In Progress | P2 | Library list ergonomics | Keep the list in a fixed-height scroll area (so the panel doesn't grow); add selection-for-actions without switching preview; add explicit Open to switch preview | Select A for actions while preview stays on B; list scrolls after ~3 items | `docs/QA.md` (19-QA-007) |
+| 19.7 | Done | P2 | Library list ergonomics | Keep the list in a fixed-height scroll area (so the panel doesn't grow); add selection-for-actions without switching preview; add explicit Open to switch preview | Pass (`docs/QA.md` 19-QA-007) |  |
 
 ### Mapping / Tracking Rules (Highlights)
 - Authoritative spec: `docs/reader-highlighting-srs.md`
@@ -107,4 +111,3 @@
 2. Multi-round chat / chat history.
 3. Support for screenshots/figures/pictures.
 4. Book-level RAG (optional, local-first) when ready.
-

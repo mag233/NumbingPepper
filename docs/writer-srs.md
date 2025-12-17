@@ -1,86 +1,133 @@
 # SRS — Writer (Editor) Requirements (Deferred until Reader complete)
 
 ## Status
-- **Phase:** Deferred (implement after Reader completion: `docs/TASKS.md` Task 29).
-- **Reason:** Current project priority is Reader stability and core reading workflows; Writer needs a cohesive workflow spec before building UI/features.
+- Phase: Deferred (implement after Reader completion: `docs/TASKS.md` Task 29).
+- Reason: Writer needs a cohesive workflow spec and stable data model before building UI.
 
-## Goals (P0 “usable writing”)
-1) **Large editing area**
+## Core UX Model (agreed)
+Writer is organized around a Writing Project, with a workspace split into:
+- Content (top): the main writing area (plain text; Markdown syntax allowed).
+- Context (bottom): an editable plain-text block used alongside Content for LLM interactions; supports external paste.
+- Action row (middle): actions TBD (e.g., AI transforms, export, templates).
+
+Left side navigation:
+- Top: project list.
+- Bottom: current project’s References list.
+
+Right side:
+- Optional collapsible multi-round LLM chat panel.
+
+## Definitions
+- Project: unit of work; everything in Writer is scoped to a project.
+- Reference: a “reference card” representing a snippet + metadata; can be sourced from Reader highlights or created manually.
+- Context membership: per reference include/exclude toggle controlling whether it participates in Context (and in what order).
+- Active project: the project currently receiving edits and Reader-to-Writer additions; must be visible in Writer.
+
+## Requirements by Priority
+### P0 — Usable Writing (no data loss)
+1) Large editing area
 - Comfortable long-form writing surface.
-- Reading should not “drive” Writer UX (Writer should be usable without selecting a PDF).
+- Writer must be usable without selecting a PDF (Reader must not drive Writer state).
 
-2) **Persist last edit**
-- Draft restores after refresh/restart/crash (local-first).
-- Debounced writes; flush on scope switch.
+2) Persist last edits (local-first)
+- Restore after refresh/restart/crash.
+- Debounced writes; flush on project switch and app close.
 
-3) **Entries + tags**
-- Writer maintains a list of saved entries (“documents”).
-- Default title rule: **first line is title** (editable).
-- In-editor tags: `#tag` and `#tag/subtag` are auto-extracted and indexed.
+3) Projects + titles
+- Maintain a list of projects.
+- Default title rule: first line of Content is the title (editable).
+- Optional: “pin title” to stop auto-title changes (P1 if needed).
 
-## Goals (P1 “AI-assisted writing”)
-4) **AI actions on highlighted text**
-- Select text in editor → actions (e.g., Simplify, Concise, Rewrite, Translate, Explain).
-- Actions must be non-destructive by default: preview/insert at cursor; undo works.
+4) Context block
+- Editable plain text, supports paste.
+- Supports Clear and Undo last append.
+- Shows context size (P0: char count + item count; P1: token estimate).
 
-5) **Right-side AI chat**
-- Writer has a dedicated assistant panel.
-- Chat context rules are explicit (Writer chat must not follow Reader book selection unless user opts in).
-- Shortcuts: TBD (define before implementation).
+5) References (cards)
+- Each project has a list of reference cards.
+- References can be created from Reader highlights and manually.
+- Clicking a reference navigates back to Reader location when the source is a PDF highlight.
 
-6) **Markdown support**
-- Minimum: import/export Markdown for entries.
-- Full markdown-native editing is optional; clarify fidelity expectations (TipTap ↔ Markdown round-trip can be lossy).
+6) Include/exclude references into Context
+- Each reference has a toggle (checkbox/switch) to include in Context.
+- Context composition is deterministic: stable ordering and predictable updates.
 
-## Goals (P2 “integrations & personalization”)
-7) **One-click export to Flomo**
-- Export selected text or whole entry via Flomo API.
-- Failure handling: retries and clear user feedback.
+### P1 — AI-Assisted Writing
+7) AI actions on highlighted text (Writer)
+- Select text in Content → actions (e.g., Simplify, Concise, Rewrite, Translate, Explain).
+- Non-destructive by default: preview/insert at cursor; undo works.
 
-8) **Synonyms & translation**
-- Quick actions for synonyms and translation.
-- Support remote LLM first; local model optional later due to packaging/perf.
+8) Writer chat (collapsible, multi-round)
+- Dedicated assistant panel that is independent from Reader’s per-book chat by default.
+- Optional opt-in: “link to current book” to include Reader book context (future).
+- Supports prompt presets/templates (define list + editing UX later).
 
-9) **Personalization (“can my writing be learned?”)**
-- Must be local-first and privacy-preserving by default.
-- Clarify definition before build:
-  - Option A: “style profile” prompts derived from your writing.
-  - Option B: local embeddings/RAG over your drafts for suggestions.
-  - Not in scope: server-side training on user content by default.
+9) Markdown preview toggle
+- Content accepts Markdown syntax.
+- P1 provides Edit/Preview toggle (preview is read-only render; editing remains plain text).
+
+### P2 — Integrations & Personalization
+10) Flomo export
+- Export selected text or whole project via Flomo API.
+- Clear user feedback; retries and error handling.
+
+11) Synonyms & translation
+- Quick actions for synonyms and translation (remote LLM first; local model optional later).
+
+12) Personalization (“can my writing be learned?”)
+- Must be local-first and privacy-preserving by default (explicit opt-in).
+- Acceptable definitions:
+  - Local “style profile” prompts derived from the user’s writing.
+  - Local retrieval over drafts (embeddings) for suggestions.
+- Not in scope by default: server-side training on user content.
 
 ## Data Contracts (proposed)
-### Draft/Entry storage
-Current DB table exists:
-- `drafts`: `id`, `editor_doc` (TipTap JSON), `updated_at`.
+These are storage-level contracts; UI can evolve without changing their meaning.
 
-To support “entries list” and tags, we will likely need an additional table (P1 for Writer):
-- `draft_entries`: `id`, `title`, `editor_doc`, `tags_json`, `created_at`, `updated_at`.
-- Or evolve `drafts` into “entries” with additional columns.
+### Tables (SQLite)
+- writing_projects: id, title, created_at, updated_at
+- writing_contents: project_id (PK/FK), content_text, updated_at
+- writing_contexts: project_id (PK/FK), context_text, updated_at
+- writing_references:
+  - id, project_id (FK), source_type ('highlight' | 'manual' | 'file')
+  - book_id?, page_index?, rects_json? (normalized)
+  - title?, author?, snippet_text, created_at
+- writing_context_membership:
+  - project_id, reference_id, included (0/1), order_index
 
-### Tag extraction
-- Parse editor text for tokens matching:
-  - `#tag`
-  - `#tag/subtag` (multiple segments)
-- Exclude tags inside code blocks if we support them (define later).
+### Types (conceptual)
+- WritingProject { id, title, createdAt, updatedAt }
+- WritingContent { projectId, contentText, updatedAt }
+- WritingContext { projectId, contextText, updatedAt }
+- WritingReference { id, projectId, sourceType, source?, title?, author?, snippetText, createdAt }
+- WritingContextMembership { projectId, referenceId, included, orderIndex }
 
-## Behaviors
-- Switching between entries does not lose unsaved content.
-- Title updates when first line changes (unless user “pins” a custom title).
-- Tag list updates live as user types.
-- AI actions:
-  - Use selected text (required) + surrounding context (optional, bounded).
-  - Result insertion: at cursor or replace selection (explicit user choice).
+### Tags (in-editor)
+- Parse Content text for tokens matching #tag or #tag/subtag and attach to the project (indexing/filtering can be P1).
+- Define exclusions later (e.g., code blocks) once Markdown preview exists.
+
+## Reader → Writer Integration (requirements)
+- From a Reader highlight:
+  - Add to writing context: append snippet to active project Context; show toast (“Added to Context”) with Undo.
+  - Add to [project name] (reference): create a reference card with book/page/rects/snippet; default included=false.
+- If there is no active project, prompt the user to choose/create a project. Never silently write into an unknown target.
+- Reader actions must not switch tabs or disrupt the current Reader flow.
 
 ## Acceptance Tests (Manual)
-1) Create entry, type content, restart → content restores.
-2) First line becomes title; editing first line updates title; pin title prevents auto-update.
-3) Add `#tag/subtag` in text → entry tag list shows it; search/filter by tag works.
-4) Select text → click “Simplify” → output appears without destroying original; undo restores.
-5) Writer chat does not change when switching PDFs (unless “link to reader” is enabled).
-6) Export to Flomo returns success toast; failure shows retry.
+1) Create project A → type Content → restart → Content restores.
+2) Content first line becomes title; edit first line → title updates.
+3) Paste text into Context; Clear removes; Undo restores last append.
+4) Add manual Reference → appears in list; toggle include → Context composition changes deterministically.
+5) In Reader, highlight → “Add to writing context” → Writer Context contains appended snippet (no tab switch).
+6) In Reader, highlight → “Add to [project] (reference)” → Reference card created and can jump back to the same location.
+7) Writer chat: switch PDFs in Reader → Writer chat does not change.
+8) Markdown preview toggle: switch to Preview → formatting renders; switch back → text unchanged.
+9) Flomo export: success shows confirmation; failure shows retry.
 
 ## Risks & Mitigations
-- **R-W-001 (Scope creep):** Writer features can balloon quickly → enforce phased delivery (P0/P1/P2).
-- **R-W-002 (Coupling):** Writer chat tied to Reader selection confuses users → define independent session rules.
-- **R-W-003 (Markdown fidelity):** TipTap ↔ Markdown may be lossy → set expectations; start with export/import.
-- **R-W-004 (Personalization privacy):** “learning” must be explicit and local-first → default off, clear settings, no training by default.
+- R-W-001 (Scope creep): enforce phased delivery (P0/P1/P2) and keep prompt/template work separate.
+- R-W-002 (Coupling): Writer state must not follow Reader selection; explicit active project and optional linking.
+- R-W-003 (Context bloat): show size, default included=false for new references, provide Clear/Undo and per-ref toggles.
+- R-W-004 (Locator drift): PDF locators can shift across render modes; use stable page_index + rects (already used by highlights).
+- R-W-005 (Markdown expectations): start with plain text + preview; avoid WYSIWYG promises until validated.
+- R-W-006 (Personalization privacy): default off; clear settings; no server-side training by default.

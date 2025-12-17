@@ -33,7 +33,7 @@ a {
 }
 
 .react-pdf__Page__textContent ::selection {
-  background: rgba(59, 130, 246, 0.35);
+  background: transparent;
 }
 
 /* Reader: find-in-document highlighting */

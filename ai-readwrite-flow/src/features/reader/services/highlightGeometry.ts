@@ -80,8 +80,28 @@ const splitByHorizontalGap = (rects: HighlightRect[], gapThreshold = 0.06): High
   return groups
 }
 
+const median = (values: number[]) => {
+  if (values.length === 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[Math.floor(sorted.length / 2)] ?? 0
+}
+
+const filterOutlierRects = (rects: HighlightRect[]) => {
+  if (rects.length < 3) return rects
+  const med = median(rects.map((r) => r.height))
+  const maxHeight = Math.min(0.16, med > 0 ? med * 4.5 : 0.08)
+  const maxArea = 0.42
+  return rects.filter((r) => {
+    const area = r.width * r.height
+    if (r.height > 0.24) return false
+    if (area > maxArea) return false
+    if (r.height > maxHeight && r.width > 0.82) return false
+    return true
+  })
+}
+
 export const mergeRectsByLine = (rects: HighlightRect[]) => {
-  const sorted = unionRects(rects)
+  const sorted = filterOutlierRects(unionRects(rects))
   const groups = groupByLine(sorted)
   const merged = groups.flatMap((g) => splitByHorizontalGap(g).map(mergeLineGroup))
   return merged.sort((a, b) => a.y - b.y)
@@ -97,9 +117,52 @@ export const shrinkForLegibility = (
   return clampRect({ ...rect, y, height })
 }
 
+const xOverlap = (a: HighlightRect, b: HighlightRect) =>
+  Math.max(0, Math.min(rectRight(a), rectRight(b)) - Math.max(a.x, b.x))
+
+const enforceVerticalGap = (rects: HighlightRect[], minGap = 0.002) => {
+  const next = rects.map((r) => ({ ...r }))
+  type Track = { lastIdx: number; last: HighlightRect }
+  const tracks: Track[] = []
+
+  const findTrack = (rect: HighlightRect): Track | undefined => {
+    let best: { track: Track; score: number } | undefined
+    for (const track of tracks) {
+      const overlap = xOverlap(track.last, rect)
+      if (overlap <= 0) continue
+      const ratio = overlap / Math.min(track.last.width || 1, rect.width || 1)
+      if (ratio < 0.25) continue
+      if (!best || ratio > best.score) best = { track, score: ratio }
+    }
+    return best?.track
+  }
+
+  for (let idx = 0; idx < next.length; idx += 1) {
+    const rect = next[idx]!
+    const track = findTrack(rect)
+    if (!track) {
+      tracks.push({ lastIdx: idx, last: rect })
+      continue
+    }
+
+    const prev = track.last
+    const maxBottom = rect.y - minGap
+    if (rectBottom(prev) > maxBottom && maxBottom > prev.y) {
+      const trimmed = clampRect({ ...prev, height: maxBottom - prev.y })
+      next[track.lastIdx] = trimmed
+      track.last = trimmed
+    }
+
+    track.lastIdx = idx
+    track.last = rect
+  }
+
+  return next.filter((r) => r.width > 0 && r.height > 0)
+}
+
 export const normalizeHighlightRects = (rects: HighlightRect[]) => {
   const merged = mergeRectsByLine(rects).map((r) => shrinkForLegibility(r))
-  return merged.filter((r) => r.width > 0 && r.height > 0)
+  return enforceVerticalGap(merged)
 }
 
 export const rectSetsOverlap = (a: HighlightRect[], b: HighlightRect[]) =>

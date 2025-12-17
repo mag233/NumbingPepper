@@ -5,12 +5,15 @@ export type FitMode = 'manual' | 'fitWidth' | 'fitPage'
 export type FindActiveHit = { page: number; ordinal: number }
 export type OutlineEntry = { title: string; page: number | null; depth: number }
 export type OutlineStatus = 'idle' | 'loading' | 'ready' | 'error'
+export type PageLabels = Array<string | null>
 
 type ReaderState = {
   currentPage: number
   pageCount: number
   setPage: (page: number) => void
   setPageCount: (count: number) => void
+  pageLabels: PageLabels | null
+  setPageLabels: (labels: PageLabels | null) => void
   scrollMode: 'paged' | 'continuous'
   toggleScrollMode: () => void
   zoom: number
@@ -42,6 +45,7 @@ const clamp = (value: number, min: number, max: number) =>
 const useReaderStore = create<ReaderState>((set, get) => ({
   currentPage: 1,
   pageCount: 1,
+  pageLabels: null,
   scrollMode: 'continuous',
   zoom: 1,
   fitMode: 'fitWidth',
@@ -56,6 +60,7 @@ const useReaderStore = create<ReaderState>((set, get) => ({
       currentPage: clamp(current, 1, Math.max(1, count)),
     })
   },
+  setPageLabels: (labels) => set({ pageLabels: labels }),
   toggleScrollMode: () =>
     set((state) => ({
       scrollMode: state.scrollMode === 'continuous' ? 'paged' : 'continuous',

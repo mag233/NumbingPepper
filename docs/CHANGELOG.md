@@ -5,6 +5,7 @@
 - Library store hydrates from DB, dedupes by hash, persists `last_read_position` (page+scroll+zoom+fit_mode), and uses base64/asset loading in app.
 - Web imports store data URLs to survive refresh; web hides desktop-only entries to avoid broken previews and guides users to re-import on web.
 - Reader: improved highlight geometry by merging selection fragments per line; merge overlapping highlights to avoid dark stacking.
+- Reader: reduce highlight adjacent-line overlap by enforcing a small vertical gap between normalized line rects (Task 12.1 / 29.2).
 - Highlights: click-to-select via hit-testing and a popover for recolor/delete/note/Ask AI/Summarize/Explain/Questions; added save feedback + delete confirm.
 - Reader: anchored highlight overlays to a page-sized host so layout toggles (Show/Hide navigation) don’t shift highlights.
 - Reader: continuous scroll uses progressive page rendering to reduce jank on large PDFs.
@@ -21,3 +22,17 @@
 - Library: hash-based de-duplication on import (no extra copy), recent-open tracking, and safe deletion actions (remove vs delete local file) (Task 19).
 - Library: added Trash/Restore (soft delete) to avoid “removed but app copy still exists” confusion; destructive delete now labeled as deleting the app copy (Task 19.6).
 - Library: constrain library list height with scrolling; add selection-for-actions without switching the current preview (explicit Open to switch) (Task 19.7).
+- Reader: drag-select now renders a custom selection overlay (per-line rects) and disables native PDF text-layer selection background to reduce adjacent-line overlap (Task 29.5).
+- Reader: selection overlay filters out bogus large rects when dragging into whitespace (prevents “giant blue blocks”) (Task 29.5).
+- Docs: expanded Writer workflow model (projects/content/context/references + Reader→Writer actions), added collapsible multi-round writer chat requirement, and refreshed Task 18 breakdown/backlogs.
+- Reader: added PageLabels support (show printed page labels when available; Jump supports labels and `pdf:` physical override) (Task 28.6).
+- Writer: added SQLite schema (migrations v10–v14) and TS/Zod contracts for projects/content/context/references (Task 18.1).
+- Writer: added projects store + picker UI; Writer drafts are now project-scoped (no longer tied to Reader book selection) (Task 18.2).
+- Writer: added project-scoped Context panel with persistence, Clear, and Undo last append (Task 18.3).
+- Writer: project switching now re-initializes TipTap per project draft id to prevent cross-project content bleed; new projects load empty content by default (Task 18.3).
+- Writer: added a per-project, collapsible Writer AI chat panel (separate from Reader book chat) with persistence and template dropdown scaffold (Task 18.6).
+- Writer: Writer AI chat now uses left/right aligned bubbles with distinct styling for user vs assistant; collapsed state shrinks the chat column instead of leaving a large blank area.
+- Writer: added hashtag extraction from project content (`#tag` / `#tag/subtag`) and a tag filter in the Projects picker (Task 18.7).
+- Writer: added per-project References with manual add, include/exclude toggle, and safe delete (Task 18.4).
+- Reader→Writer: persistent highlight popover adds “To Context” and “To Ref”, writing into the active project (with create-project prompt and undo for context append) (Task 18.5).
+- Reader→Writer: selection floating menu now also includes “To Context” / “To Ref” (no need to persist highlight first); floating menu clamps horizontally to avoid the chat sidebar covering it.

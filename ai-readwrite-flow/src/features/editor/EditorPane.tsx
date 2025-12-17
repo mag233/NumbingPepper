@@ -4,9 +4,15 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Command, Sparkles, Wand2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
-import useLibraryStore from '../../stores/libraryStore'
 import { useDraftPersistence } from './hooks/useDraftPersistence'
-import { draftIdForBook } from './services/draftIds'
+import { draftIdForProject } from './services/draftIds'
+import WriterProjectPicker from './components/WriterProjectPicker'
+import useWriterProjectStore from './stores/writerProjectStore'
+import useWriterContextStore from './stores/writerContextStore'
+import WriterContextPanel from './components/WriterContextPanel'
+import useWriterReferencesStore from './stores/writerReferencesStore'
+import WriterReferencesPanel from './components/WriterReferencesPanel'
+import { extractTagPathsFromTipTapDoc } from './services/writerTags'
 
 type Props = {
   onCommand: (prompt: string) => void
@@ -20,20 +26,55 @@ const commands = [
 
 const EditorPane = ({ onCommand }: Props) => {
   const [showMenu, setShowMenu] = useState(false)
-  const { activeId } = useLibraryStore()
-  const draftId = useMemo(() => draftIdForBook(activeId), [activeId])
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Start writing. Type "/" to open AI commands; responses will be inserted at the cursor.',
-      }),
-    ],
-    content:
-      '<p>Welcome to AI-ReadWrite-Flow: write here, chat on the right, read on the left.</p><p>Try typing / to open commands.</p>',
-  })
+  const { hydrate, activeProjectId } = useWriterProjectStore()
+  const setProjectTags = useWriterProjectStore((s) => s.setProjectTags)
+  const hydrateContext = useWriterContextStore((s) => s.hydrate)
+  const flushContext = useWriterContextStore((s) => s.flush)
+  const hydrateReferences = useWriterReferencesStore((s) => s.hydrate)
+  useEffect(() => {
+    void hydrate()
+  }, [hydrate])
+  useEffect(() => {
+    void hydrateContext(activeProjectId)
+    void hydrateReferences(activeProjectId)
+    return () => {
+      void flushContext()
+    }
+  }, [activeProjectId, flushContext, hydrateContext, hydrateReferences])
+  const draftId = useMemo(() => draftIdForProject(activeProjectId), [activeProjectId])
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit,
+        Placeholder.configure({
+          placeholder: 'Start writing. Type "/" to open AI commands; responses will be inserted at the cursor.',
+        }),
+      ],
+      content: '<p></p>',
+    },
+    [draftId],
+  )
 
   useDraftPersistence({ editor, draftId })
+
+  useEffect(() => {
+    if (!editor) return
+    if (!activeProjectId) return
+    const timerRef = { current: 0 as number | null }
+    const schedule = () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current)
+      timerRef.current = window.setTimeout(() => {
+        const tags = extractTagPathsFromTipTapDoc(editor.getJSON())
+        setProjectTags(activeProjectId, tags)
+      }, 400)
+    }
+    editor.on('update', schedule)
+    schedule()
+    return () => {
+      editor.off('update', schedule)
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current)
+    }
+  }, [activeProjectId, editor, setProjectTags])
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -69,9 +110,12 @@ const EditorPane = ({ onCommand }: Props) => {
     <Card
       title="Writer / TipTap"
       action={
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <Command className="size-4" />
-          Type "/" to open commands
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+          <WriterProjectPicker />
+          <span className="inline-flex items-center gap-2">
+            <Command className="size-4" />
+            Type "/" to open commands
+          </span>
         </div>
       }
     >
@@ -86,6 +130,8 @@ const EditorPane = ({ onCommand }: Props) => {
             {slashCommands}
           </div>
         )}
+        <WriterContextPanel />
+        <WriterReferencesPanel />
       </div>
     </Card>
   )

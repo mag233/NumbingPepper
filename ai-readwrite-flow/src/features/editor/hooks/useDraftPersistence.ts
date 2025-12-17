@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Editor } from '@tiptap/react'
 import { loadDraft, saveDraft } from '../services/draftRepo'
+import type { JSONContent } from '@tiptap/core'
 
 type Args = {
   editor: Editor | null
@@ -8,24 +9,22 @@ type Args = {
 }
 
 const DEBOUNCE_MS = 500
+const EMPTY_DOC: JSONContent = { type: 'doc', content: [{ type: 'paragraph' }] }
 
 export const useDraftPersistence = ({ editor, draftId }: Args) => {
   const timerRef = useRef<number | null>(null)
-  const loadingRef = useRef(false)
+  const loadSeqRef = useRef(0)
 
   useEffect(() => {
     if (!editor) return
     if (!draftId) return
-    if (loadingRef.current) return
-
-    loadingRef.current = true
+    loadSeqRef.current += 1
+    const seq = loadSeqRef.current
     void (async () => {
       const draft = await loadDraft(draftId)
-      if (!draft) return
-      editor.commands.setContent(draft.editorDoc, { emitUpdate: false })
-    })().finally(() => {
-      loadingRef.current = false
-    })
+      if (seq !== loadSeqRef.current) return
+      editor.commands.setContent(draft?.editorDoc ?? EMPTY_DOC, { emitUpdate: false })
+    })()
   }, [draftId, editor])
 
   useEffect(() => {

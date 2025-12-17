@@ -3,6 +3,11 @@ import { normalizeHighlightRects } from './highlightGeometry'
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 
+export type SelectionOverlayInfo = {
+  page: number
+  rects: HighlightRect[]
+}
+
 const parsePageNumber = (node: Element | null): number | undefined => {
   if (!node) return undefined
   const raw = node.getAttribute('data-page-number')
@@ -14,11 +19,22 @@ const parsePageNumber = (node: Element | null): number | undefined => {
 const closestPageNode = (node: Node | null): Element | null => {
   if (!node) return null
   const element = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement
-  return element?.closest('.react-pdf__Page') ?? null
+  return element?.closest('[data-page-number]') ?? element?.closest('.react-pdf__Page') ?? null
 }
 
 const closestPageHost = (node: Element | null): Element | null =>
   node?.closest('[data-arwf-page-host]') ?? null
+
+type RectLike = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> & Partial<Pick<DOMRect, 'right' | 'bottom'>>
+
+const rectRight = (rect: RectLike) => (typeof rect.right === 'number' ? rect.right : rect.left + rect.width)
+const rectBottom = (rect: RectLike) => (typeof rect.bottom === 'number' ? rect.bottom : rect.top + rect.height)
+
+const intersectsHost = (rect: RectLike, host: DOMRect) =>
+  rectRight(rect) > host.left &&
+  rect.left < host.right &&
+  rectBottom(rect) > host.top &&
+  rect.top < host.bottom
 
 const normalizeRect = (rect: DOMRect, hostRect: DOMRect): HighlightRect => {
   const width = hostRect.width || 1
@@ -47,6 +63,7 @@ export const selectionToHighlight = (): SelectionInfo | undefined => {
 
   const rects = Array.from(range.getClientRects())
     .filter((r) => r.width > 0 && r.height > 0)
+    .filter((r) => intersectsHost(r, hostRect))
     .map((r) => normalizeRect(r, hostRect))
   if (!rects.length) return undefined
 

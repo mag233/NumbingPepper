@@ -16,20 +16,20 @@ import { isNearBottom, nextRenderCount } from './services/continuousRender'
 import { useZoomShortcuts } from './hooks/useZoomShortcuts'
 import { getPageRenderSize } from './services/fitMode'
 import { useFindHighlight } from './hooks/useFindHighlight'
-import { extractPdfOutline } from './services/pdfOutline'
 import { usePagedWheelFlip } from './hooks/usePagedWheelFlip'
+import { useSelectionOverlay } from './hooks/useSelectionOverlay'
+import { usePdfDocumentMeta } from './hooks/usePdfDocumentMeta'
+import { useWriterHighlightActions } from './hooks/useWriterHighlightActions'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc
-type Props = {
-  onAction: (action: 'summarize' | 'explain' | 'chat' | 'questions', text: string) => void
-}
+type Props = { onAction: (action: 'summarize' | 'explain' | 'chat' | 'questions', text: string) => void }
 const ReaderPane = ({ onAction }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [pageWidth, setPageWidth] = useState(720)
   const [docError, setDocError] = useState<{ src: string; message: string } | null>(null)
-  const { currentPage, setPage, setPageCount, pageCount, scrollMode, zoom, fitMode, setFitMode, setZoomValue, findQuery, findToken, findActiveHit, resetOutline, setOutline, setOutlineLoading, setOutlineError } = useReaderStore()
+  const { currentPage, setPage, setPageCount, pageCount, scrollMode, zoom, fitMode, setFitMode, setZoomValue, findQuery, findToken, findActiveHit, resetOutline, setOutline, setOutlineLoading, setOutlineError, setPageLabels } = useReaderStore()
   const { items, activeId, setLastPosition } = useLibraryStore()
   const { byBookId, hydrate: hydrateHighlights, add: addHighlight, remove: removeHighlight, setColor: setHighlightColor, setNote: setHighlightNote } = useHighlightStore()
   const [scrollY, setScrollY] = useState(0)
@@ -38,27 +38,23 @@ const ReaderPane = ({ onAction }: Props) => {
   const [scrollViewportHeight, setScrollViewportHeight] = useState(0)
   const activeItem = useMemo(() => items.find((item) => item.id === activeId), [items, activeId])
   const { fileSrc, blockedReason } = usePdfFileSource(activeItem)
-  useEffect(() => {
-    const resize = () => {
-      const width = containerRef.current?.clientWidth
-      if (width) setPageWidth(Math.min(1400, width - 32))
-    }
-    resize()
-    window.addEventListener('resize', resize)
-    return () => window.removeEventListener('resize', resize)
-  }, [])
-  useEffect(() => { const el = scrollRef.current; if (!el) return; const ro = new ResizeObserver((e) => setScrollViewportHeight(e[0]?.contentRect.height ?? 0)); ro.observe(el); return () => ro.disconnect() }, [])
-  const { menu, handleAction } = useSelectionMenu({ container: containerRef, activeBookId: activeId, addHighlight, onAction })
-  useZoomShortcuts()
-  useFindHighlight({
-    query: findQuery,
-    page: currentPage,
-    token: findToken,
-    activeHitPage: findActiveHit?.page ?? null,
-    activeHitOrdinal: findActiveHit?.ordinal ?? null,
-    zoomKey: zoom,
-    fitModeKey: fitMode,
+  const selectionOverlay = useSelectionOverlay({ container: containerRef })
+  const { onLoadError, onLoadSuccess, onSourceError } = usePdfDocumentMeta({
+    fileSrc: fileSrc ?? null,
+    activeItem,
+    setPageCount,
+    setRenderedPages,
+    setDocError,
+    setOutlineLoading,
+    setOutline,
+    setOutlineError,
+    setPageLabels,
   })
+  useEffect(() => { const resize = () => { const width = containerRef.current?.clientWidth; if (width) setPageWidth(Math.min(1400, width - 32)) }; resize(); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize) }, [])
+  useEffect(() => { const el = scrollRef.current; if (!el) return; const ro = new ResizeObserver((e) => setScrollViewportHeight(e[0]?.contentRect.height ?? 0)); ro.observe(el); return () => ro.disconnect() }, [])
+  const { menu, handleAction, dismissMenu } = useSelectionMenu({ container: containerRef, activeBookId: activeId, addHighlight, onAction })
+  useZoomShortcuts()
+  useFindHighlight({ query: findQuery, page: currentPage, token: findToken, activeHitPage: findActiveHit?.page ?? null, activeHitOrdinal: findActiveHit?.ordinal ?? null, zoomKey: zoom, fitModeKey: fitMode })
   useEffect(() => {
     if (activeItem?.lastReadPosition?.page) {
       const pos = activeItem.lastReadPosition
@@ -96,6 +92,14 @@ const ReaderPane = ({ onAction }: Props) => {
     return map
   }, [highlights])
   const highlightsForPage = (page: number) => highlightsByPage[page] ?? []
+
+  const menuSelectionOverlay = useMemo(() => {
+    if (!menu.visible) return null
+    if (!menu.page || !menu.rects?.length) return null
+    return { page: menu.page, rects: menu.rects }
+  }, [menu.page, menu.rects, menu.visible])
+
+  const effectiveSelectionOverlay = selectionOverlay ?? menuSelectionOverlay
   const {
     popover: highlightPopover,
     selectedHighlight,
@@ -117,6 +121,10 @@ const ReaderPane = ({ onAction }: Props) => {
     removeHighlight,
     setHighlightColor,
     setHighlightNote,
+  })
+  const { Toast: WriterToast, addAsWritingReference, addToWritingContext } = useWriterHighlightActions({
+    highlight: selectedHighlight,
+    onClosePopover: closeHighlightPopover,
   })
   const hasPdf = Boolean(fileSrc) && !blockedReason
   const loadError = blockedReason ?? (docError?.src === String(fileSrc ?? '') ? docError.message : null)
@@ -148,6 +156,7 @@ const ReaderPane = ({ onAction }: Props) => {
         ref={containerRef}
         className="relative rounded-xl border border-slate-800/70 bg-slate-900/50"
       >
+        <WriterToast />
         <SelectedHighlightPopover
           activeId={activeId}
           selectedHighlight={selectedHighlight}
@@ -157,6 +166,8 @@ const ReaderPane = ({ onAction }: Props) => {
           onSummarize={summarize}
           onExplain={explain}
           onGenerateQuestions={generateQuestions}
+          onAddToWritingContext={() => void addToWritingContext()}
+          onAddAsWritingReference={() => void addAsWritingReference()}
           onDelete={remove}
           onSetColor={setColor}
           onSetNote={setNote}
@@ -179,25 +190,9 @@ const ReaderPane = ({ onAction }: Props) => {
             <Document
               key={String(fileSrc ?? '')}
               file={fileSrc}
-              onLoadError={(error) => {
-                console.error('[ReaderPane] onLoadError', { error, fileSrc, activeItem })
-                setDocError({ src: String(fileSrc ?? ''), message: `${error.message} | source: ${String(fileSrc ?? 'none')}` })
-              }}
-              onSourceError={(error) => {
-                console.error('[ReaderPane] onSourceError', { error, fileSrc, activeItem })
-                setDocError({ src: String(fileSrc ?? ''), message: `${error.message} | source: ${String(fileSrc ?? 'none')}` })
-              }}
-              onLoadSuccess={(data) => {
-                setPageCount(data.numPages)
-                setRenderedPages(Math.min(3, data.numPages))
-                setDocError(null)
-                setOutlineLoading()
-                void extractPdfOutline(data)
-                  .then((outline) => setOutline(outline))
-                  .catch((error: unknown) =>
-                    setOutlineError(error instanceof Error ? error.message : 'Outline extraction failed'),
-                  )
-              }}
+              onLoadError={onLoadError}
+              onSourceError={onSourceError}
+              onLoadSuccess={onLoadSuccess}
               loading={<p className="text-sm text-slate-400">Loading PDF...</p>}
               error={
                 <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-100">
@@ -212,6 +207,9 @@ const ReaderPane = ({ onAction }: Props) => {
                       pageNumber={idx + 1}
                       {...pageSizeProps}
                       highlights={highlightsForPage(idx + 1)}
+                      selectionRects={
+                        effectiveSelectionOverlay?.page === idx + 1 ? effectiveSelectionOverlay.rects : undefined
+                      }
                       onHitHighlight={handleHighlightHit}
                     />
                   </div>
@@ -221,6 +219,9 @@ const ReaderPane = ({ onAction }: Props) => {
                   pageNumber={currentPage}
                   {...pageSizeProps}
                   highlights={highlightsForPage(currentPage)}
+                  selectionRects={
+                    effectiveSelectionOverlay?.page === currentPage ? effectiveSelectionOverlay.rects : undefined
+                  }
                   onHitHighlight={handleHighlightHit}
                 />
               )}
@@ -240,7 +241,7 @@ const ReaderPane = ({ onAction }: Props) => {
           <ReaderEmptyState />
         )}
 
-        {menu.visible && <FloatingMenu x={menu.x} y={menu.y} text={menu.text} copyStatus={menu.copyStatus} onAction={handleAction} />}
+        {menu.visible && <FloatingMenu x={menu.x} y={menu.y} text={menu.text} page={menu.page} rects={menu.rects} activeBookId={activeId} copyStatus={menu.copyStatus} onAction={handleAction} onDismiss={dismissMenu} />}
       </div>
     </Card>
   )

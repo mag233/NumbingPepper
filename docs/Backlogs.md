@@ -28,3 +28,13 @@
 ## Library Management (planned)
 - Safe deletion: "Remove from library" (DB-only) and optional "Delete local file" (desktop-only, double confirm).
 - Organization: tags/collections for grouping and filtering PDFs (P2/backlog).
+
+## Writer (Deferred; record-only for now)
+- Writer workspace: Content (top) + Context (bottom) + action row; left nav projects + references; right collapsible multi-round chat.
+- References: cards with source metadata (bookId/page/rects/snippet); allow manual references; toggle include/exclude into Context; show Context size (items/chars; token estimate later).
+- Reader → Writer: from a highlight, actions “Add to writing context” and “Add to [project] (reference)”; if no active project, prompt to choose/create.
+- Prompt presets/templates for Writer chat/actions (list + editing UI TBD).
+- Markdown: allow Markdown syntax; add Edit/Preview toggle (P1).
+- Writer UX polish: after creating a new project, auto-open rename (focus title input) to avoid extra click (low risk).
+- Top bar: make it truly global or tab-aware; Writer tab should not display Reader/PDF selection state in the header (needs design).
+- Writer layout: move References panel into the left sidebar (below Projects) for better navigation and to avoid shrinking the main writing area.

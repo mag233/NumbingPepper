@@ -93,6 +93,19 @@
 - Quick synonyms/translation via remote LLM first; local model optional later.
 - “Can my writing be learned?” requires an explicit privacy-first definition; default is **no server-side training**. Consider local-only “style profile” prompts or local retrieval over drafts.
 
+**Writer workflow model (spec-only; implementation deferred)**
+- **Projects:** Writer work is organized into “Writing Projects”. A project is the unit of saved work and has its own content/context/references.
+- **Workspace layout:** top = **Content** (writing), bottom = **Context** (plain text, editable, supports paste), with an action row between (actions TBD).
+- **Left navigation:** top = project list; bottom = current project’s **References** list.
+- **References (minimum unit):** “reference cards” with `source` (bookId/page/rects), `title`, `snippet`, `createdAt`, optional `author`; can be created from Reader highlights or manually.
+- **Context membership:** each reference has an include/exclude toggle; context displays “items/size” and supports **Clear** and **Undo last append**.
+- **Active project is explicit:** Writer must show the currently active project; Reader “add to writing …” actions must not be allowed to silently write into an unknown project (prompt to choose/create if none).
+- **Reader → Writer actions:** from a Reader highlight:
+  - “Add to writing context” appends snippet to the active project context (toast + undo).
+  - “Add to [project name] (reference)” creates a reference card (default included = false to avoid context bloat).
+- **Writer assistant:** right-side **collapsible** multi-round chat, decoupled from Reader’s per-book chat unless user explicitly opts in; supports prompt presets/templates (TBD).
+- **Markdown:** content accepts Markdown syntax. P1 adds an **Edit/Preview** toggle (preview is read-only render; editing remains plain text).
+
 See `docs/writer-srs.md` for testable details and acceptance criteria.
 
 ### Gestures & Theme (P1)

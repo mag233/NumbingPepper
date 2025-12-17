@@ -6,6 +6,7 @@ import ReaderPane from './features/reader/ReaderPane'
 import ReaderNav from './features/reader/ReaderNav'
 import EditorPane from './features/editor/EditorPane'
 import ChatSidebar from './features/ai/ChatSidebar'
+import WriterChatSidebar from './features/editor/WriterChatSidebar'
 import PanelErrorBoundary from './shared/components/PanelErrorBoundary'
 import { useMediaQuery } from './lib/hooks/useMediaQuery'
 import { appTitle } from './lib/constants'
@@ -28,6 +29,14 @@ const App = () => {
   const [showTopBar, setShowTopBar] = useState(true)
   const [showNav, setShowNav] = useState(true)
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
+  const [writerChatCollapsed, setWriterChatCollapsed] = useState(false)
+  const writerCols = showNav
+    ? writerChatCollapsed
+      ? 'md:grid-cols-[240px_minmax(0,3.5fr)_64px]'
+      : 'md:grid-cols-[240px_minmax(0,3.5fr)_1.1fr]'
+    : writerChatCollapsed
+      ? 'md:grid-cols-[minmax(0,3.5fr)_64px]'
+      : 'md:grid-cols-[minmax(0,3.5fr)_1.1fr]'
 
   useEffect(() => {
     void hydrate()
@@ -201,11 +210,7 @@ const App = () => {
             )}
 
             {desktopView === 'writer' && (
-              <section
-                className={`grid items-start gap-4 ${
-                  showNav ? 'md:grid-cols-[240px_minmax(0,3.5fr)_1.1fr]' : 'md:grid-cols-[minmax(0,3.5fr)_1.1fr]'
-                }`}
-              >
+              <section className={`grid items-start gap-4 ${writerCols}`}>
                 {showNav && (
                   <div className="h-full">
                     <ReaderNav
@@ -219,9 +224,11 @@ const App = () => {
                 </div>
                 <div className="h-full">
                   <PanelErrorBoundary title="Chat">
-                    <ChatSidebar
+                    <WriterChatSidebar
                       quickPrompt={quickPrompt}
                       onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
+                      collapsed={writerChatCollapsed}
+                      onCollapsedChange={setWriterChatCollapsed}
                     />
                   </PanelErrorBoundary>
                 </div>

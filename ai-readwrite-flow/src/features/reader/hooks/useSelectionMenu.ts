@@ -101,5 +101,9 @@ export const useSelectionMenu = ({ container, activeBookId, addHighlight, onActi
     setMenu((state) => ({ ...state, visible: false }))
   }
 
-  return { menu, handleAction }
+  const dismissMenu = () => {
+    setMenu((state) => ({ ...state, visible: false }))
+  }
+
+  return { menu, handleAction, dismissMenu }
 }

@@ -3,6 +3,7 @@ import { BookCopy, ChevronLeft, ChevronRight, List, RefreshCw, ZoomIn, ZoomOut }
 import Card from '../../shared/components/Card'
 import useReaderStore from '../../stores/readerStore'
 import FindInDocument from './components/FindInDocument'
+import { formatPageForDisplay, resolveJumpTarget } from './services/pageLabels'
 
 type Props = {
   onJump?: (page: number) => void
@@ -24,11 +25,14 @@ const ReaderNav = ({
   onToggleNav,
   navVisible,
 }: Props) => {
-  const { currentPage, pageCount, setPage, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode, outline, outlineStatus, outlineError } =
+  const { currentPage, pageCount, pageLabels, setPage, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode, outline, outlineStatus, outlineError } =
     useReaderStore()
-  const [inputPage, setInputPage] = useState<number | ''>('')
+  const [inputPage, setInputPage] = useState('')
 
   const tocLines = useMemo(() => outline.slice(0, 400), [outline])
+  const currentLabel = useMemo(() => formatPageForDisplay(currentPage, pageLabels), [currentPage, pageLabels])
+  const currentLabelHint =
+    pageLabels?.[currentPage - 1] && currentLabel !== String(currentPage) ? `${currentLabel} (PDF ${currentPage})` : `${currentPage}`
 
   const jumpTo = (page: number) => {
     setPage(page)
@@ -86,7 +90,7 @@ const ReaderNav = ({
               <ChevronLeft className="size-4" />
             </button>
             <span className="rounded-lg border border-slate-800/70 bg-slate-900/70 px-3 py-1 text-sm">
-              {currentPage} / {pageCount}
+              {currentLabelHint} / {pageCount}
             </span>
             <button
               className={navButton}
@@ -98,25 +102,33 @@ const ReaderNav = ({
           </div>
           <div className="flex items-center gap-2">
             <input
-              type="number"
-              min={1}
-              max={pageCount}
+              type="text"
+              inputMode="text"
               value={inputPage}
-              onChange={(e) => setInputPage(e.target.value ? Number(e.target.value) : '')}
-              placeholder="Jump to"
+              onChange={(e) => setInputPage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                const page = resolveJumpTarget({ input: inputPage, pageCount, pageLabels })
+                if (page) jumpTo(page)
+              }}
+              placeholder={pageLabels ? 'Jump (label or page)' : 'Jump to page'}
               className="w-24 rounded-lg border border-slate-800/70 bg-slate-900/70 px-2 py-1 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
             />
             <button
               className={navButton}
               onClick={() => {
-                if (typeof inputPage === 'number' && inputPage >= 1 && inputPage <= pageCount) {
-                  jumpTo(inputPage)
-                }
+                const page = resolveJumpTarget({ input: inputPage, pageCount, pageLabels })
+                if (page) jumpTo(page)
               }}
             >
               Go
             </button>
           </div>
+          {pageLabels && (
+            <p className="text-xs text-slate-500">
+              Tip: type printed page labels (e.g., <span className="font-mono">iv</span> or <span className="font-mono">1</span>). Use <span className="font-mono">pdf:15</span> for physical pages.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -195,7 +207,11 @@ const ReaderNav = ({
                   title={item.page ? `Go to page ${item.page}` : 'No page destination'}
                 >
                   <span className="truncate">{item.title}</span>
-                  {item.page && <span className="ml-auto text-[11px] text-slate-400">{item.page}</span>}
+                  {item.page && (
+                    <span className="ml-auto text-[11px] text-slate-400">
+                      {formatPageForDisplay(item.page, pageLabels)}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

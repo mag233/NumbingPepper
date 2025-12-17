@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CircleHelp, MessageSquare, Paintbrush, Sparkles, StickyNote, Trash2 } from 'lucide-react'
+import { CircleHelp, FolderPlus, MessageSquare, Paintbrush, Sparkles, StickyNote, Trash2 } from 'lucide-react'
 import { type Highlight, type HighlightColor } from '../types'
 
 type Props = {
@@ -12,6 +12,8 @@ type Props = {
   onSummarize: () => void
   onExplain: () => void
   onGenerateQuestions: () => void
+  onAddToWritingContext: () => void
+  onAddAsWritingReference: () => void
   onSetColor: (color: HighlightColor) => Promise<void>
   onSetNote: (note: string | null) => Promise<void>
 }
@@ -32,6 +34,8 @@ const HighlightPopover = ({
   onSummarize,
   onExplain,
   onGenerateQuestions,
+  onAddToWritingContext,
+  onAddAsWritingReference,
   onSetColor,
   onSetNote,
 }: Props) => {
@@ -99,6 +103,22 @@ const HighlightPopover = ({
         >
           <CircleHelp className="size-3" />
           Questions
+        </button>
+        <button
+          onClick={onAddToWritingContext}
+          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-emerald-500 hover:text-emerald-100 whitespace-nowrap"
+          title="Append this highlight to the active writing project context"
+        >
+          <FolderPlus className="size-3" />
+          To Context
+        </button>
+        <button
+          onClick={onAddAsWritingReference}
+          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-emerald-500 hover:text-emerald-100 whitespace-nowrap"
+          title="Save as a reference in the active writing project"
+        >
+          <FolderPlus className="size-3" />
+          To Ref
         </button>
         <div className="col-span-2 mt-1">
           <button

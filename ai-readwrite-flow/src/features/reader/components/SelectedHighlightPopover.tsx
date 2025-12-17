@@ -10,6 +10,8 @@ type Props = {
   onSummarize: () => void
   onExplain: () => void
   onGenerateQuestions: () => void
+  onAddToWritingContext: () => void
+  onAddAsWritingReference: () => void
   onDelete: () => Promise<void>
   onSetColor: (color: HighlightColor) => Promise<void>
   onSetNote: (note: string | null) => Promise<void>
@@ -24,6 +26,8 @@ const SelectedHighlightPopover = ({
   onSummarize,
   onExplain,
   onGenerateQuestions,
+  onAddToWritingContext,
+  onAddAsWritingReference,
   onDelete,
   onSetColor,
   onSetNote,
@@ -43,6 +47,8 @@ const SelectedHighlightPopover = ({
       onSummarize={onSummarize}
       onExplain={onExplain}
       onGenerateQuestions={onGenerateQuestions}
+      onAddToWritingContext={onAddToWritingContext}
+      onAddAsWritingReference={onAddAsWritingReference}
       onDelete={onDelete}
       onSetColor={onSetColor}
       onSetNote={onSetNote}

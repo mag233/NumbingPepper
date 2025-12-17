@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { draftIdForBook } from './draftIds'
+import { draftIdForBook, draftIdForProject } from './draftIds'
 
 describe('draftIdForBook', () => {
   it('returns global when no book', () => {
@@ -13,3 +13,14 @@ describe('draftIdForBook', () => {
   })
 })
 
+describe('draftIdForProject', () => {
+  it('returns project global when no project', () => {
+    expect(draftIdForProject(undefined)).toBe('project:global')
+    expect(draftIdForProject(null)).toBe('project:global')
+    expect(draftIdForProject('')).toBe('project:global')
+  })
+
+  it('returns project-scoped id when project present', () => {
+    expect(draftIdForProject('p1')).toBe('project:p1')
+  })
+})
