@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Command, Sparkles, Wand2 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Command, Eye, Pencil, Sparkles, Wand2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import { useDraftPersistence } from './hooks/useDraftPersistence'
 import { draftIdForProject } from './services/draftIds'
@@ -26,6 +28,7 @@ const commands = [
 
 const EditorPane = ({ onCommand }: Props) => {
   const [showMenu, setShowMenu] = useState(false)
+  const [isPreview, setIsPreview] = useState(false)
   const { hydrate, activeProjectId } = useWriterProjectStore()
   const setProjectTags = useWriterProjectStore((s) => s.setProjectTags)
   const hydrateContext = useWriterContextStore((s) => s.hydrate)
@@ -45,7 +48,18 @@ const EditorPane = ({ onCommand }: Props) => {
   const editor = useEditor(
     {
       extensions: [
-        StarterKit,
+        StarterKit.configure({
+          heading: false,
+          bulletList: false,
+          orderedList: false,
+          listItem: false,
+          blockquote: false,
+          codeBlock: false,
+          bold: false,
+          italic: false,
+          strike: false,
+          code: false,
+        }),
         Placeholder.configure({
           placeholder: 'Start writing. Type "/" to open AI commands; responses will be inserted at the cursor.',
         }),
@@ -56,6 +70,10 @@ const EditorPane = ({ onCommand }: Props) => {
   )
 
   useDraftPersistence({ editor, draftId })
+
+  useEffect(() => {
+    editor?.setEditable(!isPreview)
+  }, [editor, isPreview])
 
   useEffect(() => {
     if (!editor) return
@@ -106,12 +124,26 @@ const EditorPane = ({ onCommand }: Props) => {
     [editor, onCommand],
   )
 
+  const previewSource =
+    isPreview && editor ? editor.getText({ blockSeparator: '\n' }).trimEnd() : ''
+
   return (
     <Card
       title="Writer / TipTap"
       action={
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
           <WriterProjectPicker />
+          <button
+            type="button"
+            onClick={() => {
+              setIsPreview((value) => !value)
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-800/70 bg-slate-900/60 px-3 py-2 text-slate-100 hover:border-sky-500"
+            aria-pressed={isPreview}
+          >
+            {isPreview ? <Pencil className="size-4" /> : <Eye className="size-4" />}
+            {isPreview ? 'Edit' : 'Preview'}
+          </button>
           <span className="inline-flex items-center gap-2">
             <Command className="size-4" />
             Type "/" to open commands
@@ -120,7 +152,24 @@ const EditorPane = ({ onCommand }: Props) => {
       }
     >
       <div className="relative rounded-xl border border-slate-800/70 bg-slate-900/60 p-3">
-        <EditorContent editor={editor} className="prose prose-invert max-w-none text-slate-100" />
+        {isPreview ? (
+          <div className="max-w-none rounded-lg border border-slate-800/70 bg-slate-950/40 p-4 text-slate-100 [&_a]:text-sky-300 [&_a]:underline-offset-2 hover:[&_a]:text-sky-200 [&_blockquote]:border-l-2 [&_blockquote]:border-slate-700 [&_blockquote]:pl-3 [&_blockquote]:text-slate-200 [&_code]:rounded [&_code]:bg-slate-900/70 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-slate-100 [&_h1]:mt-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mt-4 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_pre]:my-3 [&_pre]:overflow-auto [&_pre]:rounded-lg [&_pre]:bg-slate-900/70 [&_pre]:p-3 [&_ul]:list-disc [&_ul]:pl-6">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {previewSource || '*(empty)*'}
+            </ReactMarkdown>
+            {import.meta.env.DEV && (
+              <details className="mt-4 rounded-lg border border-slate-800/70 bg-slate-950/50 p-3 text-xs text-slate-200">
+                <summary className="cursor-pointer select-none text-slate-300">Debug: raw markdown</summary>
+                <pre className="mt-2 whitespace-pre-wrap break-words">{previewSource || '(empty)'}</pre>
+              </details>
+            )}
+          </div>
+        ) : (
+          <EditorContent
+            editor={editor}
+            className="prose prose-invert max-w-none text-slate-100 [&_.ProseMirror]:min-h-[55vh] [&_.ProseMirror]:outline-none"
+          />
+        )}
         {showMenu && (
           <div className="absolute left-3 top-3 z-10 grid gap-2 rounded-xl border border-slate-800/70 bg-slate-950/90 p-3 shadow-xl">
             <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">

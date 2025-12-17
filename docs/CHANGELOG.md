@@ -33,6 +33,7 @@
 - Writer: added a per-project, collapsible Writer AI chat panel (separate from Reader book chat) with persistence and template dropdown scaffold (Task 18.6).
 - Writer: Writer AI chat now uses left/right aligned bubbles with distinct styling for user vs assistant; collapsed state shrinks the chat column instead of leaving a large blank area.
 - Writer: added hashtag extraction from project content (`#tag` / `#tag/subtag`) and a tag filter in the Projects picker (Task 18.7).
+- Writer: added a Markdown Preview toggle (Edit/Preview) for Content; preview is read-only and preserves the source text (Task 18.8).
 - Writer: added per-project References with manual add, include/exclude toggle, and safe delete (Task 18.4).
 - Reader→Writer: persistent highlight popover adds “To Context” and “To Ref”, writing into the active project (with create-project prompt and undo for context append) (Task 18.5).
 - Reader→Writer: selection floating menu now also includes “To Context” / “To Ref” (no need to persist highlight first); floating menu clamps horizontally to avoid the chat sidebar covering it.

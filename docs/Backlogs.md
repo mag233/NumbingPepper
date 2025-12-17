@@ -38,3 +38,6 @@
 - Writer UX polish: after creating a new project, auto-open rename (focus title input) to avoid extra click (low risk).
 - Top bar: make it truly global or tab-aware; Writer tab should not display Reader/PDF selection state in the header (needs design).
 - Writer layout: move References panel into the left sidebar (below Projects) for better navigation and to avoid shrinking the main writing area.
+
+## Theme (backlog)
+- Add a “Soft Dark” preset (less black background + slightly off-white text) to reduce eye strain; keep current dark as an option.

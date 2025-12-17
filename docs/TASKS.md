@@ -22,8 +22,8 @@
 | 14 | Done        | P0       | Add error boundaries for Reader/Chat (and Writer later) with reload affordance.                              | Low |
 | 15 | Todo        | P1       | Add smoke tests (stores/hooks/api client); mock Tauri plugins.                                               | Medium - harness setup needed. |
 | 16 | Todo        | P1       | Performance guards: virtualization for large lists (>100), main-thread budget on import.                    | Medium - needs profiling and thresholds. |
-| 17 | Todo        | P1       | Theme presets (light/ocean/forest/sand) with persistence and OS-pref initial detect.                        | Low |
-| 18 | Backlog     | P1       | Writer/Editor: entries+tags, AI actions, writer chat, markdown, Flomo export, personalization (deferred).     | High - scope creep; define spec+acceptance first (see Task 18 breakdown + `docs/writer-srs.md`). |
+| 17 | Todo        | P1       | Theme presets (light/ocean/forest/sand) with persistence and OS-pref initial detect.                        | Low - add a “Soft Dark” preset to reduce eye strain. |
+| 18 | In Progress | P1       | Writer/Editor: entries+tags, AI actions, writer chat, markdown, Flomo export, personalization.              | High - scope creep; keep spec+acceptance gated (see Task 18 breakdown + `docs/writer-srs.md`). |
 | 19 | In Progress | P1       | Library duplicate detection via hash; graceful collision handling and recent-open tracking.                 | Medium - needs QA for delete/dedupe/recents + new ergonomics. |
 | 20 | Backlog     | P1       | RAG "Ask the book" global search using FTS; prompt with citations; fallback when empty/offline.             | High - requires extraction/indexing. |
 | 21 | Backlog     | P1       | Extraction & indexing: Rust background text extraction, chunking, insert into FTS with progress.            | High - Rust worker and error reporting. |
@@ -85,7 +85,7 @@
 | 18.5 | Done | P1 | Reader → Writer actions | From Reader selection menu or highlight popover: Add to context + Add to project(reference); if no active project prompt choose/create; no tab switch | Pass (`docs/QA.md` 18-QA-005); Partial (`docs/QA.md` 18-QA-006) |
 | 18.6 | Done | P1 | Writer assistant chat | Collapsible multi-round writer chat; per-project history; decoupled from Reader by default; prompt presets scaffold (TBD list) | Pass (`docs/QA.md` 18-QA-007, 18-QA-008) |
 | 18.7 | Done | P1 | Tags extraction | Extract `#tag` and `#tag/subtag` from Content; filter projects by tag (prefix matches for nested) | Pass (`docs/QA.md` 18-QA-009) |
-| 18.8 | Backlog | P2 | Markdown preview | Edit/Preview toggle (preview render is read-only) | Manual: preview renders; switching back keeps text unchanged |
+| 18.8 | In Progress | P2 | Markdown preview | Edit/Preview toggle (preview render is read-only) | Pending (`docs/QA.md` 18-QA-010) |
 | 18.9 | Backlog | P2 | Flomo export | Export entry/selection to Flomo with templates + retry + success/failure feedback | Manual: success + failure paths |
 | 18.10 | Backlog | P2 | Synonyms/translation | Quick lookup via remote LLM first; local model optional later | Manual: action returns output |
 | 18.11 | Backlog | P2 | Personalization | Define "learn my writing" as local-only style profile or local retrieval; default off | Manual: enable/disable and effect |
