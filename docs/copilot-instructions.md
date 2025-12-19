@@ -16,6 +16,12 @@ Senior Full Stack Systems Engineer specializing in Tauri v2 (Rust), React (TypeS
   - **Verifiable Criteria**: unit tests and/or manual acceptance steps with observable outcomes.
 - Do not start implementation until both are clear.
 
+### 1.2 Suggestion vs Implementation Gate (strict)
+- If the user asks for **suggestions / UX review / feasibility** (without explicitly saying `Proceed`), you must:
+  - Provide: problem framing, options/trade-offs, risks, and a proposed Spec→Verify breakdown.
+  - **Do not** edit files, run commands, or change code.
+- You may only begin coding/running commands after the user explicitly says **`Proceed`** (or `Proceed <Task ID>`).
+
 ### 2) Complexity Limits
 - Max 250 lines per file. If exceeded, split into sub-modules.
 - Max 30 lines per function. Use single responsibility.

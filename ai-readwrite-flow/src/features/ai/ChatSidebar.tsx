@@ -15,7 +15,7 @@ type Props = {
 }
 
 const bubbleClass =
-  'rounded-xl border px-3 py-2 text-sm shadow-sm border-slate-800/70 bg-slate-900/70'
+  'rounded-xl border px-3 py-2 text-sm shadow-sm border-chrome-border/70 bg-surface-raised/70'
 
 const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
   const { messages, addMessage, clear, hydrate } = useChatStore()
@@ -127,7 +127,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
       action={
         <button
           onClick={() => void clear()}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-800/70 px-2 py-1 text-xs text-slate-300 hover:border-red-400 hover:text-red-200"
+          className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-2 py-1 text-xs text-ink-muted hover:border-red-500 hover:text-red-300"
         >
           <Trash2 className="size-4" />
           Clear
@@ -136,26 +136,26 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
       className="flex h-full max-h-[calc(100vh-160px)] flex-col"
     >
       <div className="flex h-full flex-col gap-3">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <MessageCircle className="size-4 text-sky-300" />
-          <span>Selected text is auto-appended to keep answers contextual.</span>
+        <div className="flex items-center gap-2 text-xs text-ink-muted">
+          <MessageCircle className="size-4 text-accent" />
+          <span className="text-ink-muted">Selected text is auto-appended to keep answers contextual.</span>
         </div>
         <div
           ref={messagesRef}
-          className="grid flex-[2] gap-3 overflow-y-auto rounded-xl border border-slate-800/70 bg-slate-950/60 p-3"
+          className="grid flex-[2] gap-3 overflow-y-auto rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3"
         >
           {messages.length === 0 && (
-            <p className="text-sm text-slate-500">No messages yet. Select text in Reader or ask a question.</p>
+            <p className="text-sm text-ink-muted">No messages yet. Select text in Reader or ask a question.</p>
           )}
           {messages.map((msg) => (
             <div
               key={msg.id}
               className={`${bubbleClass} ${
-                msg.role === 'user' ? 'border-sky-500/60 bg-slate-900 text-slate-100' : ''
+                msg.role === 'user' ? 'border-accent/70 bg-accent/10' : ''
               }`}
             >
-              <p className="text-xs uppercase text-slate-500">{msg.role}</p>
-              <p className="whitespace-pre-wrap text-sm text-slate-100">{msg.content}</p>
+              <p className="text-xs uppercase text-ink-muted">{msg.role}</p>
+              <p className="whitespace-pre-wrap text-sm text-ink-primary">{msg.content}</p>
             </div>
           ))}
         </div>
@@ -185,7 +185,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
                   const tpl = templates.find((t) => t.id === id)
                   if (tpl) setDraft(tpl.prompt)
                 }}
-                className="w-full rounded-lg border border-slate-800/70 bg-slate-900/70 px-2 py-2 text-xs text-slate-100 focus:border-sky-500 focus:outline-none"
+                className="w-full rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-2 py-2 text-xs text-ink-primary focus:border-accent focus:outline-none"
               >
                 <option value="">Choose a template</option>
                 {templates.map((tpl) => (
@@ -202,12 +202,12 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
             onChange={(event) => setDraft(event.target.value)}
             rows={3}
             placeholder="Ask a question or paste selected text..."
-            className="w-full rounded-xl border border-slate-800/70 bg-slate-900/70 p-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+            className="w-full rounded-xl border border-chrome-border/70 bg-surface-raised/70 p-3 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none"
           />
           <button
             type="submit"
             disabled={sending}
-            className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             {sending ? 'Sending...' : 'Send'}

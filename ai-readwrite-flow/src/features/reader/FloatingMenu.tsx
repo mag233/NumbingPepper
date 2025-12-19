@@ -67,55 +67,55 @@ const FloatingMenu = ({ x, y, text, page, rects, activeBookId, copyStatus = 'idl
   return (
     <div
       ref={menuRef}
-      className="absolute z-20 flex max-w-full -translate-y-full items-center gap-2 overflow-x-auto rounded-full border border-slate-800/80 bg-slate-900/90 px-3 py-2 text-xs text-slate-100 shadow-lg"
+      className="absolute z-20 flex max-w-full -translate-y-full items-center gap-2 overflow-x-auto rounded-full border border-chrome-border/80 bg-surface-base/90 px-3 py-2 text-xs text-ink-primary shadow-lg"
       style={{ top: y, left }}
     >
-      <span className="line-clamp-1 max-w-[180px] text-slate-400">"{text}"</span>
+      <span className="line-clamp-1 max-w-[180px] text-ink-muted">"{text}"</span>
       <button
         onClick={() => onAction('copy')}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-sky-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-accent/20"
       >
         <Copy className="size-4" />
         {copyStatus === 'copied' ? 'Copied' : 'Copy'}
       </button>
       <button
         onClick={() => onAction('summarize')}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-sky-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-accent/20"
       >
         <Sparkles className="size-4" />
         Summarize
       </button>
       <button
         onClick={() => onAction('explain')}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-sky-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-accent/20"
       >
         <StickyNote className="size-4" />
         Explain
       </button>
       <button
         onClick={() => onAction('chat')}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-sky-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-accent/20"
       >
         <MessageSquare className="size-4" />
         Chat
       </button>
       <button
         onClick={() => onAction('questions')}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-sky-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-accent/20"
       >
         <CircleHelp className="size-4" />
         Questions
       </button>
       <button
         onClick={() => onAction('highlight')}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-amber-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-amber-500/20"
       >
         <Highlighter className="size-4" />
         Highlight
       </button>
       <button
         onClick={() => void addToWritingContext()}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-emerald-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-emerald-500/20"
         disabled={!tempHighlight}
         title="Append to active writing project context"
       >
@@ -124,7 +124,7 @@ const FloatingMenu = ({ x, y, text, page, rects, activeBookId, copyStatus = 'idl
       </button>
       <button
         onClick={() => void addAsWritingReference()}
-        className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 hover:bg-emerald-600 whitespace-nowrap"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-emerald-500/20"
         disabled={!tempHighlight}
         title="Save as writing project reference"
       >

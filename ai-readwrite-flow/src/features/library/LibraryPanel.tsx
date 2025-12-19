@@ -114,14 +114,14 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => switchView(view === 'library' ? 'trash' : 'library')}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-800/80 px-3 py-1 text-xs text-slate-200 hover:border-sky-400 hover:text-sky-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/80 px-3 py-1 text-xs text-ink-primary hover:border-accent"
           >
             <Trash2 className="size-4" />
             {view === 'library' ? `Trash (${trashItems.length})` : 'Back to Library'}
           </button>
           <button
             onClick={() => inputRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-800/80 px-3 py-1 text-xs text-slate-200 hover:border-sky-400 hover:text-sky-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/80 px-3 py-1 text-xs text-ink-primary hover:border-accent"
           >
             <FolderDown className="size-4" />
             Add PDF...
@@ -144,7 +144,7 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
           event.preventDefault()
           handleFiles(event.dataTransfer.files)
         }}
-        className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-800/80 bg-slate-900/40 p-4"
+        className="flex flex-col gap-3 rounded-xl border border-dashed border-chrome-border/80 bg-surface-raised/40 p-4"
       >
         {error && (
           <div className="rounded-lg border border-amber-500/70 bg-amber-500/10 p-2 text-xs text-amber-100">
@@ -152,13 +152,13 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
           </div>
         )}
         {info && (
-          <div className="rounded-lg border border-slate-700/70 bg-slate-900/70 p-2 text-xs text-slate-200">
+          <div className="rounded-lg border border-chrome-border/70 bg-surface-raised/60 p-2 text-xs text-ink-primary">
             {info}
           </div>
         )}
         {items.length === 0 && (
-          <div className="flex items-center gap-3 text-sm text-slate-400">
-            <LibraryBig className="size-5 text-slate-500" />
+          <div className="flex items-center gap-3 text-sm text-ink-muted">
+            <LibraryBig className="size-5 text-ink-muted" />
             <p>Drag & drop PDFs or click Import. Files will be stored to the app data library with metadata persisted.</p>
           </div>
         )}

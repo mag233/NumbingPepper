@@ -15,7 +15,7 @@ type Props = {
 }
 
 const navButton =
-  'inline-flex items-center justify-center rounded-lg border border-slate-800/60 bg-slate-900/60 px-2 py-1 text-xs text-slate-100 hover:border-sky-500 hover:text-sky-100'
+  'inline-flex items-center justify-center rounded-lg border border-chrome-border/60 bg-surface-raised/60 px-2 py-1 text-xs text-ink-primary hover:border-accent'
 
 const ReaderNav = ({
   onJump,
@@ -49,16 +49,16 @@ const ReaderNav = ({
     <Card
       title="Nav / Quick Jump"
       action={
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-ink-muted">
           <button
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-800/70 px-2 py-1 hover:border-sky-500 hover:text-sky-100"
+            className="inline-flex items-center gap-1 rounded-lg border border-chrome-border/70 px-2 py-1 hover:border-accent hover:text-ink-primary"
             onClick={onToggleScrollMode}
           >
             {scrollMode === 'continuous' ? 'Continuous scroll' : 'Paged scroll'}
           </button>
           {onToggleNav && (
             <button
-              className="rounded-lg border border-slate-800/70 px-2 py-1 text-slate-400 hover:border-sky-500 hover:text-sky-100"
+              className="rounded-lg border border-chrome-border/70 px-2 py-1 text-ink-muted hover:border-accent hover:text-ink-primary"
               onClick={onToggleNav}
               aria-label="Toggle navigation"
             >
@@ -67,14 +67,14 @@ const ReaderNav = ({
           )}
         </div>
       }
-      className="h-full"
+      className="flex h-full flex-col"
     >
-      <div className="space-y-4 text-sm text-slate-200">
+      <div className="min-h-0 flex-1 space-y-4 overflow-auto text-sm text-ink-primary">
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center justify-between text-xs text-ink-muted">
             <span>Page</span>
             <button
-              className="inline-flex items-center gap-1 text-slate-400 hover:text-sky-200"
+              className="inline-flex items-center gap-1 text-ink-muted hover:text-accent"
               onClick={onRefresh}
             >
               <RefreshCw className="size-3" />
@@ -89,7 +89,7 @@ const ReaderNav = ({
             >
               <ChevronLeft className="size-4" />
             </button>
-            <span className="rounded-lg border border-slate-800/70 bg-slate-900/70 px-3 py-1 text-sm">
+            <span className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-3 py-1 text-sm">
               {currentLabelHint} / {pageCount}
             </span>
             <button
@@ -112,7 +112,7 @@ const ReaderNav = ({
                 if (page) jumpTo(page)
               }}
               placeholder={pageLabels ? 'Jump (label or page)' : 'Jump to page'}
-              className="w-24 rounded-lg border border-slate-800/70 bg-slate-900/70 px-2 py-1 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
+              className="w-24 rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-2 py-1 text-sm text-ink-primary focus:border-accent focus:outline-none"
             />
             <button
               className={navButton}
@@ -125,17 +125,17 @@ const ReaderNav = ({
             </button>
           </div>
           {pageLabels && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ink-muted">
               Tip: type printed page labels (e.g., <span className="font-mono">iv</span> or <span className="font-mono">1</span>). Use <span className="font-mono">pdf:15</span> for physical pages.
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center justify-between text-xs text-ink-muted">
             <span>Zoom</span>
             <button
-              className="text-slate-400 hover:text-sky-200"
+              className="text-ink-muted hover:text-accent"
               onClick={resetZoom}
               aria-label="Reset zoom"
             >
@@ -146,7 +146,7 @@ const ReaderNav = ({
             <button className={navButton} onClick={zoomOut} aria-label="Zoom out">
               <ZoomOut className="size-4" />
             </button>
-            <span className="rounded-lg border border-slate-800/70 bg-slate-900/70 px-3 py-1 text-sm">
+            <span className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-3 py-1 text-sm">
               {Math.round(zoom * 100)}%
             </span>
             <button className={navButton} onClick={zoomIn} aria-label="Zoom in">
@@ -156,19 +156,19 @@ const ReaderNav = ({
           <p className="text-xs text-slate-500">Shortcut: Ctrl/⌘ + (+ / − / 0)</p>
           <div className="flex items-center gap-2">
             <button
-              className={`${navButton} ${fitMode === 'manual' ? 'border-sky-500 text-sky-100' : ''}`}
+              className={`${navButton} ${fitMode === 'manual' ? 'border-accent' : ''}`}
               onClick={() => setFitMode('manual')}
             >
               Manual
             </button>
             <button
-              className={`${navButton} ${fitMode === 'fitWidth' ? 'border-sky-500 text-sky-100' : ''}`}
+              className={`${navButton} ${fitMode === 'fitWidth' ? 'border-accent' : ''}`}
               onClick={() => setFitMode('fitWidth')}
             >
               Fit width
             </button>
             <button
-              className={`${navButton} ${fitMode === 'fitPage' ? 'border-sky-500 text-sky-100' : ''}`}
+              className={`${navButton} ${fitMode === 'fitPage' ? 'border-accent' : ''}`}
               onClick={() => {
                 if (scrollMode === 'continuous') onToggleScrollMode()
                 setFitMode('fitPage')
@@ -183,12 +183,12 @@ const ReaderNav = ({
         <FindInDocument scrollMode={scrollMode} onToggleScrollMode={onToggleScrollMode} onJump={onJump} />
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-ink-muted">
             <List className="size-4" />
             <span>TOC / Bookmarks</span>
           </div>
           {outlineStatus === 'loading' ? (
-            <p className="rounded-lg border border-slate-800/70 bg-slate-900/70 p-2 text-xs text-slate-400">
+            <p className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 p-2 text-xs text-ink-muted">
               Loading outline…
             </p>
           ) : outlineStatus === 'error' ? (
@@ -196,19 +196,19 @@ const ReaderNav = ({
               Outline error: {outlineError || 'unknown'}
             </p>
           ) : tocLines.length ? (
-            <div className="max-h-64 overflow-auto rounded-lg border border-slate-800/70 bg-slate-900/70 p-2 text-xs text-slate-200">
+            <div className="max-h-64 overflow-auto rounded-lg border border-chrome-border/70 bg-surface-raised/70 p-2 text-xs text-ink-primary">
               {tocLines.map((item, idx) => (
                 <button
                   key={`${idx}-${item.title}`}
                   onClick={() => jumpFromToc(item.page)}
                   disabled={!item.page}
-                  className="flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-surface-raised/70 disabled:cursor-not-allowed disabled:opacity-50"
                   style={{ paddingLeft: 8 + item.depth * 10 }}
                   title={item.page ? `Go to page ${item.page}` : 'No page destination'}
                 >
                   <span className="truncate">{item.title}</span>
                   {item.page && (
-                    <span className="ml-auto text-[11px] text-slate-400">
+                    <span className="ml-auto text-[11px] text-ink-muted">
                       {formatPageForDisplay(item.page, pageLabels)}
                     </span>
                   )}
@@ -216,16 +216,16 @@ const ReaderNav = ({
               ))}
             </div>
           ) : (
-            <div className="space-y-1 rounded-lg border border-slate-800/70 bg-slate-900/70 p-3 text-xs text-slate-300">
+            <div className="space-y-1 rounded-lg border border-chrome-border/70 bg-surface-raised/70 p-3 text-xs text-ink-primary">
               <p>No outline available for this PDF.</p>
-              <p className="text-slate-500">Use Find or Page jump instead.</p>
+              <p className="text-ink-muted">Use Find or Page jump instead.</p>
             </div>
           )}
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-ink-muted">
             <BookCopy className="size-4" />
             <span>Saved marks</span>
           </div>
-          <p className="rounded-lg border border-slate-800/70 bg-slate-900/70 p-2 text-xs text-slate-400">
+          <p className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 p-2 text-xs text-ink-muted">
             Future: support bookmarks and cross-device sync. Use page jump for now.
           </p>
         </div>

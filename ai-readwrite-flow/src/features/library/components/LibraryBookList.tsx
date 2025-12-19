@@ -11,9 +11,9 @@ type Props = {
 }
 
 const getRowClassName = (selected: boolean, active: boolean) => {
-  if (active) return 'border-sky-500/70 bg-slate-900'
-  if (selected) return 'border-amber-500/60 bg-slate-900/60'
-  return 'border-slate-800/70 bg-slate-900/40'
+  if (active) return 'border-accent/70 bg-surface-raised/70'
+  if (selected) return 'border-amber-500/60 bg-surface-raised/60'
+  return 'border-chrome-border/70 bg-surface-raised/40'
 }
 
 const LibraryBookList = ({ items, selectedId, activeId, onSelect, onOpen }: Props) => {
@@ -28,7 +28,7 @@ const LibraryBookList = ({ items, selectedId, activeId, onSelect, onOpen }: Prop
           return (
             <div
               key={item.id}
-              className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 transition hover:border-sky-500 hover:bg-slate-900 ${getRowClassName(
+              className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 transition hover:border-accent hover:bg-surface-raised/70 ${getRowClassName(
                 selected,
                 active,
               )}`}
@@ -36,11 +36,11 @@ const LibraryBookList = ({ items, selectedId, activeId, onSelect, onOpen }: Prop
               <button
                 type="button"
                 onClick={() => onSelect(item.id)}
-                className="flex shrink-0 items-center justify-center rounded-md p-1 text-slate-200 hover:bg-slate-800/60"
+                className="flex shrink-0 items-center justify-center rounded-md p-1 text-ink-primary hover:bg-surface-raised/70"
                 aria-label={selected ? 'Selected' : 'Select'}
                 title={selected ? 'Selected' : 'Select'}
               >
-                {selected ? <Dot className="size-5 text-amber-300" /> : <Circle className="size-5 text-slate-500" />}
+                {selected ? <Dot className="size-5 text-amber-300" /> : <Circle className="size-5 text-ink-muted" />}
               </button>
               <button
                 type="button"
@@ -48,11 +48,11 @@ const LibraryBookList = ({ items, selectedId, activeId, onSelect, onOpen }: Prop
                 className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
                 aria-label={`Open ${item.title}`}
               >
-                <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-100">
-                  <BookOpen className="size-4 text-sky-300" />
+                <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink-primary">
+                  <BookOpen className="size-4 text-accent" />
                   <span className="truncate">{item.title}</span>
                 </div>
-                <span className="shrink-0 text-xs text-slate-400">{formatSize(item.fileSize)}</span>
+                <span className="shrink-0 text-xs text-ink-muted">{formatSize(item.fileSize)}</span>
               </button>
             </div>
           )
@@ -63,4 +63,3 @@ const LibraryBookList = ({ items, selectedId, activeId, onSelect, onOpen }: Prop
 }
 
 export default LibraryBookList
-

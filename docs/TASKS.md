@@ -22,7 +22,7 @@
 | 14 | Done        | P0       | Add error boundaries for Reader/Chat (and Writer later) with reload affordance.                              | Low |
 | 15 | Todo        | P1       | Add smoke tests (stores/hooks/api client); mock Tauri plugins.                                               | Medium - harness setup needed. |
 | 16 | Todo        | P1       | Performance guards: virtualization for large lists (>100), main-thread budget on import.                    | Medium - needs profiling and thresholds. |
-| 17 | Todo        | P1       | Theme presets (light/ocean/forest/sand) with persistence and OS-pref initial detect.                        | Low - add a “Soft Dark” preset to reduce eye strain. |
+| 17 | Done        | P1       | Theme presets (soft-dark/light/ocean/forest/sand) with persistence and OS-pref initial detect.              | Low - minor palette tweaks may still happen based on preference. |
 | 18 | In Progress | P1       | Writer/Editor: entries+tags, AI actions, writer chat, markdown, Flomo export, personalization.              | High - scope creep; keep spec+acceptance gated (see Task 18 breakdown + `docs/writer-srs.md`). |
 | 19 | In Progress | P1       | Library duplicate detection via hash; graceful collision handling and recent-open tracking.                 | Medium - needs QA for delete/dedupe/recents + new ergonomics. |
 | 20 | Backlog     | P1       | RAG "Ask the book" global search using FTS; prompt with citations; fallback when empty/offline.             | High - requires extraction/indexing. |
@@ -80,12 +80,16 @@
 | -- | ------ | -------- | -------- | -------------- | ------ |
 | 18.1 | Done | P1 | Writer data model | Define Projects/Content/Context/References/ContextMembership tables + TS contracts + Zod validation | Unit: `writingRepo.test.ts` + `writingTypes.ts` Zod parsing; Desktop: migrations v10–v14 added |
 | 18.2 | Done | P1 | Projects list + active project | Create/select/rename/delete project; persist active project; Writer no longer follows Reader book selection | Pass (`docs/QA.md` 18-QA-001) |
-| 18.3 | Done | P1 | Content + Context persistence | Persist Content and Context per project; Context supports Clear + Undo last append | Pass (`docs/QA.md` 18-QA-002, 18-QA-003) |
+| 18.3 | Done | P1 | Content + Context persistence | Persist Content and Context per project; Context shows chars+~tokens, warns on soft token limit; supports Clear + Undo last append | Pass (`docs/QA.md` 18-QA-002, 18-QA-003) |
 | 18.4 | Done | P1 | References + context inclusion | Reference cards (manual + from Reader); include/exclude toggle + stable order; click ref jumps to Reader | Pass (`docs/QA.md` 18-QA-004) |
 | 18.5 | Done | P1 | Reader → Writer actions | From Reader selection menu or highlight popover: Add to context + Add to project(reference); if no active project prompt choose/create; no tab switch | Pass (`docs/QA.md` 18-QA-005); Partial (`docs/QA.md` 18-QA-006) |
-| 18.6 | Done | P1 | Writer assistant chat | Collapsible multi-round writer chat; per-project history; decoupled from Reader by default; prompt presets scaffold (TBD list) | Pass (`docs/QA.md` 18-QA-007, 18-QA-008) |
+| 18.6 | Done | P1 | Writer assistant chat | Collapsible multi-round writer chat; per-project history; decoupled from Reader by default; prompt templates can be inserted into input and focuses textarea (no auto-send) | Pass (`docs/QA.md` 18-QA-007, 18-QA-008) |
 | 18.7 | Done | P1 | Tags extraction | Extract `#tag` and `#tag/subtag` from Content; filter projects by tag (prefix matches for nested) | Pass (`docs/QA.md` 18-QA-009) |
-| 18.8 | In Progress | P2 | Markdown preview | Edit/Preview toggle (preview render is read-only) | Pending (`docs/QA.md` 18-QA-010) |
+| 18.8 | Done | P2 | Markdown preview | Edit/Preview toggle (preview render is read-only) | Pass (`docs/QA.md` 18-QA-010) |
+| 18.12 | Done | P1 | Writer sidebar layout | Writer view hides ReaderNav and uses WriterSidebar (Projects + References); set a sane default Content/Context ratio (or adjustable split) so context is not squeezed | Pass (`docs/QA.md` 18-QA-014) |
+| 18.14 | Done | P1 | Projects picker UX | Projects menu closes via outside click/Esc/X; create project requires explicit Save/Cancel; rename supports Save/Cancel | Pass (`docs/QA.md` 18-QA-016) |
+| 18.13 | Todo | P1 | Content selection AI actions | Select text in Writer Content → show action menu (Simplify/Concise/Rewrite/Translate/Explain); non-destructive by default (insert suggestion and preserve undo) | Manual (`docs/QA.md` 18-QA-015) |
+| 18.15 | In Progress | P1 | Writer Studio artifacts | Kickoff/Definition/Explanation/Rewrite(style)/Polish generate saved artifacts first; Insert applies to Content; citation constraint On by default when refs available | Implemented; QA pending (`docs/QA.md` 18-QA-017) |
 | 18.9 | Backlog | P2 | Flomo export | Export entry/selection to Flomo with templates + retry + success/failure feedback | Manual: success + failure paths |
 | 18.10 | Backlog | P2 | Synonyms/translation | Quick lookup via remote LLM first; local model optional later | Manual: action returns output |
 | 18.11 | Backlog | P2 | Personalization | Define "learn my writing" as local-only style profile or local retrieval; default off | Manual: enable/disable and effect |

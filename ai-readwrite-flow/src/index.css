@@ -3,12 +3,72 @@
 @tailwind utilities;
 
 :root {
+  --surface-base: 11 18 33;
+  --surface-raised: 17 24 42;
+  --text-primary: 226 232 240;
+  --text-muted: 148 163 184;
+  --border: 51 65 85;
+  --accent: 56 189 248;
   color-scheme: dark;
-  background-color: #0b1221;
+  background-color: rgb(var(--surface-base));
 }
 
+:root[data-theme='soft-dark'] {
+  --surface-base: 13 20 38;
+  --surface-raised: 19 28 48;
+  --text-primary: 226 232 240;
+  --text-muted: 148 163 184;
+  --border: 51 65 85;
+  --accent: 56 189 248;
+  color-scheme: dark;
+}
+
+  :root[data-theme='ocean'] {
+    --surface-base: 6 23 28;
+    --surface-raised: 10 32 38;
+    --text-primary: 226 232 240;
+    --text-muted: 148 163 184;
+    --border: 34 80 94;
+    --accent: 34 211 238;
+    color-scheme: dark;
+  }
+
+:root[data-theme='forest'] {
+  --surface-base: 10 20 18;
+  --surface-raised: 15 30 27;
+  --text-primary: 226 232 240;
+  --text-muted: 148 163 184;
+  --border: 51 65 85;
+  --accent: 52 211 153;
+  color-scheme: dark;
+}
+
+:root[data-theme='sand'] {
+  --surface-base: 20 18 14;
+  --surface-raised: 28 25 19;
+  --text-primary: 226 232 240;
+  --text-muted: 148 163 184;
+  --border: 64 59 47;
+  --accent: 251 191 36;
+  color-scheme: dark;
+}
+
+  :root[data-theme='light'] {
+    --surface-base: 248 250 252;
+    --surface-raised: 255 255 255;
+    --text-primary: 15 23 42;
+    --text-muted: 71 85 105;
+    --border: 226 232 240;
+    --accent: 37 99 235;
+    color-scheme: light;
+  }
+
 body {
-  @apply min-h-screen bg-slate-950 text-slate-100 antialiased;
+  min-height: 100vh;
+  background-color: rgb(var(--surface-base));
+  color: rgb(var(--text-primary));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -16,7 +76,12 @@ body {
 }
 
 a {
-  @apply text-sky-300 transition hover:text-sky-200;
+  color: rgb(var(--accent));
+  transition: color 150ms;
+}
+
+a:hover {
+  color: rgb(var(--accent) / 0.85);
 }
 
 /* Reader / react-pdf: selection + text layer hygiene (mitigate selection “ghosting”) */

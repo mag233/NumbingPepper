@@ -9,8 +9,18 @@ export default {
       },
       colors: {
         surface: {
-          base: '#0b1221',
-          raised: '#11182a',
+          base: 'rgb(var(--surface-base) / <alpha-value>)',
+          raised: 'rgb(var(--surface-raised) / <alpha-value>)',
+        },
+        ink: {
+          primary: 'rgb(var(--text-primary) / <alpha-value>)',
+          muted: 'rgb(var(--text-muted) / <alpha-value>)',
+        },
+        chrome: {
+          border: 'rgb(var(--border) / <alpha-value>)',
+        },
+        accent: {
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
         },
       },
       boxShadow: {

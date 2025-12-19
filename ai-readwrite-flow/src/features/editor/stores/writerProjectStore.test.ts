@@ -38,7 +38,7 @@ describe('writerProjectStore', () => {
     resetStore()
     localStorage.removeItem('ai-readwrite-flow-writing-projects')
     localStorage.removeItem('ai-readwrite-flow-writing-active-project')
-    const created = await useWriterProjectStore.getState().createProject()
+    const created = await useWriterProjectStore.getState().createProject('Untitled')
     expect(created?.id).toBeTruthy()
     expect(useWriterProjectStore.getState().activeProjectId).toBe(created?.id ?? null)
     const ok = await useWriterProjectStore.getState().renameProject(created?.id ?? '', 'Hello')
@@ -49,4 +49,3 @@ describe('writerProjectStore', () => {
     expect(useWriterProjectStore.getState().projects).toHaveLength(0)
   })
 })
-

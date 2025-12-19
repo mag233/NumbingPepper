@@ -7,7 +7,7 @@ type Toast = {
 }
 
 type Pending = {
-  kind: 'context' | 'reference'
+  kind: 'context' | 'reference' | 'artifact'
   run: () => Promise<void>
 }
 
@@ -51,4 +51,3 @@ const useWriterToastStore = create<State>((set, get) => ({
 }))
 
 export default useWriterToastStore
-

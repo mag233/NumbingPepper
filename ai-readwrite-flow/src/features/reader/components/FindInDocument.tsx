@@ -13,7 +13,7 @@ type Props = {
 }
 
 const navButton =
-  'inline-flex items-center justify-center rounded-lg border border-slate-800/60 bg-slate-900/60 px-2 py-1 text-xs text-slate-100 hover:border-sky-500 hover:text-sky-100'
+  'inline-flex items-center justify-center rounded-lg border border-chrome-border/60 bg-surface-raised/60 px-2 py-1 text-xs text-ink-primary hover:border-accent'
 
 const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
   const { pageCount, setPage, setFindQuery, bumpFindToken, setFindActiveHit } = useReaderStore()
@@ -96,7 +96,7 @@ const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs text-slate-400">
+      <div className="flex items-center gap-2 text-xs text-ink-muted">
         <Search className="size-4" />
         <span>Find</span>
       </div>
@@ -105,7 +105,7 @@ const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search text…"
-          className="w-full rounded-lg border border-slate-800/70 bg-slate-900/70 px-2 py-1 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
+          className="w-full rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-2 py-1 text-sm text-ink-primary focus:border-accent focus:outline-none"
         />
         <button className={navButton} onClick={() => void runSearch()} disabled={searching}>
           Find
@@ -118,17 +118,17 @@ const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
         <button className={navButton} onClick={() => gotoHit(activeHitIdx + 1)} disabled={!hits.length}>
           Next
         </button>
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-ink-muted">
           {hits.length ? `${activeHitIdx + 1}/${hits.length}` : searching ? 'Searching…' : '0'}
         </span>
       </div>
       {hits[activeHitIdx]?.snippet && (
-        <p className="rounded-lg border border-slate-800/70 bg-slate-900/70 p-2 text-xs text-slate-300">
+        <p className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 p-2 text-xs text-ink-primary">
           {hits[activeHitIdx]!.snippet}
         </p>
       )}
       {searchError && <p className="text-xs text-amber-200">{searchError}</p>}
-      <p className="text-xs text-slate-500">Tip: Find runs in paged scroll for stability.</p>
+      <p className="text-xs text-ink-muted">Tip: Find runs in paged scroll for stability.</p>
     </div>
   )
 }

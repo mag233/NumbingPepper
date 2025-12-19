@@ -18,7 +18,7 @@ type State = {
   tagsByProjectId: Record<string, string[]>
   hydrate: () => Promise<void>
   selectProject: (id: string) => void
-  createProject: () => Promise<WritingProject | null>
+  createProject: (title?: string) => Promise<WritingProject | null>
   renameProject: (id: string, title: string) => Promise<boolean>
   deleteProject: (id: string) => Promise<boolean>
   setTagFilter: (tag: string | null) => void
@@ -78,9 +78,11 @@ const useWriterProjectStore = create<State>((set, get) => ({
     set({ activeProjectId: id })
     writeActiveProjectId(id)
   },
-  createProject: async () => {
+  createProject: async (title) => {
     const now = Date.now()
-    const project: WritingProject = { id: generateProjectId(), title: 'Untitled', createdAt: now, updatedAt: now }
+    const normalized = title?.trim() ?? ''
+    const projectTitle = normalized.length ? normalized : 'Untitled'
+    const project: WritingProject = { id: generateProjectId(), title: projectTitle, createdAt: now, updatedAt: now }
     const ok = await upsertWritingProject(project)
     if (!ok) return null
     set((state) => ({

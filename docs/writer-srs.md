@@ -57,6 +57,37 @@ Right side:
 - Select text in Content → actions (e.g., Simplify, Concise, Rewrite, Translate, Explain).
 - Non-destructive by default: preview/insert at cursor; undo works.
 
+7.1) Writer Studio — Artifacts (writing-first, safe insert)
+- Goal: generate reusable writing blocks (artifacts) that are stored first, then optionally inserted into Content/Context/References.
+- Default safety rule (agreed): never auto-modify Content; generation must create an Artifact first; user clicks Insert to apply.
+- Citation constraint (agreed): On by default. When there are included references, outputs must be grounded in those snippets and avoid inventing unsupported claims.
+
+Artifact types (v1, writing-first)
+- Kickoff: opening paragraph + thesis framing + 2–3 paragraph plan (prose-ready).
+- Definition: define a term (1–3 sentences) + key attributes + optional example.
+- Explanation: explain with configurable depth (peer/simple/analogy); prose-ready.
+- Rewrite (style): generate 2–3 candidate rewrites in requested style (e.g., academic/concise/policy memo).
+- Polish: grammar/clarity/flow improvements (suggested revision; do not overwrite automatically).
+- (Later) Claim → Evidence map: structure a claim with evidence bullets tied to references.
+
+Scopes (inputs)
+- Context: uses Writer Context text.
+- Included references: uses reference snippets where included=true (preferred when available).
+- Content selection: (depends on Task 18.13) uses selected text in Content for rewrite/polish.
+- Manual: user-provided input text (paste).
+
+Result handling
+- Each generation produces an Artifact record bound to the active project.
+- Artifact actions:
+  - Insert to Content (append by default; later allow cursor/selection targets).
+  - Append to Context (must enable Undo append).
+  - Save as Reference (creates a manual reference card from the artifact output; default included=false).
+  - Regenerate (creates a new artifact version or overwrites; decide per implementation).
+
+Prompt quality (agreed)
+- Use medium-complexity prompts to control format and reduce hallucinations; iterate later.
+- Each template must specify: required structure, tone, and how references are injected and cited.
+
 8) Writer chat (collapsible, multi-round)
 - Dedicated assistant panel that is independent from Reader’s per-book chat by default.
 - Optional opt-in: “link to current book” to include Reader book context (future).
@@ -123,6 +154,7 @@ These are storage-level contracts; UI can evolve without changing their meaning.
 7) Writer chat: switch PDFs in Reader → Writer chat does not change.
 8) Markdown preview toggle: switch to Preview → formatting renders; switch back → text unchanged.
 9) Flomo export: success shows confirmation; failure shows retry.
+10) Studio artifacts: generate a Kickoff/Definition/Explanation artifact using Context + included references; verify it is stored; click Insert to Content; verify Content changes; save as Reference and verify a new manual reference appears.
 
 ## Risks & Mitigations
 - R-W-001 (Scope creep): enforce phased delivery (P0/P1/P2) and keep prompt/template work separate.
@@ -131,3 +163,4 @@ These are storage-level contracts; UI can evolve without changing their meaning.
 - R-W-004 (Locator drift): PDF locators can shift across render modes; use stable page_index + rects (already used by highlights).
 - R-W-005 (Markdown expectations): start with plain text + preview; avoid WYSIWYG promises until validated.
 - R-W-006 (Personalization privacy): default off; clear settings; no server-side training by default.
+- R-W-007 (Artifacts quality): outputs can drift without grounding; default citation constraint On; show which refs were used; keep safe insert (no auto-overwrite).

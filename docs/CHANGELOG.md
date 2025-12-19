@@ -37,3 +37,14 @@
 - Writer: added per-project References with manual add, include/exclude toggle, and safe delete (Task 18.4).
 - Reader→Writer: persistent highlight popover adds “To Context” and “To Ref”, writing into the active project (with create-project prompt and undo for context append) (Task 18.5).
 - Reader→Writer: selection floating menu now also includes “To Context” / “To Ref” (no need to persist highlight first); floating menu clamps horizontally to avoid the chat sidebar covering it.
+- Theme: added preset-based theming (soft-dark/light/ocean/forest/sand) persisted in settings; app applies theme via CSS variables (Task 17).
+- Theme: migrated remaining UI surfaces/text/borders to token-based colors (Reader/Writer/Chat/Library/menus) and refined Light preset accent/border for consistency.
+- Writer: Context shows `chars` + `~tokens` with soft-limit warning; Writer AI templates support Insert (focuses input, no auto-send); desktop layout avoids global page scroll when top bar hidden.
+- Process: added a strict “Suggestion vs Implementation Gate” to require explicit `Proceed` before any code/command changes.
+- Docs: recorded Writer Content selection AI actions as a tracked requirement (Task 18.13) and added a QA placeholder (18-QA-015).
+- Writer: replaced left ReaderNav with a WriterSidebar (Projects + References) when in Writer view; adjusted Content/Context sizing so Context isn't squeezed (Task 18.12).
+- Writer: prevent Writer Projects dropdown from being covered by the editor; reduce desktop window scrolling by clamping the app shell to the viewport height.
+- Writer: fix WriterSidebar header overflow by making the Projects controls wrap and constraining the Projects popover to the sidebar width.
+- Writer: Projects picker closes via outside click/Esc/X; project creation requires explicit Save/Cancel to avoid accidental Untitled entries.
+- Docs: refined Writer AI direction toward writing-first Studio artifacts (Kickoff/Definition/Explanation/Rewrite/Polish) with safe insert and citation constraint on by default (Task 18.15).
+- Writer: implemented Studio artifacts (Kickoff/Definition/Explanation/Rewrite/Polish) saved per project; actions are non-destructive by default (generate → Artifact list → Insert/To Context/To Ref). Added `writing_artifacts` table (migration v15) with localStorage fallback on web.

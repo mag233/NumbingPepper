@@ -14,13 +14,24 @@ import useSettingsStore from '../../stores/settingsStore'
 import { testConnection } from '../../lib/apiClient'
 import { defaultBaseUrl, defaultModel } from '../../lib/constants'
 import useTemplateStore from '../../stores/templateStore'
+import { themePresetSchema, type ThemePreset } from '../../lib/theme'
 
 const inputClass =
-  'w-full rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none'
+  'w-full rounded-lg border border-chrome-border/80 bg-surface-raised/70 px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
 
 const SettingsPanel = () => {
-  const { apiKey, baseUrl, model, setApiKey, setBaseUrl, setModel, save, status } =
-    useSettingsStore()
+  const {
+    apiKey,
+    baseUrl,
+    model,
+    themePreset,
+    setApiKey,
+    setBaseUrl,
+    setModel,
+    setThemePreset,
+    save,
+    status,
+  } = useSettingsStore()
   const { templates, addTemplate, removeTemplate } = useTemplateStore()
   const [newTemplateName, setNewTemplateName] = useState('')
   const [newTemplatePrompt, setNewTemplatePrompt] = useState('')
@@ -51,16 +62,16 @@ const SettingsPanel = () => {
     <Card
       title="AI Settings (defaults per PRD)"
       action={
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-ink-muted">
           <Wifi className="size-4" />
           <span>{statusTone}</span>
         </div>
       }
       className="bg-surface-base/90"
     >
-      <div className="grid gap-3 md:grid-cols-3">
-        <label className="space-y-1 text-sm text-slate-200">
-          <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+      <div className="grid gap-3 md:grid-cols-4">
+        <label className="space-y-1 text-sm text-ink-primary">
+          <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted">
             <ShieldCheck className="size-4" />
             API Base
           </span>
@@ -71,8 +82,8 @@ const SettingsPanel = () => {
             placeholder={defaultBaseUrl}
           />
         </label>
-        <label className="space-y-1 text-sm text-slate-200">
-          <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+        <label className="space-y-1 text-sm text-ink-primary">
+          <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted">
             <TestTube className="size-4" />
             Model
           </span>
@@ -83,8 +94,8 @@ const SettingsPanel = () => {
             placeholder={defaultModel}
           />
         </label>
-        <label className="space-y-1 text-sm text-slate-200">
-          <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+        <label className="space-y-1 text-sm text-ink-primary">
+          <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted">
             <ShieldCheck className="size-4" />
             API Key
           </span>
@@ -96,52 +107,74 @@ const SettingsPanel = () => {
             type="password"
           />
         </label>
+        <label className="space-y-1 text-sm text-ink-primary">
+          <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted">
+            <ShieldCheck className="size-4" />
+            Theme
+          </span>
+          <select
+            className={inputClass}
+            value={themePreset}
+            onChange={(event) => {
+              const next = themePresetSchema.safeParse(event.target.value)
+              if (!next.success) return
+              setThemePreset(next.data satisfies ThemePreset)
+              void save()
+            }}
+          >
+            <option value="soft-dark">Soft Dark</option>
+            <option value="light">Light</option>
+            <option value="ocean">Ocean</option>
+            <option value="forest">Forest</option>
+            <option value="sand">Sand</option>
+          </select>
+        </label>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
           onClick={handleTestAndSave}
           disabled={testing}
-          className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {testing ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
           <span>Test & Save</span>
         </button>
         {message && (
-          <span className="flex items-center gap-2 text-sm text-slate-300">
+          <span className="flex items-center gap-2 text-sm text-ink-primary">
             <ShieldCheck className="size-4 text-emerald-400" />
             {message}
           </span>
         )}
       </div>
-      <div className="mt-4 rounded-xl border border-slate-800/70 bg-slate-900/70 p-3">
+      <div className="mt-4 rounded-xl border border-chrome-border/70 bg-surface-raised/70 p-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-slate-100">
+          <span className="text-sm font-semibold text-ink-primary">
             Prompt Templates ({templates.length})
           </span>
           <button
             type="button"
             onClick={() => setShowTemplates(true)}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-800/70 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-sky-400 hover:text-sky-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-1 text-xs font-semibold text-ink-primary hover:border-accent"
           >
             <Plus className="size-4" />
             Manage
           </button>
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-ink-muted">
           Manage templates in a modal; chat dropdown will pick them up automatically.
         </p>
       </div>
       {showTemplates && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-3xl rounded-2xl border border-slate-800/70 bg-slate-900/95 p-5 shadow-2xl">
+          <div className="w-full max-w-3xl rounded-2xl border border-chrome-border/70 bg-surface-base/95 p-5 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-100">Prompt Templates</p>
-                <p className="text-xs text-slate-500">Add, update, or remove quick prompts.</p>
+                <p className="text-sm font-semibold text-ink-primary">Prompt Templates</p>
+                <p className="text-xs text-ink-muted">Add, update, or remove quick prompts.</p>
               </div>
               <button
                 onClick={() => setShowTemplates(false)}
-                className="rounded-lg border border-slate-800/70 p-2 text-slate-400 hover:border-sky-500 hover:text-sky-100"
+                className="rounded-lg border border-chrome-border/70 p-2 text-ink-muted hover:border-accent hover:text-ink-primary"
                 aria-label="Close template manager"
               >
                 <X className="size-4" />
@@ -151,34 +184,34 @@ const SettingsPanel = () => {
               {templates.map((tpl) => (
                 <div
                   key={tpl.id}
-                  className="flex items-center gap-2 rounded-lg border border-slate-800/70 bg-slate-950/70 px-3 py-2"
+                  className="flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/60 px-3 py-2"
                 >
-                  <div className="flex-1 text-left text-sm text-slate-100">
+                  <div className="flex-1 text-left text-sm text-ink-primary">
                     <span className="font-medium">{tpl.name}</span>
-                    <span className="ml-2 text-xs text-slate-500">{tpl.prompt}</span>
+                    <span className="ml-2 text-xs text-ink-muted">{tpl.prompt}</span>
                   </div>
                   <button
                     onClick={() => removeTemplate(tpl.id)}
-                    className="rounded border border-transparent p-1 text-slate-500 hover:border-red-400 hover:text-red-200"
+                    className="rounded border border-transparent p-1 text-ink-muted hover:border-red-500 hover:text-red-300"
                     aria-label="Remove template"
                   >
                     <Trash2 className="size-4" />
                   </button>
                 </div>
               ))}
-              <div className="rounded-lg border border-dashed border-slate-800/70 bg-slate-950/60 p-3">
+              <div className="rounded-lg border border-dashed border-chrome-border/70 bg-surface-raised/40 p-3">
                 <div className="grid gap-2">
                   <input
                     value={newTemplateName}
                     onChange={(event) => setNewTemplateName(event.target.value)}
                     placeholder="Template name"
-                    className="w-full rounded border border-slate-800/70 bg-slate-900/70 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+                    className={inputClass}
                   />
                   <input
                     value={newTemplatePrompt}
                     onChange={(event) => setNewTemplatePrompt(event.target.value)}
                     placeholder="Template prompt"
-                    className="w-full rounded border border-slate-800/70 bg-slate-900/70 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+                    className={inputClass}
                   />
                   <button
                     type="button"
@@ -188,7 +221,7 @@ const SettingsPanel = () => {
                       setNewTemplateName('')
                       setNewTemplatePrompt('')
                     }}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-800/70 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-sky-500"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-2 text-xs font-semibold text-ink-primary hover:border-accent"
                   >
                     <Plus className="size-4" />
                     Save Template

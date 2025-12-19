@@ -86,6 +86,7 @@
 **P1 (AI-assisted writing) — requirements**
 - Highlight/selection actions (examples): Simplify, Concise, Rewrite, Translate, Explain.
 - Right-side AI assistant chat for writing (shortcuts TBD).
+- Writer Studio “Artifacts” (writing-first): Kickoff/Definition/Explanation/Rewrite(style)/Polish produce saved artifacts first (no auto-overwrite); user clicks Insert to apply. Citation constraint is On by default when references are available.
 - Markdown support: at minimum import/export; full markdown-native editing optional (define fidelity expectations).
 
 **P2 (integrations & personalization) — requirements**

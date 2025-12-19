@@ -32,7 +32,7 @@ const PdfPageWithHighlights = ({ pageNumber, width, height, highlights, selectio
   const filteredSelectionRects = filterSelectionRects(selectionRects)
 
   return (
-    <div className="rounded-lg border border-slate-800/60 bg-slate-900/60">
+    <div className="rounded-lg border border-chrome-border/60 bg-surface-raised/40">
       <div className="flex justify-center p-2">
         <div
           data-arwf-page-host

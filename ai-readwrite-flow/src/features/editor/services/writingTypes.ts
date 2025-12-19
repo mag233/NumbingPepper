@@ -55,3 +55,39 @@ export const writingContextMembershipSchema = z.object({
 })
 export type WritingContextMembership = z.infer<typeof writingContextMembershipSchema>
 
+export const writingArtifactTypeSchema = z.enum(['kickoff', 'definition', 'explanation', 'rewrite', 'polish'])
+export type WritingArtifactType = z.infer<typeof writingArtifactTypeSchema>
+
+export const writingArtifactScopeSchema = z.object({
+  includeContext: z.boolean(),
+  includeIncludedReferences: z.boolean(),
+})
+export type WritingArtifactScope = z.infer<typeof writingArtifactScopeSchema>
+
+export const writingArtifactInputSnapshotSchema = z.object({
+  prompt: z.string(),
+  contextText: z.string(),
+  references: z.array(
+    z.object({
+      id: z.string().min(1),
+      title: z.string().optional(),
+      snippetText: z.string().min(1),
+      bookId: z.string().optional(),
+      pageIndex: z.number().int().positive().optional(),
+    }),
+  ),
+})
+export type WritingArtifactInputSnapshot = z.infer<typeof writingArtifactInputSnapshotSchema>
+
+export const writingArtifactSchema = z.object({
+  id: z.string().min(1),
+  projectId: z.string().min(1),
+  type: writingArtifactTypeSchema,
+  title: z.string().min(1),
+  contentText: z.string(),
+  scope: writingArtifactScopeSchema,
+  inputSnapshot: writingArtifactInputSnapshotSchema,
+  createdAt: z.number().int().nonnegative(),
+  updatedAt: z.number().int().nonnegative(),
+})
+export type WritingArtifact = z.infer<typeof writingArtifactSchema>

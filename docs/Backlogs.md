@@ -31,6 +31,7 @@
 
 ## Writer (Deferred; record-only for now)
 - Writer workspace: Content (top) + Context (bottom) + action row; left nav projects + references; right collapsible multi-round chat.
+- Writer Content selection actions: select/highlight text in Content → show a small action menu (e.g., Simplify, Concise, Rewrite, Translate, Explain); actions should insert a generated suggestion (non-destructive by default) and keep undo working.
 - References: cards with source metadata (bookId/page/rects/snippet); allow manual references; toggle include/exclude into Context; show Context size (items/chars; token estimate later).
 - Reader → Writer: from a highlight, actions “Add to writing context” and “Add to [project] (reference)”; if no active project, prompt to choose/create.
 - Prompt presets/templates for Writer chat/actions (list + editing UI TBD).

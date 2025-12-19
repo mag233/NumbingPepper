@@ -187,5 +187,26 @@ pub fn migrations() -> Vec<Migration> {
       ",
       kind: MigrationKind::Up,
     },
+    Migration {
+      version: 15,
+      description: "create writing_artifacts table",
+      sql: "
+        CREATE TABLE IF NOT EXISTS writing_artifacts (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL,
+          artifact_type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          content_text TEXT NOT NULL,
+          scope_json TEXT NOT NULL,
+          input_snapshot_json TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY(project_id) REFERENCES writing_projects(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_writing_artifacts_project_id ON writing_artifacts(project_id);
+        CREATE INDEX IF NOT EXISTS idx_writing_artifacts_updated_at ON writing_artifacts(updated_at);
+      ",
+      kind: MigrationKind::Up,
+    },
   ]
 }

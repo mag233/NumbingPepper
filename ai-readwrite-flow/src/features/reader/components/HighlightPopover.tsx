@@ -45,17 +45,17 @@ const HighlightPopover = ({
 
   return (
     <div
-      className="absolute z-30 w-[260px] rounded-xl border border-slate-800/80 bg-slate-950/95 p-3 text-xs text-slate-100 shadow-xl"
+      className="absolute z-30 w-[260px] rounded-xl border border-chrome-border/80 bg-surface-base/95 p-3 text-xs text-ink-primary shadow-xl"
       style={{ left: x, top: y }}
     >
       <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 text-xs text-slate-300">
+        <div className="inline-flex items-center gap-2 text-xs text-ink-muted">
           <Paintbrush className="size-4 text-amber-300" />
           Highlight
         </div>
         <button
           onClick={onClose}
-          className="rounded-md border border-slate-800/80 px-2 py-1 text-[11px] text-slate-300 hover:border-slate-700 hover:text-slate-100"
+          className="rounded-md border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-muted hover:border-accent hover:text-ink-primary"
         >
           Close
         </button>
@@ -78,35 +78,35 @@ const HighlightPopover = ({
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           onClick={onSummarize}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-sky-500 hover:text-sky-100 whitespace-nowrap"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-accent"
         >
           <Sparkles className="size-3" />
           Summarize
         </button>
         <button
           onClick={onExplain}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-sky-500 hover:text-sky-100 whitespace-nowrap"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-accent"
         >
           <StickyNote className="size-3" />
           Explain
         </button>
         <button
           onClick={onAskAi}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-sky-500 hover:text-sky-100 whitespace-nowrap"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-accent"
         >
           <MessageSquare className="size-3" />
           Ask AI
         </button>
         <button
           onClick={onGenerateQuestions}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-sky-500 hover:text-sky-100 whitespace-nowrap"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-accent"
         >
           <CircleHelp className="size-3" />
           Questions
         </button>
         <button
           onClick={onAddToWritingContext}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-emerald-500 hover:text-emerald-100 whitespace-nowrap"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-emerald-500 hover:text-emerald-300"
           title="Append this highlight to the active writing project context"
         >
           <FolderPlus className="size-3" />
@@ -114,7 +114,7 @@ const HighlightPopover = ({
         </button>
         <button
           onClick={onAddAsWritingReference}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-emerald-500 hover:text-emerald-100 whitespace-nowrap"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-emerald-500 hover:text-emerald-300"
           title="Save as a reference in the active writing project"
         >
           <FolderPlus className="size-3" />
@@ -132,8 +132,8 @@ const HighlightPopover = ({
             }}
             className={`inline-flex w-full items-center justify-center gap-1 rounded-lg border px-2 py-1 text-[11px] whitespace-nowrap ${
               deleteArmed
-                ? 'border-red-500 bg-red-500/10 text-red-100'
-                : 'border-slate-800/80 text-slate-200 hover:border-red-500 hover:text-red-200'
+                ? 'border-red-500 bg-red-500/10 text-red-300'
+                : 'border-chrome-border/80 text-ink-primary hover:border-red-500 hover:text-red-300'
             }`}
           >
             <Trash2 className="size-3" />
@@ -143,12 +143,12 @@ const HighlightPopover = ({
       </div>
 
       <div className="mt-3">
-        <label className="mb-1 block text-[11px] text-slate-400">Note</label>
+        <label className="mb-1 block text-[11px] text-ink-muted">Note</label>
         <textarea
           value={note}
           onChange={(event) => setNote(event.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-slate-800/80 bg-slate-900/60 p-2 text-xs text-slate-100 focus:border-sky-500 focus:outline-none"
+          className="w-full rounded-lg border border-chrome-border/80 bg-surface-raised/60 p-2 text-xs text-ink-primary focus:border-accent focus:outline-none"
           placeholder="Add a note..."
         />
         <div className="mt-2 flex items-center justify-end gap-2">
@@ -166,7 +166,7 @@ const HighlightPopover = ({
                 window.setTimeout(() => setSaveStatus('idle'), 1200)
               })
             }}
-            className="rounded-lg border border-slate-800/80 px-2 py-1 text-[11px] text-slate-300 hover:border-slate-700 hover:text-slate-100"
+            className="rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-muted hover:border-accent hover:text-ink-primary"
           >
             Clear
           </button>
@@ -180,7 +180,7 @@ const HighlightPopover = ({
                 })
                 .catch(() => setSaveStatus('error'))
             }}
-            className="rounded-lg bg-sky-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-sky-400"
+            className="rounded-lg bg-accent px-3 py-1 text-[11px] font-semibold text-white hover:bg-accent/90"
           >
             {saveStatus === 'saving' ? 'Saving...' : 'Save'}
           </button>

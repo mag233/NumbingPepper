@@ -154,7 +154,7 @@ const ReaderPane = ({ onAction }: Props) => {
     <Card title="Reader / PDF">
       <div
         ref={containerRef}
-        className="relative rounded-xl border border-slate-800/70 bg-slate-900/50"
+        className="relative rounded-xl border border-chrome-border/70 bg-surface-raised/30"
       >
         <WriterToast />
         <SelectedHighlightPopover
@@ -193,7 +193,7 @@ const ReaderPane = ({ onAction }: Props) => {
               onLoadError={onLoadError}
               onSourceError={onSourceError}
               onLoadSuccess={onLoadSuccess}
-              loading={<p className="text-sm text-slate-400">Loading PDF...</p>}
+              loading={<p className="text-sm text-ink-muted">Loading PDF...</p>}
               error={
                 <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-100">
                   Failed to load PDF file.
@@ -226,7 +226,7 @@ const ReaderPane = ({ onAction }: Props) => {
                 />
               )}
             </Document>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-ink-muted">
               {scrollMode === 'continuous'
                 ? 'Continuous scroll: use mouse wheel to browse pages.'
                 : 'Paged mode: mouse wheel flips pages; select text to open the floating menu.'}

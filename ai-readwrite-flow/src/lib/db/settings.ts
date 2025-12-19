@@ -1,10 +1,17 @@
 import { defaultBaseUrl, defaultModel } from '../constants'
+import {
+  defaultThemePreset,
+  getPreferredThemePreset,
+  normalizeThemePreset,
+  type ThemePreset,
+} from '../theme'
 import { ensureClient, ensureStore } from './client'
 
 export type StoredSettings = {
   apiKey: string
   baseUrl: string
   model: string
+  themePreset: ThemePreset
 }
 
 const LOCAL_STORAGE_KEY = 'ai-readwrite-flow-settings'
@@ -12,6 +19,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   apiKey: '',
   baseUrl: defaultBaseUrl,
   model: defaultModel,
+  themePreset: defaultThemePreset,
 }
 
 export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
@@ -19,7 +27,13 @@ export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
   if (st) {
     try {
       const raw = await st.get<StoredSettings>('settings')
-      if (raw) return { ...DEFAULT_SETTINGS, ...raw }
+      if (raw) {
+        return {
+          ...DEFAULT_SETTINGS,
+          ...raw,
+          themePreset: normalizeThemePreset(raw.themePreset ?? getPreferredThemePreset()),
+        }
+      }
     } catch (error) {
       console.warn('Tauri store read failed', error)
     }
@@ -27,7 +41,14 @@ export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
 
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY)
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<StoredSettings>
+      return {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        themePreset: normalizeThemePreset(parsed.themePreset ?? getPreferredThemePreset()),
+      }
+    }
   } catch (error) {
     console.warn('Local settings read failed', error)
   }
@@ -44,10 +65,12 @@ export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
         acc[row.key] = row.value
         return acc
       }, {})
+      const preferred = getPreferredThemePreset()
       return {
         apiKey: record.apiKey ?? '',
         baseUrl: record.baseUrl ?? defaultBaseUrl,
         model: record.model ?? defaultModel,
+        themePreset: normalizeThemePreset(record.themePreset ?? preferred),
       }
     } catch (error) {
       console.warn('SQLite settings read failed, using defaults', error)
@@ -73,6 +96,10 @@ export const persistSettings = async (settings: StoredSettings) => {
         'model',
         settings.model,
       ])
+      await db.execute('INSERT OR REPLACE INTO settings (key, value) VALUES ($1, $2)', [
+        'themePreset',
+        settings.themePreset,
+      ])
     } catch (error) {
       console.warn('SQLite settings write failed, still persisting to store/localStorage', error)
     }
@@ -94,4 +121,3 @@ export const persistSettings = async (settings: StoredSettings) => {
     console.warn('Local settings write failed', error)
   }
 }
-

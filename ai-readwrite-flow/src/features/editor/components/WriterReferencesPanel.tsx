@@ -3,12 +3,17 @@ import { useMemo, useState } from 'react'
 import useWriterReferencesStore from '../stores/writerReferencesStore'
 
 const btn =
-  'inline-flex items-center justify-center rounded-lg border border-slate-800/70 bg-slate-900/70 px-3 py-1 text-xs text-slate-100 hover:border-sky-500'
+  'inline-flex items-center justify-center rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-3 py-1 text-xs text-ink-primary hover:border-accent'
 
 const inputCls =
-  'w-full rounded-lg border border-slate-800/70 bg-slate-950/40 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none'
+  'w-full rounded-lg border border-chrome-border/70 bg-surface-base/30 px-2 py-1 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
 
-const WriterReferencesPanel = () => {
+type Props = {
+  noTopMargin?: boolean
+  listClassName?: string
+}
+
+const WriterReferencesPanel = ({ noTopMargin, listClassName }: Props) => {
   const { projectId, references, membership, addManual, toggleIncluded, removeReference } =
     useWriterReferencesStore()
   const [openAdd, setOpenAdd] = useState(false)
@@ -25,10 +30,12 @@ const WriterReferencesPanel = () => {
   const isIncluded = (id: string) => membership.find((m) => m.referenceId === id)?.included ?? false
 
   return (
-    <div className="mt-3 rounded-xl border border-slate-800/70 bg-slate-900/40 p-3">
+    <div
+      className={`rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3 ${noTopMargin ? '' : 'mt-3'}`}
+    >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="text-xs text-slate-300">
-          References <span className="text-slate-500">({includedCount} in context)</span>
+        <div className="text-xs text-ink-primary">
+          References <span className="text-ink-muted">({includedCount} in context)</span>
         </div>
         <button className={btn} onClick={() => setOpenAdd((v) => !v)} disabled={!projectId}>
           <Plus className="mr-1 size-4" />
@@ -38,7 +45,7 @@ const WriterReferencesPanel = () => {
 
       {openAdd && (
         <form
-          className="mb-3 grid gap-2 rounded-lg border border-slate-800/70 bg-slate-950/30 p-2"
+          className="mb-3 grid gap-2 rounded-lg border border-chrome-border/70 bg-surface-base/30 p-2"
           onSubmit={(e) => {
             e.preventDefault()
             void addManual({ title, author, snippetText: snippet }).then((ok) => {
@@ -70,27 +77,29 @@ const WriterReferencesPanel = () => {
       )}
 
       {references.length ? (
-        <div className="max-h-64 overflow-auto rounded-lg border border-slate-800/60">
+        <div
+          className={`rounded-lg border border-chrome-border/60 ${listClassName ?? 'max-h-64 overflow-auto'}`}
+        >
           {references.map((r) => {
             const included = isIncluded(r.id)
             const confirm = confirmDeleteId === r.id
             return (
-              <div key={r.id} className="flex items-start gap-2 border-b border-slate-800/60 p-2 last:border-b-0">
+              <div key={r.id} className="flex items-start gap-2 border-b border-chrome-border/60 p-2 last:border-b-0">
                 <input
                   type="checkbox"
                   checked={included}
                   onChange={(e) => void toggleIncluded(r.id, e.target.checked)}
-                  className="mt-1 size-4 accent-sky-400"
+                  className="mt-1 size-4 accent-accent"
                   disabled={!projectId}
                   aria-label="Include in context"
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="truncate text-sm text-slate-100" title={r.title ?? undefined}>
+                      <div className="truncate text-sm text-ink-primary" title={r.title ?? undefined}>
                         {r.title ?? 'Untitled reference'}
                       </div>
-                      <div className="truncate text-xs text-slate-500">
+                      <div className="truncate text-xs text-ink-muted">
                         {r.author ? `by ${r.author}` : r.sourceType}
                       </div>
                     </div>
@@ -110,18 +119,17 @@ const WriterReferencesPanel = () => {
                       <Trash2 className="size-4" />
                     </button>
                   </div>
-                  <div className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs text-slate-300">{r.snippetText}</div>
+                  <div className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs text-ink-primary">{r.snippetText}</div>
                 </div>
               </div>
             )
           })}
         </div>
       ) : (
-        <p className="text-xs text-slate-500">No references yet. Add a manual reference to start.</p>
+        <p className="text-xs text-ink-muted">No references yet. Add a manual reference to start.</p>
       )}
     </div>
   )
 }
 
 export default WriterReferencesPanel
-

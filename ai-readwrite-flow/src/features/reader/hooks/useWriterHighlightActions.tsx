@@ -89,18 +89,18 @@ export const useWriterHighlightActions = ({ highlight, onClosePopover }: Args) =
   const Toast = () => {
     if (!toast) return null
     return (
-      <div className="absolute right-3 top-3 z-40 flex items-center gap-2 rounded-lg border border-slate-800/80 bg-slate-950/90 px-3 py-2 text-xs text-slate-100 shadow-lg">
+      <div className="absolute right-3 top-3 z-40 flex items-center gap-2 rounded-lg border border-chrome-border/80 bg-surface-base/90 px-3 py-2 text-xs text-ink-primary shadow-lg">
         <span>{toast.message}</span>
         {pending && (
           <>
             <button
-              className="rounded-md border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-sky-500 hover:text-sky-100"
+              className="rounded-md border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-accent"
               onClick={() => void confirmCreate()}
             >
               Create
             </button>
             <button
-              className="rounded-md border border-slate-800/80 px-2 py-1 text-[11px] text-slate-300 hover:border-slate-700 hover:text-slate-100"
+              className="rounded-md border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-muted hover:border-accent hover:text-ink-primary"
               onClick={() => {
                 cancelPending()
               }}
@@ -111,7 +111,7 @@ export const useWriterHighlightActions = ({ highlight, onClosePopover }: Args) =
         )}
         {toast.undo && (
           <button
-            className="rounded-md border border-slate-800/80 px-2 py-1 text-[11px] text-slate-200 hover:border-sky-500 hover:text-sky-100"
+            className="rounded-md border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-accent"
             onClick={() => {
               toast.undo?.()
               clearToast()
