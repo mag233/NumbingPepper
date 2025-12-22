@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { z } from 'zod'
 
 export type PromptTemplate = {
   id: string
@@ -20,12 +21,21 @@ type TemplateState = {
 
 const STORAGE_KEY = 'ai-readwrite-flow-templates'
 
+const promptTemplateSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  prompt: z.string(),
+})
+
+const promptTemplateListSchema = z.array(promptTemplateSchema)
+
 const loadTemplates = (): PromptTemplate[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaultTemplates
-    const parsed = JSON.parse(raw) as PromptTemplate[]
-    if (Array.isArray(parsed)) return parsed
+    const json: unknown = JSON.parse(raw)
+    const parsed = promptTemplateListSchema.safeParse(json)
+    if (parsed.success) return parsed.data
   } catch (error) {
     console.warn('Failed to load templates', error)
   }

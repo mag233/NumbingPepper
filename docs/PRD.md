@@ -43,6 +43,15 @@
   - Organization (P2/backlog): tags/collections for grouping and filtering PDFs (not Alpha-critical).
 
 ### Reader Core (P0)
+
+- **PRD-RDR-AI-001 (P1): Reader "Questions" shortcut (active recall)**
+  - From Reader selection menu and persisted highlight popover, provide `Questions` (Generate Questions).
+  - Output contract (default): generate **3–5** `Q:`/`A:` pairs grounded only in the provided context, covering **terminology**, **logic flow**, and **insight/implications** (tags allowed). If context is insufficient, ask clarifying questions instead of guessing.
+- **PRD-RDR-AI-002 (P1): Shared Reader shortcut templates**
+  - Reader actions `Ask AI` / `Summarize` / `Explain` / `Questions` must use a shared template registry so prompts and behaviors stay consistent across selection menu and highlight popover.
+- **PRD-RDR-AI-003 (P1): End-user editable templates with safe defaults**
+  - Provide Settings UI to edit the Reader shortcut templates (instruction text) locally.
+  - Must include a fail-safe recovery: `Use defaults` + per-template reset + reset all overrides.
 - Render PDF via react-pdf; page nav + continuous scroll toggle; wheel scoped. Restore `last_read_position`. Floating menu on selection: Summarize/Explain/Chat/Save Highlight. Selection bounding uses normalized page coords (0–1); store zoom when available to aid re-projection.
 
 ### Highlights & Notes (P0/P1)

@@ -29,7 +29,11 @@
 - Safe deletion: "Remove from library" (DB-only) and optional "Delete local file" (desktop-only, double confirm).
 - Organization: tags/collections for grouping and filtering PDFs (P2/backlog).
 
+## Maintenance / tooling
+- Exclude large build artifacts from editor/Copilot indexing; add safe cleanup script and optional scheduled cleanup guidance. See `docs/MAINTENANCE.md`.
+
 ## Writer (Deferred; record-only for now)
+- Snapshots / History: allow manual snapshots of a project’s Content (with optional note), list snapshots, and restore/duplicate into a new project; reduces fear of autosave overwriting “ideal” versions.
 - Writer workspace: Content (top) + Context (bottom) + action row; left nav projects + references; right collapsible multi-round chat.
 - Writer Content selection actions: select/highlight text in Content → show a small action menu (e.g., Simplify, Concise, Rewrite, Translate, Explain); actions should insert a generated suggestion (non-destructive by default) and keep undo working.
 - References: cards with source metadata (bookId/page/rects/snippet); allow manual references; toggle include/exclude into Context; show Context size (items/chars; token estimate later).

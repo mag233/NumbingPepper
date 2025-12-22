@@ -1,4 +1,6 @@
 import { ensureClient } from './client'
+import { hasNoColumn, mapRowToBook, sortByRecency } from './booksHelpers'
+import { readLocalBooks, writeLocalBooks } from './booksLocalStore'
 
 export type LastReadPosition = {
   page: number
@@ -23,77 +25,6 @@ export type BookRecord = {
   addedAt: number
   lastReadPosition?: LastReadPosition
 }
-
-const LOCAL_LIBRARY_KEY = 'ai-readwrite-flow-library'
-
-const hasNoColumn = (error: unknown, column: string) =>
-  error instanceof Error && error.message.includes(`no such column: ${column}`)
-
-const parsePosition = (raw: unknown): LastReadPosition | undefined => {
-  if (!raw) return undefined
-  try {
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-    if (typeof parsed !== 'object' || parsed === null) return undefined
-    const pos = parsed as Record<string, unknown>
-    if (typeof pos.page !== 'number') return undefined
-    return {
-      page: pos.page,
-      scroll_y: typeof pos.scroll_y === 'number' ? pos.scroll_y : undefined,
-      zoom: typeof pos.zoom === 'number' ? pos.zoom : undefined,
-      fit_mode:
-        pos.fit_mode === 'manual' || pos.fit_mode === 'fitWidth' || pos.fit_mode === 'fitPage'
-          ? pos.fit_mode
-          : undefined,
-    }
-  } catch (error) {
-    console.warn('Failed to parse last_read_position', error)
-    return undefined
-  }
-}
-
-const mapRowToBook = (row: Record<string, unknown>): BookRecord => ({
-  id: String(row.id),
-  title: String(row.title ?? row.file_name ?? 'Untitled'),
-  author: typeof row.author === 'string' ? row.author : undefined,
-  coverPath: typeof row.cover_path === 'string' ? row.cover_path : undefined,
-  filePath: String(row.file_path),
-  format: typeof row.format === 'string' ? row.format : 'pdf',
-  fileHash: typeof row.file_hash === 'string' ? row.file_hash : undefined,
-  fileSize: typeof row.file_size === 'number' ? row.file_size : Number(row.file_size ?? 0),
-  mtime: typeof row.mtime === 'number' ? row.mtime : undefined,
-  lastOpenedAt: typeof row.last_opened_at === 'number' ? row.last_opened_at : undefined,
-  deletedAt: typeof row.deleted_at === 'number' ? row.deleted_at : undefined,
-  processedForSearch:
-    typeof row.processed_for_search === 'number'
-      ? row.processed_for_search === 1
-      : Boolean(row.processed_for_search),
-  addedAt: typeof row.added_at === 'number' ? row.added_at : Number(row.added_at ?? Date.now()),
-  lastReadPosition: parsePosition(row.last_read_position),
-})
-
-const readLocalBooks = (): BookRecord[] => {
-  try {
-    const raw = localStorage.getItem(LOCAL_LIBRARY_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed as BookRecord[]
-  } catch (error) {
-    console.warn('Local library read failed', error)
-    return []
-  }
-}
-
-const writeLocalBooks = (books: BookRecord[]) => {
-  try {
-    localStorage.setItem(LOCAL_LIBRARY_KEY, JSON.stringify(books))
-  } catch (error) {
-    console.warn('Local library write failed', error)
-  }
-}
-
-const sortByRecency = (books: BookRecord[]) =>
-  [...books].sort((a, b) => (b.lastOpenedAt ?? b.addedAt) - (a.lastOpenedAt ?? a.addedAt))
 
 export const loadBooks = async (): Promise<BookRecord[]> => {
   const db = await ensureClient()

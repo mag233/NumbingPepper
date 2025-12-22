@@ -18,6 +18,7 @@ const normalizePath = (path: string) => path.replace(/\\/g, '/')
 export const usePdfFileSource = (activeItem?: ActiveItem): Result => {
   const [fileSrc, setFileSrc] = useState<string | undefined>(undefined)
   const [blockedReason, setBlockedReason] = useState<string | undefined>(undefined)
+  const [loadedForId, setLoadedForId] = useState<string | null>(null)
 
   const normalizedPath = (() => {
     if (!activeItem?.filePath) return undefined
@@ -28,50 +29,56 @@ export const usePdfFileSource = (activeItem?: ActiveItem): Result => {
 
   const resolvedFile = activeItem?.url ?? normalizedPath
 
+  const activeId = activeItem?.id
+  const tauri = isTauri()
+
+  const isWebBlocked =
+    !tauri &&
+    normalizedPath !== undefined &&
+    !normalizedPath.startsWith('data:') &&
+    !normalizedPath.startsWith('blob:')
+
+  const effectiveBlockedReason =
+    activeId && isWebBlocked
+      ? 'This file was imported in the app; re-import in web to view.'
+      : loadedForId === activeId
+        ? blockedReason
+        : undefined
+
+  const effectiveFileSrc = (() => {
+    if (!activeId) return undefined
+    if (!tauri) return isWebBlocked ? undefined : resolvedFile
+    if (normalizedPath?.startsWith('data:') || normalizedPath?.startsWith('blob:')) return resolvedFile
+    if (!normalizedPath) return resolvedFile
+    return loadedForId === activeId ? fileSrc : undefined
+  })()
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFileSrc(undefined)
-    setBlockedReason(undefined)
-    if (!activeItem?.id) return
-
-    const tauri = isTauri()
-    const isWebBlocked =
-      !tauri &&
-      normalizedPath !== undefined &&
-      !normalizedPath.startsWith('data:') &&
-      !normalizedPath.startsWith('blob:')
-
-    if (!tauri) {
-      if (isWebBlocked) {
-        setBlockedReason('This file was imported in the app; re-import in web to view.')
-        return
-      }
-      setFileSrc(resolvedFile)
-      return
-    }
-
-    if (normalizedPath?.startsWith('data:') || normalizedPath?.startsWith('blob:')) {
-      setFileSrc(resolvedFile)
-      return
-    }
-
-    if (!normalizedPath) {
-      setFileSrc(resolvedFile)
-      return
-    }
+    if (!activeId) return
+    if (!tauri) return
+    if (normalizedPath?.startsWith('data:') || normalizedPath?.startsWith('blob:')) return
+    if (!normalizedPath) return
 
     void invoke<string>('read_file_base64', { path: normalizedPath })
-      .then((data) => setFileSrc(`data:application/pdf;base64,${data}`))
+      .then((data) => {
+        setLoadedForId(activeId)
+        setBlockedReason(undefined)
+        setFileSrc(`data:application/pdf;base64,${data}`)
+      })
       .catch((error) => {
         console.error('[usePdfFileSource] read_file_base64 failed', error)
         try {
+          setLoadedForId(activeId)
+          setBlockedReason(undefined)
           setFileSrc(convertFileSrc(normalizedPath))
         } catch (fallbackError) {
           console.error('[usePdfFileSource] convertFileSrc failed', fallbackError)
+          setLoadedForId(activeId)
+          setFileSrc(undefined)
           setBlockedReason('Failed to resolve PDF path.')
         }
       })
-  }, [activeItem?.id, activeItem?.filePath, activeItem?.url, normalizedPath, resolvedFile])
+  }, [activeId, normalizedPath, tauri])
 
-  return { fileSrc, blockedReason }
+  return { fileSrc: effectiveFileSrc, blockedReason: effectiveBlockedReason }
 }

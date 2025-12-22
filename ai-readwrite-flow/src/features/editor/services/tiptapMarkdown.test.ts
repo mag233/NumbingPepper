@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tipTapDocToMarkdownSource } from './tiptapMarkdown'
+import { markdownSourceToTipTapDoc, tipTapDocToMarkdownSource } from './tiptapMarkdown'
 
 describe('tipTapDocToMarkdownSource', () => {
   it('extracts paragraphs and headings with stable spacing', () => {
@@ -100,5 +100,17 @@ describe('tipTapDocToMarkdownSource', () => {
     expect(tipTapDocToMarkdownSource(null)).toBe('')
     expect(tipTapDocToMarkdownSource(123)).toBe('')
     expect(tipTapDocToMarkdownSource({})).toBe('')
+  })
+})
+
+describe('markdownSourceToTipTapDoc', () => {
+  it('round-trips markdown-ish text through TipTap doc', () => {
+    const md = ['# Title', '', '## Section', 'line 1', 'line 2', '', '- item'].join('\n')
+    const doc = markdownSourceToTipTapDoc(md)
+    const back = tipTapDocToMarkdownSource(doc)
+    expect(back).toContain('# Title')
+    expect(back).toContain('## Section')
+    expect(back).toContain('line 1\nline 2')
+    expect(back).toContain('- item')
   })
 })

@@ -13,7 +13,6 @@ import { buildWriterUserPrompt } from './services/writerChatPrompt'
 import useWriterArtifactsStore from './stores/writerArtifactsStore'
 import WriterChatMessages from './components/WriterChatMessages'
 import WriterStudioPanel from './components/WriterStudioPanel'
-
 type Props = {
   quickPrompt?: { text: string; autoSend?: boolean }
   onConsumeQuickPrompt?: () => void
@@ -163,84 +162,86 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
       }
       className="flex h-full max-h-[calc(100vh-160px)] flex-col"
     >
-      <div className="flex h-full flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex items-center gap-2 text-xs text-ink-muted">
           <MessageCircle className="size-4 text-accent" />
           <span>Chat is scoped to the active writing project.</span>
         </div>
         <WriterStudioPanel />
-        <WriterChatMessages messages={messages} />
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-amber-500/50 bg-amber-500/10 p-2 text-xs text-amber-100">
-            <AlertCircle className="size-4" />
-            <span>{error}</span>
-            {lastPrompt && (
-              <button
-                onClick={handleRetry}
-                className="ml-auto inline-flex items-center gap-1 rounded border border-amber-400 px-2 py-1 text-amber-50 hover:border-amber-300"
-              >
-                <RotateCcw className="size-3" />
-                Retry
-              </button>
-            )}
-          </div>
-        )}
-        <form onSubmit={handleSend} className="space-y-2 flex-1">
-          <label className="flex items-center gap-2 text-xs text-ink-muted">
-            <input
-              type="checkbox"
-              checked={includeContext}
-              onChange={(e) => setIncludeContext(e.target.checked)}
-              className="accent-accent"
-            />
-            Include Writer Context
-          </label>
-          {templates.length > 0 && (
-            <div className="flex items-center gap-2 text-xs">
-              <select
-                value={selectedTemplate}
-                onChange={(event) => setSelectedTemplate(event.target.value)}
-                className="w-full rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-2 py-2 text-xs text-ink-primary focus:border-accent focus:outline-none"
-              >
-                <option value="">Choose a template</option>
-                {templates.map((tpl) => (
-                  <option key={tpl.id} value={tpl.id}>
-                    {tpl.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="shrink-0 rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-3 py-2 text-xs text-ink-primary hover:border-accent disabled:opacity-60"
-                disabled={!selectedTemplate}
-                onClick={() => {
-                  const tpl = templates.find((t) => t.id === selectedTemplate)
-                  if (!tpl) return
-                  setDraft((cur) => (cur.trim() ? `${cur}\n\n${tpl.prompt}` : tpl.prompt))
-                  window.setTimeout(focusInput, 0)
-                }}
-              >
-                Insert
-              </button>
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <WriterChatMessages messages={messages} />
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/50 bg-amber-500/10 p-2 text-xs text-amber-100">
+              <AlertCircle className="size-4" />
+              <span>{error}</span>
+              {lastPrompt && (
+                <button
+                  onClick={handleRetry}
+                  className="ml-auto inline-flex items-center gap-1 rounded border border-amber-400 px-2 py-1 text-amber-50 hover:border-amber-300"
+                >
+                  <RotateCcw className="size-3" />
+                  Retry
+                </button>
+              )}
             </div>
           )}
-          <textarea
-            ref={inputRef}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            rows={3}
-            placeholder="Ask for help on your writing..."
-            className="w-full rounded-xl border border-chrome-border/70 bg-surface-raised/70 p-3 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={sending}
-            className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-            {sending ? 'Sending...' : 'Send'}
-          </button>
-        </form>
+          <form onSubmit={handleSend} className="space-y-2">
+            <label className="flex items-center gap-2 text-xs text-ink-muted">
+              <input
+                type="checkbox"
+                checked={includeContext}
+                onChange={(e) => setIncludeContext(e.target.checked)}
+                className="accent-accent"
+              />
+              Include Writer Context
+            </label>
+            {templates.length > 0 && (
+              <div className="flex items-center gap-2 text-xs">
+                <select
+                  value={selectedTemplate}
+                  onChange={(event) => setSelectedTemplate(event.target.value)}
+                  className="w-full rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-2 py-2 text-xs text-ink-primary focus:border-accent focus:outline-none"
+                >
+                  <option value="">Choose a template</option>
+                  {templates.map((tpl) => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {tpl.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-3 py-2 text-xs text-ink-primary hover:border-accent disabled:opacity-60"
+                  disabled={!selectedTemplate}
+                  onClick={() => {
+                    const tpl = templates.find((t) => t.id === selectedTemplate)
+                    if (!tpl) return
+                    setDraft((cur) => (cur.trim() ? `${cur}\n\n${tpl.prompt}` : tpl.prompt))
+                    window.setTimeout(focusInput, 0)
+                  }}
+                >
+                  Insert
+                </button>
+              </div>
+            )}
+            <textarea
+              ref={inputRef}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              rows={3}
+              placeholder="Ask for help on your writing..."
+              className="w-full rounded-xl border border-chrome-border/70 bg-surface-raised/70 p-3 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={sending}
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              {sending ? 'Sending...' : 'Send'}
+            </button>
+          </form>
+        </div>
       </div>
     </Card>
   )

@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Reader: added `Questions` shortcut (auto-send) and a Settings editor for Reader AI templates (Ask AI/Summarize/Explain/Questions) with `Use defaults` + reset controls.
+- Code discipline: added Zod validation for persisted JSON (templates/settings/books local fallback), split oversized TS modules to meet the 250-LOC rule, and removed eslint-disable suppressions by restructuring effects.
 - Added SQLite migrations for books/highlights/chats/drafts/FTS; Tauri import command copies to per-book folders with hash/mtime/size metadata.
 - Library store hydrates from DB, dedupes by hash, persists `last_read_position` (page+scroll+zoom+fit_mode), and uses base64/asset loading in app.
 - Web imports store data URLs to survive refresh; web hides desktop-only entries to avoid broken previews and guides users to re-import on web.
@@ -48,3 +50,13 @@
 - Writer: Projects picker closes via outside click/Esc/X; project creation requires explicit Save/Cancel to avoid accidental Untitled entries.
 - Docs: refined Writer AI direction toward writing-first Studio artifacts (Kickoff/Definition/Explanation/Rewrite/Polish) with safe insert and citation constraint on by default (Task 18.15).
 - Writer: implemented Studio artifacts (Kickoff/Definition/Explanation/Rewrite/Polish) saved per project; actions are non-destructive by default (generate → Artifact list → Insert/To Context/To Ref). Added `writing_artifacts` table (migration v15) with localStorage fallback on web.
+- Writer: Studio artifacts list defaults to “Recent 3 + All…” to prevent the sidebar from crowding out chat; artifact action buttons are compact.
+- Writer: disable TipTap horizontal-rule auto-conversion so `---` stays literal in Edit and renders correctly in Markdown Preview.
+- Writer: Writer AI sidebar now keeps the chat input visible by making messages scroll and preventing the input form from taking flexible height; Studio is collapsible (default collapsed).
+- Writer: added Writer outline (from markdown headings in Content) with click-to-jump, plus reference snippet expand/collapse and a wider Writer sidebar for readability.
+- Writer: fix outline click-to-jump by wiring the editor to react to outline click events; improve multi-level rendering (indentation per heading level) and make jumps resilient to heading syntax variations.
+- Writer: harden Writer draft persistence by writing through to local fallback on every save and flushing pending edits on pagehide/visibilitychange (reduces data loss on abrupt restarts).
+- Writer: fix markdown normalization that incorrectly transformed `## Heading` into `# # Heading`, which broke Outline levels and preview rendering.
+- Writer: fix autosave debounce bookkeeping and snapshot-based flush so the active project is not overwritten with an empty doc during app close/unmount.
+- Writer: block autosave during editor hydration so switching Reader→Writer or switching projects cannot overwrite an existing draft with the initial empty editor state.
+- Writer: add explicit `Save` button + “Saved/Saving/Failed” status in the Writer header; harden SQLite init (fail-closed to local fallback) and persist content to `writing_contents` as a second-layer restore path.

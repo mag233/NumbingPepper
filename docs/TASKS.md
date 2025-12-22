@@ -37,6 +37,8 @@
 | 29 | In Progress | P0       | Reader hardening & completion (stability, TOC/outline, error boundaries, UX polish).                         | Medium - keep Reader-first; defer non-blockers. |
 | 30 | Backlog     | P2       | Cache management: 512MB soft cap + LRU eviction for `$APP_DATA/cache` (never critical data).                | Low - prevents unbounded growth; housekeeping. |
 | 31 | Backlog     | P2       | Library organization: tags/collections for PDFs (grouping + filters).                                        | Medium - requires new schema + UI; not Alpha-critical. |
+| 32 | Done        | P2       | Code discipline compliance: add Zod validation for persisted JSON, split oversized modules, remove lint suppressions. | Low - refactor-only; behavior should remain stable. |
+| 33 | In Progress | P1       | Reader AI templates + Questions shortcut (selection + highlight popover).                                     | Medium - prompt contract + user-editable templates w/ defaults fallback. |
 
 ## Progress Notes
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
@@ -75,6 +77,15 @@
 | 29.4 | Done | P1 | TOC/outline | Parse PDF outline (if present) for quick jump | Pass (`docs/QA.md` 29-QA-002) |
 | 29.5 | Done | P1 | Selection UX | Reduce adjacent-line selection overlap during drag-select via custom selection overlay; keep menu consistent | Pass (`docs/QA.md` 10-QA-002); remaining native overlap edge cases tracked under 10-QA-001 |
 
+## Task 33 Breakdown (Reader AI templates + Questions shortcut)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify |
+| -- | ------ | -------- | -------- | -------------- | ------ |
+| 33.1 | In Progress | P1 | Central template registry (Summarize/Explain/Ask AI/Questions) | Single source of truth; templates are end-user editable with `Use defaults` + per-template reset + reset-all overrides | Unit (Vitest): prompt building + action mapping |
+| 33.2 | In Progress | P1 | Selection menu: Questions action | Action appears in floating menu; auto-sends; default output: 3–5 Q/A pairs covering terminology + logic flow + insight | Manual: selection → Questions → auto-send + focused input |
+| 33.3 | In Progress | P1 | Highlight popover: Questions action | Popover includes Questions; reuses same template registry as selection menu | Manual: click highlight → popover → Questions |
+| 33.4 | In Progress | P1 | UX polish | Single-line labels; tooltip “Generate Questions”; menu clamped to avoid being covered; mobile 375px checks | Manual: 375px + desktop split view |
+| 33.5 | In Progress | P1 | Docs/QA | Add QA rows for Questions + templates UI + defaults fallback | `docs/QA.md` 33-QA-001..004 |
+
 ## Task 18 Breakdown (Writer - deferred until Task 29 complete)
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify |
 | -- | ------ | -------- | -------- | -------------- | ------ |
@@ -89,7 +100,10 @@
 | 18.12 | Done | P1 | Writer sidebar layout | Writer view hides ReaderNav and uses WriterSidebar (Projects + References); set a sane default Content/Context ratio (or adjustable split) so context is not squeezed | Pass (`docs/QA.md` 18-QA-014) |
 | 18.14 | Done | P1 | Projects picker UX | Projects menu closes via outside click/Esc/X; create project requires explicit Save/Cancel; rename supports Save/Cancel | Pass (`docs/QA.md` 18-QA-016) |
 | 18.13 | Todo | P1 | Content selection AI actions | Select text in Writer Content → show action menu (Simplify/Concise/Rewrite/Translate/Explain); non-destructive by default (insert suggestion and preserve undo) | Manual (`docs/QA.md` 18-QA-015) |
-| 18.15 | In Progress | P1 | Writer Studio artifacts | Kickoff/Definition/Explanation/Rewrite(style)/Polish generate saved artifacts first; Insert applies to Content; citation constraint On by default when refs available | Implemented; QA pending (`docs/QA.md` 18-QA-017) |
+| 18.15 | Done | P1 | Writer Studio artifacts | Kickoff/Definition/Explanation/Rewrite(style)/Polish generate saved artifacts first; Insert applies to Content; citation constraint On by default when refs available | Pass (`docs/QA.md` 18-QA-017). Includes “Recent 3 + All…” artifacts list to keep chat usable. |
+| 18.16 | In Progress | P1 | Outline + reference preview | Outline derives from markdown headings in Content and supports click-to-jump; references support expand/collapse preview; sidebar width increased for readability | Manual (`docs/QA.md` 18-QA-019, 18-QA-020) |
+| 18.17 | In Progress | P0 | Draft persistence hardening | Prevent empty overwrites during Writer mount/project switch (hydration gate); drafts should survive abrupt app restarts with write-through local fallback + flush-on-exit | Manual (`docs/QA.md` 18-QA-021, 18-QA-022) |
+| 18.18 | Todo | P1 | Snapshots / History (manual) | Add manual snapshots for Writer Content (title+note+timestamp) with restore/duplicate; prevents autosave from overwriting “ideal” versions and provides safe rollbacks | Manual: create snapshot, restore snapshot, duplicate project |
 | 18.9 | Backlog | P2 | Flomo export | Export entry/selection to Flomo with templates + retry + success/failure feedback | Manual: success + failure paths |
 | 18.10 | Backlog | P2 | Synonyms/translation | Quick lookup via remote LLM first; local model optional later | Manual: action returns output |
 | 18.11 | Backlog | P2 | Personalization | Define "learn my writing" as local-only style profile or local retrieval; default off | Manual: enable/disable and effect |

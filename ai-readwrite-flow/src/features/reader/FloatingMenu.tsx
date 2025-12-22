@@ -102,6 +102,7 @@ const FloatingMenu = ({ x, y, text, page, rects, activeBookId, copyStatus = 'idl
       <button
         onClick={() => onAction('questions')}
         className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-accent/20"
+        title="Generate Questions"
       >
         <CircleHelp className="size-4" />
         Questions

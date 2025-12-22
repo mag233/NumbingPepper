@@ -1,20 +1,12 @@
 import { useMemo, useState } from 'react'
-import {
-  CheckCircle2,
-  Loader2,
-  ShieldCheck,
-  TestTube,
-  Wifi,
-  Trash2,
-  Plus,
-  X,
-} from 'lucide-react'
+import { CheckCircle2, Loader2, Plus, ShieldCheck, TestTube, Trash2, Wifi, X } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useSettingsStore from '../../stores/settingsStore'
 import { testConnection } from '../../lib/apiClient'
 import { defaultBaseUrl, defaultModel } from '../../lib/constants'
 import useTemplateStore from '../../stores/templateStore'
 import { themePresetSchema, type ThemePreset } from '../../lib/theme'
+import ReaderShortcutTemplatesModal from './ReaderShortcutTemplatesModal'
 
 const inputClass =
   'w-full rounded-lg border border-chrome-border/80 bg-surface-raised/70 px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
@@ -38,6 +30,7 @@ const SettingsPanel = () => {
   const [testing, setTesting] = useState(false)
   const [message, setMessage] = useState<string>('')
   const [showTemplates, setShowTemplates] = useState(false)
+  const [showReaderTemplates, setShowReaderTemplates] = useState(false)
 
   const statusTone = useMemo(() => {
     if (testing) return 'Testing...'
@@ -148,6 +141,22 @@ const SettingsPanel = () => {
       </div>
       <div className="mt-4 rounded-xl border border-chrome-border/70 bg-surface-raised/70 p-3">
         <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-ink-primary">Reader AI Templates</span>
+          <button
+            type="button"
+            onClick={() => setShowReaderTemplates(true)}
+            className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-1 text-xs font-semibold text-ink-primary hover:border-accent"
+          >
+            <Plus className="size-4" />
+            Manage
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-ink-muted">
+          Edit the built-in Reader shortcuts (Ask AI / Summarize / Explain / Questions). Use defaults to recover if prompts break.
+        </p>
+      </div>
+      <div className="mt-4 rounded-xl border border-chrome-border/70 bg-surface-raised/70 p-3">
+        <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-ink-primary">
             Prompt Templates ({templates.length})
           </span>
@@ -232,6 +241,7 @@ const SettingsPanel = () => {
           </div>
         </div>
       )}
+      {showReaderTemplates && <ReaderShortcutTemplatesModal onClose={() => setShowReaderTemplates(false)} />}
     </Card>
   )
 }

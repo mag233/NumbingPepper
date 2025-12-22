@@ -18,7 +18,7 @@ const WriterChatMessages = ({ messages }: Props) => {
   return (
     <div
       ref={messagesRef}
-      className="grid flex-[2] gap-3 overflow-y-auto rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3"
+      className="grid min-h-48 flex-1 gap-3 overflow-y-auto rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3"
     >
       {messages.length === 0 && <p className="text-sm text-ink-muted">No messages yet.</p>}
       {messages.map((msg) => (
@@ -38,4 +38,3 @@ const WriterChatMessages = ({ messages }: Props) => {
 }
 
 export default WriterChatMessages
-

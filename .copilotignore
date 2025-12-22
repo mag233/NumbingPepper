@@ -1,0 +1,13 @@
+# Large / generated build artifacts
+ai-readwrite-flow/src-tauri/target/**
+ai-readwrite-flow/node_modules/**
+ai-readwrite-flow/dist/**
+
+# Local app/runtime data (dev)
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# OS / tooling noise
+**/.DS_Store
+**/Thumbs.db

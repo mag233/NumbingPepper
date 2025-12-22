@@ -18,7 +18,7 @@ import useMetricsStore from './stores/metricsStore'
 import useLibraryStore from './stores/libraryStore'
 import { normalizeThemePreset } from './lib/theme'
 import { getWriterGridCols } from './lib/layout'
-import { buildReaderQuickPrompt, type ReaderQuickAction } from './lib/quickPrompts'
+import useReaderShortcutTemplateStore, { type ReaderShortcutAction } from './stores/readerShortcutTemplateStore'
 
 const NAV_TABS: { id: TabKey; label: string }[] = [
   { id: 'library', label: 'Library' },
@@ -40,6 +40,7 @@ const App = () => {
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
   const [writerChatCollapsed, setWriterChatCollapsed] = useState(false)
   const writerCols = getWriterGridCols(showNav, writerChatCollapsed)
+  const buildReaderQuickPrompt = useReaderShortcutTemplateStore((s) => s.buildQuickPrompt)
 
   useEffect(() => {
     void hydrate()
@@ -50,7 +51,7 @@ const App = () => {
     document.documentElement.dataset.theme = normalizeThemePreset(themePreset)
   }, [themePreset])
 
-  const handleReaderAction = (action: ReaderQuickAction, text: string) => {
+  const handleReaderAction = (action: ReaderShortcutAction, text: string) => {
     setQuickPrompt(buildReaderQuickPrompt(action, text))
     if (isMobile) setActiveTab('chat')
   }

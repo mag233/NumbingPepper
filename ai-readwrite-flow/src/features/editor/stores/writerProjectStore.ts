@@ -115,8 +115,7 @@ const useWriterProjectStore = create<State>((set, get) => ({
       const activeProjectId =
         state.activeProjectId === id ? pickDefaultActive(projects) : state.activeProjectId
       writeActiveProjectId(activeProjectId)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { [id]: __removed, ...rest } = state.tagsByProjectId
+      const rest = Object.fromEntries(Object.entries(state.tagsByProjectId).filter(([projectId]) => projectId !== id))
       const allTags = uniqueSorted(Object.values(rest).flat())
       const tagFilter = state.tagFilter && allTags.includes(state.tagFilter) ? state.tagFilter : null
       return { projects, activeProjectId, tagsByProjectId: rest, allTags, tagFilter }

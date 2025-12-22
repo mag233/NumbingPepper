@@ -100,6 +100,7 @@ const HighlightPopover = ({
         <button
           onClick={onGenerateQuestions}
           className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-accent"
+          title="Generate Questions"
         >
           <CircleHelp className="size-3" />
           Questions

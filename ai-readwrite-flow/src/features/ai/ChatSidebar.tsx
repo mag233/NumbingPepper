@@ -31,6 +31,13 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
   const messagesRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  const focusInput = useCallback(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.focus()
+    el.setSelectionRange(el.value.length, el.value.length)
+  }, [])
+
   const historyMessages: ChatMessageInput[] = useMemo(
     () =>
       messages.map((msg) => ({
@@ -99,21 +106,20 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt }: Props) => {
   useEffect(() => {
     if (!quickPrompt) return
     const { text, autoSend } = quickPrompt
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDraft(text)
+    window.setTimeout(() => setDraft(text), 0)
     if (autoSend) {
-      void doSend(text)
-      setDraft('')
+      window.setTimeout(() => {
+        void doSend(text)
+        setDraft('')
+        window.setTimeout(focusInput, 0)
+      }, 0)
     } else {
       window.setTimeout(() => {
-        const el = inputRef.current
-        if (!el) return
-        el.focus()
-        el.setSelectionRange(el.value.length, el.value.length)
+        focusInput()
       }, 0)
     }
     onConsumeQuickPrompt?.()
-  }, [quickPrompt, onConsumeQuickPrompt, doSend])
+  }, [quickPrompt, onConsumeQuickPrompt, doSend, focusInput])
 
   useEffect(() => {
     if (messagesRef.current) {

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
-import type { Editor as TipTapEditor, JSONContent } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import ReactMarkdown from 'react-markdown'
@@ -9,12 +8,16 @@ import { Command, Eye, Pencil, Sparkles, Wand2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import { useDraftPersistence } from './hooks/useDraftPersistence'
 import { draftIdForProject } from './services/draftIds'
+import { insertPlainTextAsParagraphs, scrollEditorToNeedle } from './services/editorCommands'
 import useWriterProjectStore from './stores/writerProjectStore'
 import useWriterContextStore from './stores/writerContextStore'
 import WriterContextPanel from './components/WriterContextPanel'
 import useWriterReferencesStore from './stores/writerReferencesStore'
 import { extractTagPathsFromTipTapDoc } from './services/writerTags'
 import useWriterArtifactsStore from './stores/writerArtifactsStore'
+import { tipTapDocToMarkdownSource } from './services/tiptapMarkdown'
+import useWriterOutlineStore from './stores/writerOutlineStore'
+import useWriterEditorCommandStore from './stores/writerEditorCommandStore'
 
 type Props = {
   onCommand: (prompt: string) => void
@@ -25,18 +28,6 @@ const commands = [
   { label: 'Fix Grammar', prompt: 'Check and correct grammar.' },
   { label: 'Summarize', prompt: 'Summarize the key points above.' },
 ]
-
-const insertPlainTextAsParagraphs = (editor: TipTapEditor, text: string) => {
-  const normalized = text.replace(/\r\n/g, '\n').trim()
-  if (!normalized) return
-  const paragraphs = normalized.split(/\n{2,}/g)
-  const content: JSONContent[] = paragraphs.map((p) => ({
-    type: 'paragraph',
-    content: [{ type: 'text', text: p }],
-  }))
-  editor.chain().focus().insertContent(content).run()
-}
-
 const EditorPane = ({ onCommand }: Props) => {
   const [showMenu, setShowMenu] = useState(false)
   const [isPreview, setIsPreview] = useState(false)
@@ -48,6 +39,9 @@ const EditorPane = ({ onCommand }: Props) => {
   const hydrateReferences = useWriterReferencesStore((s) => s.hydrate)
   const pendingInsert = useWriterArtifactsStore((s) => s.pendingInsert)
   const consumeInsert = useWriterArtifactsStore((s) => s.consumeInsert)
+  const setOutlineFromMarkdown = useWriterOutlineStore((s) => s.setFromMarkdown)
+  const consumeScrollRequest = useWriterEditorCommandStore((s) => s.consumeScrollRequest)
+  const pendingScroll = useWriterEditorCommandStore((s) => s.pendingScroll)
   useEffect(() => {
     void hydrate()
   }, [hydrate])
@@ -69,6 +63,7 @@ const EditorPane = ({ onCommand }: Props) => {
           listItem: false,
           blockquote: false,
           codeBlock: false,
+          horizontalRule: false,
           bold: false,
           italic: false,
           strike: false,
@@ -83,7 +78,7 @@ const EditorPane = ({ onCommand }: Props) => {
     [draftId],
   )
 
-  useDraftPersistence({ editor, draftId })
+  const { status: saveStatus, lastSavedAt, flushNow } = useDraftPersistence({ editor, draftId })
 
   useEffect(() => {
     editor?.setEditable(!isPreview)
@@ -98,13 +93,23 @@ const EditorPane = ({ onCommand }: Props) => {
 
   useEffect(() => {
     if (!editor) return
+    if (!pendingScroll) return
+    const req = consumeScrollRequest()
+    if (!req) return
+    scrollEditorToNeedle(editor, req)
+  }, [consumeScrollRequest, editor, pendingScroll])
+
+  useEffect(() => {
+    if (!editor) return
     if (!activeProjectId) return
     const timerRef = { current: 0 as number | null }
     const schedule = () => {
       if (timerRef.current !== null) window.clearTimeout(timerRef.current)
       timerRef.current = window.setTimeout(() => {
-        const tags = extractTagPathsFromTipTapDoc(editor.getJSON())
+        const doc = editor.getJSON()
+        const tags = extractTagPathsFromTipTapDoc(doc)
         setProjectTags(activeProjectId, tags)
+        setOutlineFromMarkdown(activeProjectId, tipTapDocToMarkdownSource(doc))
       }, 400)
     }
     editor.on('update', schedule)
@@ -113,7 +118,7 @@ const EditorPane = ({ onCommand }: Props) => {
       editor.off('update', schedule)
       if (timerRef.current !== null) window.clearTimeout(timerRef.current)
     }
-  }, [activeProjectId, editor, setProjectTags])
+  }, [activeProjectId, editor, setOutlineFromMarkdown, setProjectTags])
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -145,13 +150,20 @@ const EditorPane = ({ onCommand }: Props) => {
     [editor, onCommand],
   )
 
-  const previewSource =
-    isPreview && editor ? editor.getText({ blockSeparator: '\n' }).trimEnd() : ''
+  const previewSource = isPreview && editor ? tipTapDocToMarkdownSource(editor.getJSON()) : ''
 
   const activeTitle = useMemo(() => {
     const active = projects.find((p) => p.id === activeProjectId)
     return active?.title ?? 'No project'
   }, [activeProjectId, projects])
+
+  const saveLabel = useMemo(() => {
+    if (saveStatus === 'saving') return 'Saving…'
+    if (saveStatus === 'error') return 'Save failed'
+    if (!lastSavedAt) return 'Not saved yet'
+    const time = new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return `Saved ${time}`
+  }, [lastSavedAt, saveStatus])
 
   return (
     <Card
@@ -161,6 +173,23 @@ const EditorPane = ({ onCommand }: Props) => {
           <span className="max-w-[12rem] truncate text-xs text-ink-muted" title={activeTitle}>
             Active: {activeTitle}
           </span>
+          <span
+            className={`rounded-lg border px-2 py-1 ${
+              saveStatus === 'error'
+                ? 'border-red-500/40 bg-red-500/10 text-red-200'
+                : 'border-chrome-border/70 bg-surface-raised/40 text-ink-muted'
+            }`}
+            title={lastSavedAt ? new Date(lastSavedAt).toISOString() : undefined}
+          >
+            {saveLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => void flushNow()}
+            className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/60 px-3 py-2 text-ink-primary hover:border-accent"
+          >
+            Save
+          </button>
           <button
             type="button"
             onClick={() => {

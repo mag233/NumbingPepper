@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import useWriterReferencesStore from '../stores/writerReferencesStore'
 
@@ -17,6 +17,7 @@ const WriterReferencesPanel = ({ noTopMargin, listClassName }: Props) => {
   const { projectId, references, membership, addManual, toggleIncluded, removeReference } =
     useWriterReferencesStore()
   const [openAdd, setOpenAdd] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [snippet, setSnippet] = useState('')
@@ -83,6 +84,7 @@ const WriterReferencesPanel = ({ noTopMargin, listClassName }: Props) => {
           {references.map((r) => {
             const included = isIncluded(r.id)
             const confirm = confirmDeleteId === r.id
+            const expanded = expandedId === r.id
             return (
               <div key={r.id} className="flex items-start gap-2 border-b border-chrome-border/60 p-2 last:border-b-0">
                 <input
@@ -103,23 +105,36 @@ const WriterReferencesPanel = ({ noTopMargin, listClassName }: Props) => {
                         {r.author ? `by ${r.author}` : r.sourceType}
                       </div>
                     </div>
-                    <button
-                      className={`${btn} ${confirm ? 'border-amber-500/60 text-amber-100 hover:border-amber-400' : ''}`}
-                      onClick={() => {
-                        if (!confirm) {
-                          setConfirmDeleteId(r.id)
-                          return
-                        }
-                        void removeReference(r.id).then(() => setConfirmDeleteId(null))
-                      }}
-                      type="button"
-                      title={confirm ? 'Click again to confirm delete' : 'Delete'}
-                      aria-label={confirm ? 'Confirm delete reference' : 'Delete reference'}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className={btn}
+                        type="button"
+                        onClick={() => setExpandedId((cur) => (cur === r.id ? null : r.id))}
+                        title={expanded ? 'Collapse preview' : 'Preview'}
+                        aria-label={expanded ? 'Collapse reference preview' : 'Preview reference'}
+                      >
+                        {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                      </button>
+                      <button
+                        className={`${btn} ${confirm ? 'border-amber-500/60 text-amber-100 hover:border-amber-400' : ''}`}
+                        onClick={() => {
+                          if (!confirm) {
+                            setConfirmDeleteId(r.id)
+                            return
+                          }
+                          void removeReference(r.id).then(() => setConfirmDeleteId(null))
+                        }}
+                        type="button"
+                        title={confirm ? 'Click again to confirm delete' : 'Delete'}
+                        aria-label={confirm ? 'Confirm delete reference' : 'Delete reference'}
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs text-ink-primary">{r.snippetText}</div>
+                  <div className={`mt-1 whitespace-pre-wrap text-xs text-ink-primary ${expanded ? '' : 'line-clamp-3'}`}>
+                    {r.snippetText}
+                  </div>
                 </div>
               </div>
             )

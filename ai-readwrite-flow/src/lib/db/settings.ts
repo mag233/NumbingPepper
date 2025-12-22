@@ -5,6 +5,7 @@ import {
   normalizeThemePreset,
   type ThemePreset,
 } from '../theme'
+import { z } from 'zod'
 import { ensureClient, ensureStore } from './client'
 
 export type StoredSettings = {
@@ -22,16 +23,24 @@ const DEFAULT_SETTINGS: StoredSettings = {
   themePreset: defaultThemePreset,
 }
 
+const storedSettingsInputSchema = z.object({
+  apiKey: z.string().optional(),
+  baseUrl: z.string().optional(),
+  model: z.string().optional(),
+  themePreset: z.string().optional(),
+})
+
 export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
   const st = await ensureStore()
   if (st) {
     try {
-      const raw = await st.get<StoredSettings>('settings')
-      if (raw) {
+      const raw: unknown = await st.get('settings')
+      const parsed = storedSettingsInputSchema.safeParse(raw)
+      if (parsed.success) {
         return {
           ...DEFAULT_SETTINGS,
-          ...raw,
-          themePreset: normalizeThemePreset(raw.themePreset ?? getPreferredThemePreset()),
+          ...parsed.data,
+          themePreset: normalizeThemePreset(parsed.data.themePreset ?? getPreferredThemePreset()),
         }
       }
     } catch (error) {
@@ -42,11 +51,13 @@ export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as Partial<StoredSettings>
+      const json: unknown = JSON.parse(raw)
+      const parsed = storedSettingsInputSchema.safeParse(json)
+      if (!parsed.success) throw new Error('Invalid settings in localStorage')
       return {
         ...DEFAULT_SETTINGS,
-        ...parsed,
-        themePreset: normalizeThemePreset(parsed.themePreset ?? getPreferredThemePreset()),
+        ...parsed.data,
+        themePreset: normalizeThemePreset(parsed.data.themePreset ?? getPreferredThemePreset()),
       }
     }
   } catch (error) {

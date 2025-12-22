@@ -6,6 +6,11 @@ let client: Database | null = null
 export const getSqlite = async () => {
   if (!isTauri()) return null
   if (client) return client
-  client = await Database.load('sqlite:settings.db')
-  return client
+  try {
+    client = await Database.load('sqlite:settings.db')
+    return client
+  } catch {
+    client = null
+    return null
+  }
 }

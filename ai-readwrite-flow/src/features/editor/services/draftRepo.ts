@@ -65,16 +65,20 @@ const mapRow = (row: DraftRow): DraftRecord | null => {
 
 export const loadDraft = async (id: string): Promise<DraftRecord | null> => {
   if (!id) return null
+  const local = readLocal(id)
   const db = await getSqlite()
-  if (!db) return readLocal(id)
+  if (!db) return local
   try {
     const rows = (await db.select<DraftRow[]>('SELECT id, editor_doc, updated_at FROM drafts WHERE id = ? LIMIT 1', [
       id,
     ])) ?? []
     const row = rows[0]
-    return row ? mapRow(row) : null
+    const fromDb = row ? mapRow(row) : null
+    if (!fromDb) return local
+    if (!local) return fromDb
+    return local.updatedAt >= fromDb.updatedAt ? local : fromDb
   } catch {
-    return readLocal(id)
+    return local
   }
 }
 
@@ -82,11 +86,10 @@ export const saveDraft = async (draft: DraftRecord) => {
   const parsed = draftSchema.safeParse(draft)
   if (!parsed.success) return false
 
+  writeLocal(parsed.data)
+
   const db = await getSqlite()
-  if (!db) {
-    writeLocal(parsed.data)
-    return true
-  }
+  if (!db) return true
 
   try {
     await db.execute('INSERT OR REPLACE INTO drafts (id, editor_doc, updated_at) VALUES (?, ?, ?)', [
@@ -96,7 +99,6 @@ export const saveDraft = async (draft: DraftRecord) => {
     ])
     return true
   } catch {
-    writeLocal(parsed.data)
     return true
   }
 }
