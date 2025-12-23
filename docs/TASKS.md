@@ -18,7 +18,7 @@
 | 10 | Backlog     | P2       | Reader selection UX polish (reduce adjacent-line overlap; predictable menu bounds).                          | Low - non-blocker; some PDFs still overlap. |
 | 11 | Done        | P0       | Save/restore `last_read_position` (page/scroll/zoom/fit_mode) per book.                                      | Medium - continuous vs paged restore details. |
 | 12 | In Progress | P0       | Highlights: persistence + overlays + interactions (see breakdown below).                                     | Medium - geometry edge cases + perf. |
-| 13 | In Progress | P0       | Persist chat history and writer drafts; add basic telemetry/logging (local-only).                            | Medium - 13-QA-001..003 pass; 13-QA-004 pending. Writer UX deferred until Reader complete. |
+| 13 | In Progress | P0       | Persist chat history and writer drafts; add basic telemetry/logging (local-only).                            | Medium - 13-QA-001..002 pass; 13-QA-003 pending; 13-QA-004 N/A (Writer is project-scoped; see 18-QA-021/022). |
 | 14 | Done        | P0       | Add error boundaries for Reader/Chat (and Writer later) with reload affordance.                              | Low |
 | 15 | Todo        | P1       | Add smoke tests (stores/hooks/api client); mock Tauri plugins.                                               | Medium - harness setup needed. |
 | 16 | Todo        | P1       | Performance guards: virtualization for large lists (>100), main-thread budget on import.                    | Medium - needs profiling and thresholds. |
@@ -39,6 +39,7 @@
 | 31 | Backlog     | P2       | Library organization: tags/collections for PDFs (grouping + filters).                                        | Medium - requires new schema + UI; not Alpha-critical. |
 | 32 | Done        | P2       | Code discipline compliance: add Zod validation for persisted JSON, split oversized modules, remove lint suppressions. | Low - refactor-only; behavior should remain stable. |
 | 33 | In Progress | P1       | Reader AI templates + Questions shortcut (selection + highlight popover).                                     | Medium - prompt contract + user-editable templates w/ defaults fallback. |
+| 34 | In Progress | P1       | Desktop layout density: Settings drawer + left Library + bottom PDF toolbar (Reader/Writer share global settings). | Medium - layout refactor; must not break mobile or web/desktop separation. |
 
 ## Progress Notes
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
@@ -78,6 +79,9 @@
 | 29.5 | Done | P1 | Selection UX | Reduce adjacent-line selection overlap during drag-select via custom selection overlay; keep menu consistent | Pass (`docs/QA.md` 10-QA-002); remaining native overlap edge cases tracked under 10-QA-001 |
 
 ## Task 33 Breakdown (Reader AI templates + Questions shortcut)
+Progress update (reported by user):
+- 33-QA-001/002: Questions flows pass (selection + highlight popover).
+- Template safety tests (Use defaults / reset) still pending (33-QA-003/004).
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify |
 | -- | ------ | -------- | -------- | -------------- | ------ |
 | 33.1 | In Progress | P1 | Central template registry (Summarize/Explain/Ask AI/Questions) | Single source of truth; templates are end-user editable with `Use defaults` + per-template reset + reset-all overrides | Unit (Vitest): prompt building + action mapping |
@@ -85,6 +89,17 @@
 | 33.3 | In Progress | P1 | Highlight popover: Questions action | Popover includes Questions; reuses same template registry as selection menu | Manual: click highlight → popover → Questions |
 | 33.4 | In Progress | P1 | UX polish | Single-line labels; tooltip “Generate Questions”; menu clamped to avoid being covered; mobile 375px checks | Manual: 375px + desktop split view |
 | 33.5 | In Progress | P1 | Docs/QA | Add QA rows for Questions + templates UI + defaults fallback | `docs/QA.md` 33-QA-001..004 |
+
+## Task 34 Breakdown (Desktop layout density + Settings drawer)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify |
+| -- | ------ | -------- | -------- | -------------- | ------ |
+| 34.1 | Done | P1 | Docs: layout + settings IA | Define desktop three-panel layout, settings drawer sections (Global/Reader/Chat), and bottom PDF toolbar scope | PRD IDs present; TASKS breakdown present |
+| 34.2 | Done | P1 | Settings drawer | Replace always-visible Settings panels with a top-right `⚙` drawer/modal; sections/tabs for Global / Reader templates / Chat templates | Manual: open from Reader + Writer; settings editable |
+| 34.3 | Done | P1 | Left sidebar restructure | Left sidebar = Library (top) + TOC/Bookmarks/Highlights (bottom); independent scroll areas | Manual: scroll independence verified |
+| 34.4 | Done | P1 | Bottom PDF toolbar | Page jump / find / zoom / fit controls in a compact always-visible bottom bar (desktop) | Manual: actions work; menus not obscured |
+| 34.5 | Done | P1 | Writer top bar alignment | Writer view shows Writer-relevant state; shares Global settings; avoids Reader-only status noise | Manual: Writer header meaningful; settings entry consistent |
+| 34.7 | Done | P1 | TOC collapse | Allow collapsing long TOC sections (per heading) to improve navigation on large outlines | Manual: collapse/expand works; jump still works |
+| 34.6 | Todo | P1 | QA | Run 34-QA scenarios and record results | `docs/QA.md` 34-QA-001.. |
 
 ## Task 18 Breakdown (Writer - deferred until Task 29 complete)
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify |

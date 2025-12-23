@@ -74,7 +74,7 @@
 | 13-QA-001 | Chat persists after restart/refresh | Open a book → send 2 messages → refresh/restart | Messages still visible | Pass | Desktop uses SQLite; web uses localStorage fallback. |
 | 13-QA-002 | Chat is per book | Open Book A → send message → open Book B → switch back | Book B chat is separate; switching back restores A | Pass | Session id is `book:{bookId}`; no book uses `global`. |
 | 13-QA-003 | Draft persists after restart/refresh | Open Writer → type text → refresh/restart | Draft restored | Pending | Observed occasional loss on full app restart (project-scoped Writer); hardening in progress (write-through local + pagehide flush). |
-| 13-QA-004 | Draft is per book | Book A write “A” → Book B write “B” → switch back | Correct draft restored per book | Pending | Not re-tested yet. |
+| 13-QA-004 | Draft is per book | Book A write “A” → Book B write “B” → switch back | Correct draft restored per book | N/A | Writer drafts are now project-scoped; book switching must not change Writer content. Validate via 18-QA-021/022. |
 | 18-QA-021 | Draft persists across app restarts | Create a new Writer project → type several lines in Content → confirm header shows “Saved …” → fully close app → restart app twice | Content remains and matches last edits | Pending | `Save` button forces a flush; persistence uses both `drafts` (TipTap JSON) and `writing_contents` (markdown fallback). Regression fix: debounce timer is cleared after save to avoid an extra flush overwriting the active project on close. |
 | 18-QA-022 | Switching into Writer does not wipe Content | Start on Reader view (Writer not mounted) → click Writer → verify active project Content remains; switch projects A↔B 3 times | No project gets cleared on entering Writer or switching projects | Pending | Protects against hydration race where the initial empty editor state could be auto-saved over an existing draft. |
 
@@ -118,3 +118,13 @@
 | 33-QA-002 | Highlight popover → Questions parity | Click an existing highlight → popover → click `Questions` | Same behavior as selection Questions; uses highlight content as context | Pending |  |
 | 33-QA-003 | Templates UI: Use defaults recovery | Settings → Reader AI Templates → edit Questions template to a bad prompt → verify output degrades → turn on `Use defaults` | Defaults take effect immediately; prompts recover without crashes | Pending |  |
 | 33-QA-004 | Templates UI: reset behaviors | Settings → Reader AI Templates → edit template → `Reset` → edit multiple → `Reset all` | Per-template reset and reset-all restore defaults; overrides persist but are cleared | Pending |  |
+
+## 2025-12-22 — Desktop layout density + Settings drawer (Task 34)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 34-QA-001 | Settings drawer replaces always-visible panels | Desktop: open app → locate `⚙` → open/close drawer | No large Settings panels occupy the workspace; settings are accessible via drawer | Pass |  |
+| 34-QA-002 | Settings drawer works in Reader + Writer | Switch Reader ↔ Writer → open `⚙` | Same Global settings visible/editable in both views | Pass |  |
+| 34-QA-003 | Left sidebar scroll independence | Scroll Library list; then scroll TOC/Bookmarks/Highlights area | Library scroll does not move the TOC/Bookmarks area and vice versa | Pass | Layout note: large blank gap between Library and TOC; prefer Library keep compact height and TOC expands. |
+| 34-QA-004 | Bottom PDF toolbar availability | In Reader (desktop), use bottom bar to Jump/Find/Zoom/Fit | Controls work and do not obscure floating menu/popovers | Pass | Fixed by ensuring ReaderPane container is a flex column so the scroll area leaves space for the toolbar. |
+| 34-QA-005 | Writer header is view-aware | In Writer view, verify top bar does not show Reader-only status blocks | Header shows Writer-relevant state; Global settings entry remains available | Pass |  |

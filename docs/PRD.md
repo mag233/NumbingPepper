@@ -34,6 +34,12 @@
 ## 5. Functional Requirements
 ### Settings & Connectivity (P0)
 - Defaults: base `https://xiaoai.plus/v1`, model `gpt-5-mini`, empty api_key. Test `/models`, show latency/model presence. Persist locally; guard empty key; buffered errors with retry.
+- **PRD-SHELL-SETTINGS-001 (P1): Shared global settings**
+  - Reader and Writer must share global settings (LLM base/model/key and theme) and expose them from both views.
+  - Writer must not reuse Reader-only top bar status; top bar content is view-aware (show Writer-relevant state when in Writer view).
+- **PRD-SHELL-SETTINGS-002 (P1): Settings drawer (desktop density)**
+  - Desktop should not dedicate large always-visible screen space to Settings or Template panels.
+  - Provide a single settings entry (e.g., top-right `⚙`) that opens a drawer/modal with sections/tabs: Global / Reader templates / Chat templates.
 
 ### Library Import & Hydration (P0)
 - Drag/drop or picker. Copy file to library root; write `books` row. On partial copy failure, clean folder and show inline error. Permissions prompts surfaced. Hydrate list on launch. Goal: quickly reopen recent readings; dedupe via hash.
@@ -41,6 +47,16 @@
   - Show and sort by **recently opened** (backed by `books.last_opened_at`).
   - Safe cleanup: **Trash** (soft delete) + **Restore**; optional **Delete app copy** (desktop only, double confirm).
   - Organization (P2/backlog): tags/collections for grouping and filtering PDFs (not Alpha-critical).
+
+### App Shell & Layout (P1)
+- **PRD-SHELL-LAYOUT-001 (P1): Desktop three-panel workspace**
+  - Desktop workspace prioritizes reading: left sidebar (Library + TOC/Bookmarks/Highlights), center PDF, right Chat.
+  - Left sidebar uses independent scroll areas: Library list scroll does not affect TOC/Bookmarks scroll.
+- **PRD-SHELL-LAYOUT-002 (P1): Bottom PDF toolbar**
+  - Common PDF actions (page jump, find, zoom, fit modes) are available in a compact bottom toolbar (desktop), always visible.
+  - Sidebar focuses on structure/navigation (TOC/bookmarks/highlights) rather than duplicating page tools.
+- **PRD-SHELL-LAYOUT-003 (P1): Mobile unaffected**
+  - Mobile keeps the tab-based layout; desktop-only layout density changes must not break mobile behavior.
 
 ### Reader Core (P0)
 

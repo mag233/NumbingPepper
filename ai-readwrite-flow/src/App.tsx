@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Bot, LayoutPanelTop, Smartphone, Sparkles } from 'lucide-react'
+import { Bot, LayoutPanelTop, Settings, Smartphone, Sparkles } from 'lucide-react'
 import SettingsPanel from './features/settings/SettingsPanel'
 import LibraryPanel from './features/library/LibraryPanel'
 import ReaderPane from './features/reader/ReaderPane'
-import ReaderNav from './features/reader/ReaderNav'
 import EditorPane from './features/editor/EditorPane'
 import WriterSidebar from './features/editor/WriterSidebar'
 import ChatSidebar from './features/ai/ChatSidebar'
@@ -19,6 +18,8 @@ import useLibraryStore from './stores/libraryStore'
 import { normalizeThemePreset } from './lib/theme'
 import { getWriterGridCols } from './lib/layout'
 import useReaderShortcutTemplateStore, { type ReaderShortcutAction } from './stores/readerShortcutTemplateStore'
+import SettingsDrawer from './features/settings/SettingsDrawer'
+import ReaderDesktopSidebar from './features/reader/components/ReaderDesktopSidebar'
 
 const NAV_TABS: { id: TabKey; label: string }[] = [
   { id: 'library', label: 'Library' },
@@ -35,12 +36,12 @@ const App = () => {
   const { lastLatencyMs, lastTokens, lastModel } = useMetricsStore()
   const { hydrate: hydrateLibrary } = useLibraryStore()
   const [quickPrompt, setQuickPrompt] = useState<{ text: string; autoSend?: boolean }>()
-  const [showTopBar, setShowTopBar] = useState(true)
   const [showNav, setShowNav] = useState(true)
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
   const [writerChatCollapsed, setWriterChatCollapsed] = useState(false)
   const writerCols = getWriterGridCols(showNav, writerChatCollapsed)
   const buildReaderQuickPrompt = useReaderShortcutTemplateStore((s) => s.buildQuickPrompt)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     void hydrate()
@@ -77,6 +78,21 @@ const App = () => {
           <div className="flex items-center gap-3 text-xs text-ink-muted">
             <Sparkles className="size-4 text-amber-300" />
             <span>Default model: {model}</span>
+            {!isMobile && (
+              <span className="rounded-full border border-chrome-border/70 bg-surface-raised/50 px-2 py-1 text-[11px] text-ink-primary">
+                {desktopView === 'reader' ? 'Reader' : 'Writer'}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/50 px-3 py-1 text-xs text-ink-primary hover:border-accent"
+              title="Settings"
+              aria-label="Settings"
+            >
+              <Settings className="size-4" />
+              <span className="hidden md:inline">Settings</span>
+            </button>
           </div>
         </div>
       </header>
@@ -121,21 +137,15 @@ const App = () => {
             </div>
           </section>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-4">
-            <div className="hidden items-center gap-3 text-xs text-ink-muted md:flex">
-              <span>View:</span>
-              <button
-                className="rounded-lg border border-chrome-border/70 px-2 py-1 hover:border-accent hover:text-ink-primary"
-                onClick={() => setShowTopBar((v) => !v)}
-              >
-                {showTopBar ? 'Hide top bar' : 'Show top bar'}
-              </button>
-              <button
-                className="rounded-lg border border-chrome-border/70 px-2 py-1 hover:border-accent hover:text-ink-primary"
-                onClick={() => setShowNav((v) => !v)}
-              >
-                {showNav ? 'Hide navigation' : 'Show navigation'}
-              </button>
+            <div className="flex min-h-0 flex-1 flex-col gap-4">
+              <div className="hidden items-center gap-3 text-xs text-ink-muted md:flex">
+                <span>View:</span>
+                <button
+                  className="rounded-lg border border-chrome-border/70 px-2 py-1 hover:border-accent hover:text-ink-primary"
+                  onClick={() => setShowNav((v) => !v)}
+                >
+                  {showNav ? 'Hide navigation' : 'Show navigation'}
+                </button>
               <button
                 className={`rounded-lg border px-2 py-1 ${
                   desktopView === 'reader'
@@ -158,31 +168,25 @@ const App = () => {
               </button>
             </div>
 
-            {showTopBar && (
-              <section className="grid gap-4 md:grid-cols-[1.4fr_0.8fr]">
-                <SettingsPanel />
-                <LibraryPanel compact onOpen={() => setActiveTab('reader')} />
-              </section>
-            )}
-
             <div className="min-h-0 flex-1">
               {desktopView === 'reader' && (
               <section
                 className={`grid h-full min-h-0 items-stretch gap-4 ${
-                  showNav ? 'md:grid-cols-[240px_minmax(0,3.5fr)_1.1fr]' : 'md:grid-cols-[minmax(0,3.5fr)_1.1fr]'
+                  showNav ? 'md:grid-cols-[320px_minmax(0,3.5fr)_1.1fr]' : 'md:grid-cols-[minmax(0,3.5fr)_1.1fr]'
                 }`}
               >
                 {showNav && (
                   <div className="min-h-0">
-                    <ReaderNav
+                    <ReaderDesktopSidebar
                       scrollMode={scrollMode}
                       onToggleScrollMode={toggleScrollMode}
+                      onOpenBook={() => setDesktopView('reader')}
                     />
                   </div>
                 )}
                 <div className="h-full min-h-0">
                   <PanelErrorBoundary title="Reader">
-                    <ReaderPane onAction={handleReaderAction} />
+                    <ReaderPane onAction={handleReaderAction} showBottomToolbar />
                   </PanelErrorBoundary>
                 </div>
                 <div className="h-full min-h-0">
@@ -241,6 +245,7 @@ const App = () => {
           </span>
         </div>
       </footer>
+      {settingsOpen && <SettingsDrawer onClose={() => setSettingsOpen(false)} />}
     </div>
   )
 }

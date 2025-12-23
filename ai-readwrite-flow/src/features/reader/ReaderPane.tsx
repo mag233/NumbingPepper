@@ -20,16 +20,20 @@ import { usePagedWheelFlip } from './hooks/usePagedWheelFlip'
 import { useSelectionOverlay } from './hooks/useSelectionOverlay'
 import { usePdfDocumentMeta } from './hooks/usePdfDocumentMeta'
 import { useWriterHighlightActions } from './hooks/useWriterHighlightActions'
+import ReaderBottomToolbar from './components/ReaderBottomToolbar'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc
-type Props = { onAction: (action: 'summarize' | 'explain' | 'chat' | 'questions', text: string) => void }
-const ReaderPane = ({ onAction }: Props) => {
+type Props = {
+  onAction: (action: 'summarize' | 'explain' | 'chat' | 'questions', text: string) => void
+  showBottomToolbar?: boolean
+}
+const ReaderPane = ({ onAction, showBottomToolbar = false }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [pageWidth, setPageWidth] = useState(720)
   const [docError, setDocError] = useState<{ src: string; message: string } | null>(null)
-  const { currentPage, setPage, setPageCount, pageCount, scrollMode, zoom, fitMode, setFitMode, setZoomValue, findQuery, findToken, findActiveHit, resetOutline, setOutline, setOutlineLoading, setOutlineError, setPageLabels } = useReaderStore()
+  const { currentPage, setPage, setPageCount, pageCount, scrollMode, toggleScrollMode, zoom, fitMode, setFitMode, setZoomValue, findQuery, findToken, findActiveHit, resetOutline, setOutline, setOutlineLoading, setOutlineError, setPageLabels } = useReaderStore()
   const { items, activeId, setLastPosition } = useLibraryStore()
   const { byBookId, hydrate: hydrateHighlights, add: addHighlight, remove: removeHighlight, setColor: setHighlightColor, setNote: setHighlightNote } = useHighlightStore()
   const [scrollY, setScrollY] = useState(0)
@@ -151,10 +155,13 @@ const ReaderPane = ({ onAction }: Props) => {
   const pageSizeProps = renderSize.mode === 'width' ? { width: renderSize.width } : { height: renderSize.height }
 
   return (
-    <Card title="Reader / PDF">
+    <Card className="flex h-full min-h-0 flex-col p-0">
+      <header className="flex items-center justify-between gap-2 border-b border-chrome-border/70 px-4 py-3">
+        <h2 className="text-sm font-semibold text-ink-primary">Reader / PDF</h2>
+      </header>
       <div
         ref={containerRef}
-        className="relative rounded-xl border border-chrome-border/70 bg-surface-raised/30"
+        className="relative flex min-h-0 flex-1 flex-col bg-surface-raised/30"
       >
         <WriterToast />
         <SelectedHighlightPopover
@@ -173,20 +180,21 @@ const ReaderPane = ({ onAction }: Props) => {
           onSetNote={setNote}
         />
         {hasPdf ? (
-          <div
-            ref={scrollRef}
-            data-arwf-reader-scroll="true"
-            className="flex max-h-[calc(100vh-200px)] flex-col gap-3 overflow-auto p-4"
-            onScroll={(event) => {
-              const el = event.currentTarget
-              scrollYRef.current = el.scrollTop
-              setScrollY(el.scrollTop)
-              if (scrollMode !== 'continuous') return
-              if (!pageCount) return
-              if (!isNearBottom({ scrollTop: el.scrollTop, clientHeight: el.clientHeight, scrollHeight: el.scrollHeight })) return
-              setRenderedPages((cur) => nextRenderCount(cur, pageCount, 3))
-            }}
-          >
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div
+              ref={scrollRef}
+              data-arwf-reader-scroll="true"
+              className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3"
+              onScroll={(event) => {
+                const el = event.currentTarget
+                scrollYRef.current = el.scrollTop
+                setScrollY(el.scrollTop)
+                if (scrollMode !== 'continuous') return
+                if (!pageCount) return
+                if (!isNearBottom({ scrollTop: el.scrollTop, clientHeight: el.clientHeight, scrollHeight: el.scrollHeight })) return
+                setRenderedPages((cur) => nextRenderCount(cur, pageCount, 3))
+              }}
+            >
             <Document
               key={String(fileSrc ?? '')}
               file={fileSrc}
@@ -235,6 +243,10 @@ const ReaderPane = ({ onAction }: Props) => {
               <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
                 {loadError}
               </p>
+            )}
+            </div>
+            {showBottomToolbar && (
+              <ReaderBottomToolbar scrollMode={scrollMode} onToggleScrollMode={toggleScrollMode} />
             )}
           </div>
         ) : (

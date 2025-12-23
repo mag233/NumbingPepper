@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Reader: added `Questions` shortcut (auto-send) and a Settings editor for Reader AI templates (Ask AI/Summarize/Explain/Questions) with `Use defaults` + reset controls.
+- Desktop layout: moved Settings to a `⚙` drawer (Global/Reader/Chat tabs), moved Library into the left sidebar, and added a bottom PDF toolbar (Jump/Find/Zoom/Fit).
 - Code discipline: added Zod validation for persisted JSON (templates/settings/books local fallback), split oversized TS modules to meet the 250-LOC rule, and removed eslint-disable suppressions by restructuring effects.
 - Added SQLite migrations for books/highlights/chats/drafts/FTS; Tauri import command copies to per-book folders with hash/mtime/size metadata.
 - Library store hydrates from DB, dedupes by hash, persists `last_read_position` (page+scroll+zoom+fit_mode), and uses base64/asset loading in app.

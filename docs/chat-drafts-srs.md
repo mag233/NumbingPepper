@@ -33,9 +33,11 @@ Schema (already migrated in Rust):
 - `editor_doc` TEXT (TipTap JSON string)
 - `updated_at` INTEGER (ms since epoch)
 
-**Draft ID strategy (Alpha):**
-- `id = book:{bookId}` when a book is active.
-- `id = global` when no book is active.
+**Draft ID strategy (current):**
+- Writer drafts are **project-scoped**:
+  - `id = project:{projectId}` for a real project.
+  - `id = project:global` when no project is active (fallback).
+- Legacy note: older builds used `id = book:{bookId}`; this is no longer the primary Writer scope.
 
 ### Web fallback storage
 When not in Tauri (web dev), persistence uses `localStorage`:
@@ -55,7 +57,7 @@ All reads from storage are treated as **untrusted** and must be validated (Zod).
 ### Drafts
 - On entering a draft scope: load `editor_doc` if present and set editor content.
 - On edit: persist with debounce (e.g., 500ms) to avoid excessive writes.
-- Switching books: flush pending save for previous draft, then load next.
+- Switching projects: flush pending save for previous draft, then load next.
 
 ## Edge Cases
 - Invalid stored JSON: ignore and start empty (do not crash UI).
@@ -75,10 +77,13 @@ All reads from storage are treated as **untrusted** and must be validated (Zod).
   1) Type content in Writer.
   2) Refresh/restart.
   3) Content remains.
-- Per-book draft:
-  1) Open Book A, type “A”.
-  2) Open Book B, type “B”.
-  3) Switch back: A draft shows “A”, B shows “B”.
+- Per-project draft:
+  1) Create/select Project A, type “A”.
+  2) Create/select Project B, type “B”.
+  3) Switch back: Project A shows “A”; Project B shows “B”.
+- Book switching does not affect Writer:
+  1) With a Writer project open and unsent edits present, switch Reader books.
+  2) Writer content stays unchanged.
 
 ## Risks & Mitigations
 - **TipTap JSON shape changes**: validate minimally (`type: 'doc'`) and store as-is.
