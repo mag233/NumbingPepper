@@ -109,7 +109,21 @@
   - In-editor tags: auto-detect `#tag` and `#tag/subtag`.
 
 **P1 (AI-assisted writing) — requirements**
-- Highlight/selection actions (examples): Simplify, Concise, Rewrite, Translate, Explain.
+- **PRD-WTR-AI-001 (P1): Writer selection AI actions (auto-send)**
+  - In Writer Content, selecting text shows a compact action menu: `Simplify` / `Concise` / `Rewrite` / `Translate` / `Explain` / `Ask AI`.
+  - `Simplify/Concise/Rewrite/Translate/Explain` auto-send and write a result card into Writer chat.
+  - `Rewrite` supports a tone submenu: Default / Formal / Friendly / Academic / Bullet.
+  - `Translate` default target language is configurable in Settings (initial default: English).
+- **PRD-WTR-AI-002 (P1): Writer “Ask AI” is draft-only**
+  - `Ask AI` must NOT auto-send; it pre-fills the chat input with `Context:` (selected text) + `Instruction:` and focuses the cursor at the end.
+- **PRD-WTR-AI-003 (P1): Centralized Writer templates with safe defaults**
+  - Writer selection actions share a template registry (single source of truth) and are end-user editable.
+  - Must include `Use defaults` + per-template reset + reset-all recovery (same behavior expectations as Reader templates).
+- **PRD-WTR-AI-004 (P1): Non-destructive apply controls**
+  - Result cards provide explicit apply actions: `Replace selection` (default primary), `Insert below`, and `Copy`.
+  - Apply actions must preserve a clean single-step Undo for replace/insert.
+- **PRD-CHAT-UX-001 (P1): Chat role visual distinction**
+  - In both Reader and Writer chat, user and assistant/suggestion messages must be visually distinguishable (theme-aware), improving scanability.
 - Right-side AI assistant chat for writing (shortcuts TBD).
 - Writer Studio “Artifacts” (writing-first): Kickoff/Definition/Explanation/Rewrite(style)/Polish produce saved artifacts first (no auto-overwrite); user clicks Insert to apply. Citation constraint is On by default when references are available.
 - Markdown support: at minimum import/export; full markdown-native editing optional (define fidelity expectations).

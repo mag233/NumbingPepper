@@ -12,6 +12,31 @@ export const insertPlainTextAsParagraphs = (editor: TipTapEditor, text: string) 
   editor.chain().focus().insertContent(content).run()
 }
 
+export const insertPlainTextAsParagraphsAt = (editor: TipTapEditor, args: { pos: number; text: string }) => {
+  const normalized = args.text.replace(/\r\n/g, '\n').trim()
+  if (!normalized) return
+  const paragraphs = normalized.split(/\n{2,}/g)
+  const content: JSONContent[] = paragraphs.map((p) => ({
+    type: 'paragraph',
+    content: [{ type: 'text', text: p }],
+  }))
+  editor.chain().focus().insertContentAt(args.pos, content).run()
+}
+
+export const replaceRangeWithPlainTextAsParagraphs = (
+  editor: TipTapEditor,
+  args: { from: number; to: number; text: string },
+) => {
+  const normalized = args.text.replace(/\r\n/g, '\n').trim()
+  if (!normalized) return
+  const paragraphs = normalized.split(/\n{2,}/g)
+  const content: JSONContent[] = paragraphs.map((p) => ({
+    type: 'paragraph',
+    content: [{ type: 'text', text: p }],
+  }))
+  editor.chain().focus().insertContentAt({ from: args.from, to: args.to }, content).run()
+}
+
 const normalizeNeedleCandidates = (args: { needle: string; title: string; level: number }) => {
   const candidates: string[] = []
   const title = args.title.trim()

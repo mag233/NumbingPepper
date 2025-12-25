@@ -8,7 +8,12 @@ import { Command, Eye, Pencil, Sparkles, Wand2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import { useDraftPersistence } from './hooks/useDraftPersistence'
 import { draftIdForProject } from './services/draftIds'
-import { insertPlainTextAsParagraphs, scrollEditorToNeedle } from './services/editorCommands'
+import {
+  insertPlainTextAsParagraphs,
+  insertPlainTextAsParagraphsAt,
+  replaceRangeWithPlainTextAsParagraphs,
+  scrollEditorToNeedle,
+} from './services/editorCommands'
 import useWriterProjectStore from './stores/writerProjectStore'
 import useWriterContextStore from './stores/writerContextStore'
 import WriterContextPanel from './components/WriterContextPanel'
@@ -18,9 +23,11 @@ import useWriterArtifactsStore from './stores/writerArtifactsStore'
 import { tipTapDocToMarkdownSource } from './services/tiptapMarkdown'
 import useWriterOutlineStore from './stores/writerOutlineStore'
 import useWriterEditorCommandStore from './stores/writerEditorCommandStore'
+import WriterSelectionBubbleMenu from './components/WriterSelectionBubbleMenu'
+import useWriterSelectionApplyStore from './stores/writerSelectionApplyStore'
 
 type Props = {
-  onCommand: (prompt: string) => void
+  onQuickPrompt: (prompt: { text: string; autoSend: boolean; meta?: unknown }) => void
 }
 
 const commands = [
@@ -28,7 +35,7 @@ const commands = [
   { label: 'Fix Grammar', prompt: 'Check and correct grammar.' },
   { label: 'Summarize', prompt: 'Summarize the key points above.' },
 ]
-const EditorPane = ({ onCommand }: Props) => {
+const EditorPane = ({ onQuickPrompt }: Props) => {
   const [showMenu, setShowMenu] = useState(false)
   const [isPreview, setIsPreview] = useState(false)
   const { hydrate, activeProjectId } = useWriterProjectStore()
@@ -42,6 +49,8 @@ const EditorPane = ({ onCommand }: Props) => {
   const setOutlineFromMarkdown = useWriterOutlineStore((s) => s.setFromMarkdown)
   const consumeScrollRequest = useWriterEditorCommandStore((s) => s.consumeScrollRequest)
   const pendingScroll = useWriterEditorCommandStore((s) => s.pendingScroll)
+  const consumeSelectionApply = useWriterSelectionApplyStore((s) => s.consume)
+  const pendingSelectionApply = useWriterSelectionApplyStore((s) => s.pending)
   useEffect(() => {
     void hydrate()
   }, [hydrate])
@@ -92,6 +101,18 @@ const EditorPane = ({ onCommand }: Props) => {
   }, [consumeInsert, editor, pendingInsert])
 
   useEffect(() => {
+    if (!pendingSelectionApply) return
+    if (!editor) return
+    const req = consumeSelectionApply()
+    if (!req) return
+    if (req.mode === 'replace') {
+      replaceRangeWithPlainTextAsParagraphs(editor, { from: req.selection.from, to: req.selection.to, text: req.text })
+      return
+    }
+    insertPlainTextAsParagraphsAt(editor, { pos: req.selection.to, text: req.text })
+  }, [consumeSelectionApply, editor, pendingSelectionApply])
+
+  useEffect(() => {
     if (!editor) return
     if (!pendingScroll) return
     const req = consumeScrollRequest()
@@ -137,7 +158,7 @@ const EditorPane = ({ onCommand }: Props) => {
         <button
           key={command.label}
           onClick={() => {
-            onCommand(command.prompt)
+            onQuickPrompt({ text: command.prompt, autoSend: false })
             editor?.commands.insertContent(`<p>/ ${command.prompt}</p>`)
             setShowMenu(false)
           }}
@@ -147,7 +168,7 @@ const EditorPane = ({ onCommand }: Props) => {
           <Wand2 className="size-4 text-accent" />
         </button>
       )),
-    [editor, onCommand],
+    [editor, onQuickPrompt],
   )
 
   const previewSource = isPreview && editor ? tipTapDocToMarkdownSource(editor.getJSON()) : ''
@@ -224,10 +245,19 @@ const EditorPane = ({ onCommand }: Props) => {
               )}
             </div>
           ) : (
-            <EditorContent
-              editor={editor}
-              className="h-full max-w-none text-ink-primary [&_.ProseMirror]:h-full [&_.ProseMirror]:min-h-full [&_.ProseMirror]:outline-none"
-            />
+            <>
+              {editor && (
+                <WriterSelectionBubbleMenu
+                  editor={editor}
+                  disabled={showMenu || isPreview}
+                  onQuickPrompt={onQuickPrompt}
+                />
+              )}
+              <EditorContent
+                editor={editor}
+                className="h-full max-w-none text-ink-primary [&_.ProseMirror]:h-full [&_.ProseMirror]:min-h-full [&_.ProseMirror]:outline-none"
+              />
+            </>
           )}
           {showMenu && (
             <div className="absolute left-3 top-3 z-10 grid gap-2 rounded-xl border border-chrome-border/70 bg-surface-base/95 p-3 shadow-xl">

@@ -10,7 +10,7 @@ import useLibraryStore from '../../stores/libraryStore'
 import { chatSessionIdForBook } from './services/chatSession'
 
 type Props = {
-  quickPrompt?: { text: string; autoSend?: boolean }
+  quickPrompt?: { text: string; autoSend?: boolean; meta?: unknown }
   onConsumeQuickPrompt?: () => void
 }
 

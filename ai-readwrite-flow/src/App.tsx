@@ -20,6 +20,7 @@ import { getWriterGridCols } from './lib/layout'
 import useReaderShortcutTemplateStore, { type ReaderShortcutAction } from './stores/readerShortcutTemplateStore'
 import SettingsDrawer from './features/settings/SettingsDrawer'
 import ReaderDesktopSidebar from './features/reader/components/ReaderDesktopSidebar'
+import type { QuickPrompt } from './lib/quickPrompt'
 
 const NAV_TABS: { id: TabKey; label: string }[] = [
   { id: 'library', label: 'Library' },
@@ -35,7 +36,7 @@ const App = () => {
   const { scrollMode, toggleScrollMode } = useReaderStore()
   const { lastLatencyMs, lastTokens, lastModel } = useMetricsStore()
   const { hydrate: hydrateLibrary } = useLibraryStore()
-  const [quickPrompt, setQuickPrompt] = useState<{ text: string; autoSend?: boolean }>()
+  const [quickPrompt, setQuickPrompt] = useState<QuickPrompt>()
   const [showNav, setShowNav] = useState(true)
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
   const [writerChatCollapsed, setWriterChatCollapsed] = useState(false)
@@ -57,10 +58,12 @@ const App = () => {
     if (isMobile) setActiveTab('chat')
   }
 
-  const handleEditorCommand = (prompt: string) => {
-    setQuickPrompt({ text: prompt, autoSend: false })
-    if (isMobile) setActiveTab('chat')
-  }
+  useEffect(() => {
+    if (!isMobile) return
+    if (!quickPrompt) return
+    const autoSend = quickPrompt.autoSend ?? false
+    if (!autoSend) setActiveTab('chat')
+  }, [isMobile, quickPrompt, setActiveTab])
 
   return (
     <div
@@ -125,7 +128,7 @@ const App = () => {
                   <ReaderPane onAction={handleReaderAction} />
                 </PanelErrorBoundary>
               )}
-              {activeTab === 'editor' && <EditorPane onCommand={handleEditorCommand} />}
+                  {activeTab === 'editor' && <EditorPane onQuickPrompt={setQuickPrompt} />}
               {activeTab === 'chat' && (
                 <PanelErrorBoundary title="Chat">
                   <ChatSidebar
@@ -208,7 +211,7 @@ const App = () => {
                    </div>
                  )}
                  <div className="h-full min-h-0 relative z-10">
-                   <EditorPane onCommand={handleEditorCommand} />
+                   <EditorPane onQuickPrompt={setQuickPrompt} />
                  </div>
                  <div className="h-full min-h-0 relative z-10">
                    <PanelErrorBoundary title="Chat">

@@ -13,8 +13,10 @@ import { buildWriterUserPrompt } from './services/writerChatPrompt'
 import useWriterArtifactsStore from './stores/writerArtifactsStore'
 import WriterChatMessages from './components/WriterChatMessages'
 import WriterStudioPanel from './components/WriterStudioPanel'
+import { parseWriterSelectionQuickPromptMeta } from '../../lib/quickPrompt'
+import useWriterSelectionSuggestionStore from './stores/writerSelectionSuggestionStore'
 type Props = {
-  quickPrompt?: { text: string; autoSend?: boolean }
+  quickPrompt?: { text: string; autoSend?: boolean; meta?: unknown }
   onConsumeQuickPrompt?: () => void
   collapsed: boolean
   onCollapsedChange: (collapsed: boolean) => void
@@ -27,6 +29,8 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
   const activeProjectId = useWriterProjectStore((s) => s.activeProjectId)
   const { messages, addMessage, clear, hydrate } = useWriterChatStore()
   const hydrateArtifacts = useWriterArtifactsStore((s) => s.hydrate)
+  const setSuggestionSession = useWriterSelectionSuggestionStore((s) => s.setSession)
+  const setSuggestion = useWriterSelectionSuggestionStore((s) => s.setSuggestion)
   const contextText = useWriterContextStore((s) => s.contextText)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
@@ -56,16 +60,17 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
 
   useEffect(() => {
     void hydrate(sessionId)
-  }, [hydrate, sessionId])
+    setSuggestionSession(sessionId)
+  }, [hydrate, sessionId, setSuggestionSession])
 
   useEffect(() => {
     void hydrateArtifacts(activeProjectId)
   }, [activeProjectId, hydrateArtifacts])
 
   const doSend = useCallback(
-    async (content: string) => {
+    async (content: string, includeContextOverride?: boolean, meta?: unknown) => {
       if (sending) return
-      const prompt = buildWriterUserPrompt(content, contextText, includeContext)
+      const prompt = buildWriterUserPrompt(content, contextText, includeContextOverride ?? includeContext)
       if (!prompt) return
       setError(null)
       setSending(true)
@@ -83,13 +88,23 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
           latencyMs: response.latencyMs,
           model,
         })
-        await addMessage({
+        const assistantMsg = await addMessage({
           id: '',
           role: 'assistant',
           content: response.content,
           createdAt: Date.now(),
           referenceHighlightId: null,
         })
+        const parsed = parseWriterSelectionQuickPromptMeta(meta)
+        if (assistantMsg && parsed && parsed.type === 'writer-selection') {
+          setSuggestion({
+            messageId: assistantMsg.id,
+            action: parsed.action,
+            selection: parsed.selection,
+            outputText: response.content,
+            createdAt: assistantMsg.createdAt,
+          })
+        }
       } else {
         setError(response.error ?? 'Request failed')
         setMetrics({
@@ -100,7 +115,7 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
       }
       setSending(false)
     },
-    [addMessage, apiKey, baseUrl, contextText, historyMessages, includeContext, model, sending, setMetrics],
+    [addMessage, apiKey, baseUrl, contextText, historyMessages, includeContext, model, sending, setMetrics, setSuggestion],
   )
 
   const handleSend = (event: FormEvent) => {
@@ -117,11 +132,18 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
 
   useEffect(() => {
     if (!quickPrompt) return
-    const { text } = quickPrompt
+    const { text, autoSend } = quickPrompt
     window.setTimeout(() => setDraft(text), 0)
-    window.setTimeout(focusInput, 0)
+    if (autoSend) {
+      window.setTimeout(() => {
+        void doSend(text, false, quickPrompt.meta)
+        setDraft('')
+      }, 0)
+    } else {
+      window.setTimeout(focusInput, 0)
+    }
     onConsumeQuickPrompt?.()
-  }, [quickPrompt, onConsumeQuickPrompt, focusInput])
+  }, [quickPrompt, onConsumeQuickPrompt, focusInput, doSend])
 
   if (collapsed) {
     return (

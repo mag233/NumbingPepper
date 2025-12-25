@@ -73,7 +73,7 @@ Artifact types (v1, writing-first)
 Scopes (inputs)
 - Context: uses Writer Context text.
 - Included references: uses reference snippets where included=true (preferred when available).
-- Content selection: (depends on Task 18.13) uses selected text in Content for rewrite/polish.
+- Content selection (Task 18.13): selecting text in Writer Content enables selection actions (Simplify/Concise/Rewrite[tone]/Translate/Explain + Ask AI). Ask AI is draft-only; other actions auto-send and return applyable suggestion cards (replace/insert/copy) with clean Undo.
 - Manual: user-provided input text (paste).
 
 Result handling

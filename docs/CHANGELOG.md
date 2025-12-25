@@ -45,6 +45,7 @@
 - Writer: Context shows `chars` + `~tokens` with soft-limit warning; Writer AI templates support Insert (focuses input, no auto-send); desktop layout avoids global page scroll when top bar hidden.
 - Process: added a strict “Suggestion vs Implementation Gate” to require explicit `Proceed` before any code/command changes.
 - Docs: recorded Writer Content selection AI actions as a tracked requirement (Task 18.13) and added a QA placeholder (18-QA-015).
+- Docs: specified Writer selection AI actions UX/spec (auto-send actions, draft-only Ask AI, Rewrite tone submenu, apply controls, template safety) and added QA rows (18-QA-023..029).
 - Writer: replaced left ReaderNav with a WriterSidebar (Projects + References) when in Writer view; adjusted Content/Context sizing so Context isn't squeezed (Task 18.12).
 - Writer: prevent Writer Projects dropdown from being covered by the editor; reduce desktop window scrolling by clamping the app shell to the viewport height.
 - Writer: fix WriterSidebar header overflow by making the Projects controls wrap and constraining the Projects popover to the sidebar width.
