@@ -4,8 +4,7 @@ import useWriterSelectionSuggestionStore from '../stores/writerSelectionSuggesti
 import useWriterSelectionApplyStore from '../stores/writerSelectionApplyStore'
 import { copyTextToClipboard } from '../../../lib/clipboard'
 
-const bubbleBase =
-  'rounded-xl border px-3 py-2 text-sm shadow-sm border-chrome-border/70 bg-surface-raised/70'
+const bubbleBase = 'rounded-xl px-3 py-2 text-sm shadow-sm'
 
 type Props = {
   messages: WriterChatMessage[]
@@ -45,10 +44,10 @@ const WriterChatMessages = ({ messages }: Props) => {
           <div
             className={`${bubbleBase} max-w-[85%] ${
               msg.role === 'user'
-                ? 'border-accent/70 bg-accent/10'
+                ? 'border border-accent/70 bg-accent/10'
                 : suggestionIds.has(msg.id)
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
-                  : 'border-chrome-border/70 bg-surface-raised/70'
+                  ? 'border border-emerald-500/50 bg-emerald-500/10'
+                  : 'border border-chrome-border/70 bg-surface-raised/70'
             }`}
           >
             <p className="text-xs uppercase text-ink-muted">

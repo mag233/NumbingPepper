@@ -124,6 +124,29 @@
   - Apply actions must preserve a clean single-step Undo for replace/insert.
 - **PRD-CHAT-UX-001 (P1): Chat role visual distinction**
   - In both Reader and Writer chat, user and assistant/suggestion messages must be visually distinguishable (theme-aware), improving scanability.
+- **PRD-WTR-LAYOUT-001 (P1): Writer Editor↔Chat adjustable split**
+  - Desktop Writer view supports resizing the boundary between Editor and Writer AI.
+  - Default ratio (Editor/Chat) is 65/35 (ratio applies to Editor+Chat only; left sidebar excluded).
+  - Enforce minimum widths: Editor ≥ 520px; Writer AI ≥ 320px.
+- **PRD-WTR-LAYOUT-002 (P1): Layout adjust mode (lock/unlock)**
+  - Provide a top-right `Layout` control next to Settings (Writer desktop only).
+  - Default is Locked; entering Adjust mode shows draggable splitter and allows changes; Done returns to Locked.
+  - Adjust mode includes a Reset action to restore defaults.
+- **PRD-WTR-DENSITY-001 (P1): Writer spacing density**
+  - Provide a Writer-only density setting (at least Comfortable/Compact) to reduce wasted space in: header/toolbars, panel gutters, and card paddings.
+  - Must not affect Reader or mobile; migrate later only if proven.
+- **PRD-WTR-LAYOUT-003 (P1): Persist layout preferences**
+  - Persist Editor/Chat ratio and Writer density locally and restore on launch.
+- **PRD-SHELL-LAYOUT-002 (P1): Desktop sidebar resizing + nav toggle ergonomics**
+  - Left sidebar supports a user-adjustable width via a draggable splitter (desktop only).
+  - Splitter handles appear only in **Layout Adjust mode** (unlocked via Writer top bar `Layout`); otherwise a simple divider is shown (not draggable).
+  - Enforce min/max widths and persist width locally; provide a Reset to default width (via Layout controls).
+  - Replace the text button “Hide navigation” with a compact icon toggle placed consistently (desktop view toolbar/top bar).
+- **PRD-SHELL-LAYOUT-004 (P1): Global Layout toggle + per-view scope**
+  - Desktop header shows a single `Layout` / `Done` toggle in both Reader and Writer views (mobile unaffected).
+  - Layout Adjust mode is **global**, but adjustments are **scoped** to the current view; show an explicit scope hint: `Adjusting: Reader` / `Adjusting: Writer`.
+  - Reader supports adjusting the **Reader↔Chat** width split (desktop only), with min widths, persistence, and Reset (Reader-only).
+  - Writer supports adjusting the **Editor↔Chat** split and density as before; Reset is Writer-only (does not reset Reader).
 - Right-side AI assistant chat for writing (shortcuts TBD).
 - Writer Studio “Artifacts” (writing-first): Kickoff/Definition/Explanation/Rewrite(style)/Polish produce saved artifacts first (no auto-overwrite); user clicks Insert to apply. Citation constraint is On by default when references are available.
 - Markdown support: at minimum import/export; full markdown-native editing optional (define fidelity expectations).

@@ -16,6 +16,11 @@ Left side navigation:
 
 Right side:
 - Optional collapsible multi-round LLM chat panel.
+- Desktop-only layout controls (Task 35): Editor↔Writer AI split ratio is user-adjustable (default 65/35, min widths 520/320), and spacing density supports Comfortable/Compact to reduce wasted space. Writer-only first; migrate later if proven.
+- Task 35 UI polish (Writer-only):
+  - Middle column uses two sibling cards: Content (top) + Context (bottom) with default height ratio 65/35 (reduces nested-card feel).
+  - Right column uses two sibling cards: Studio (top, default collapsed to title bar) + Chat (bottom); Hide chat fully reclaims space and exposes a right-edge show handle.
+  - Artifacts list is compact (single-line items; preview collapsible per item).
 
 ## Definitions
 - Project: unit of work; everything in Writer is scoped to a project.

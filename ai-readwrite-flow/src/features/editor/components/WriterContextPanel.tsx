@@ -9,21 +9,28 @@ const contextSoftTokenLimit = 2000
 type Props = {
   fill?: boolean
   noTopMargin?: boolean
+  embedded?: boolean
 }
 
-const WriterContextPanel = ({ fill, noTopMargin }: Props) => {
+const WriterContextPanel = ({ fill, noTopMargin, embedded }: Props) => {
   const { contextText, setContextText, clearContext, undoLastAppend, lastAppendUndo, projectId } =
     useWriterContextStore()
 
   const approxTokens = estimateTokens(contextText)
   const overSoftLimit = approxTokens >= contextSoftTokenLimit
 
+  const wrapperClass = embedded
+    ? `${fill ? 'flex h-full min-h-0 flex-col' : ''}`
+    : `rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3 ${noTopMargin ? '' : 'mt-3'} ${
+        fill ? 'flex h-full min-h-0 flex-col' : ''
+      }`
+
   return (
     <div
-      className={`rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3 ${noTopMargin ? '' : 'mt-3'} ${fill ? 'flex h-full min-h-0 flex-col' : ''}`}
+      className={wrapperClass}
     >
         <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="text-xs text-ink-primary">Context (project-scoped)</div>
+          {!embedded && <div className="text-xs text-ink-primary">Context (project-scoped)</div>}
           <div className="flex items-center gap-2">
             <span className="text-xs text-ink-muted">
               {contextText.length} chars | ~{approxTokens} tokens

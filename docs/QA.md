@@ -60,10 +60,10 @@
 | 18-QA-010 | Markdown preview | In Writer, type markdown in Content (e.g., `## Title` + `- item` + `**bold**` + `---`); click Preview; then back to Edit | Preview renders markdown read-only; switching back preserves text exactly; `---` renders as a horizontal rule in Preview and remains literal `---` in Edit | Pending | Preview now renders from TipTap JSON→Markdown (supports `horizontalRule`). If `---` still auto-converts in Edit, Preview should still show the rule. |
 | 18-QA-014 | Writer sidebar layout | Desktop: switch to Writer; ensure left sidebar is WriterSidebar (Projects + References) instead of ReaderNav; verify Content/Context default ratio is usable without scrolling a full-page layout; hide Top Bar and verify there is no global page scroll (internal panels scroll instead) | Writer uses WriterSidebar; Context is not squeezed; no global page scroll when Top Bar hidden | Pass | Fixed sidebar overflow by making header controls wrap and constraining the Projects popover to the sidebar width; also set desktop shell to `h-screen overflow-hidden` to prevent window scrolling. |
 | 18-QA-015 | Content selection AI actions (overview) | In Writer Content, drag-select text; use the selection action menu; verify auto-send vs draft behaviors and that applying a suggestion is non-destructive by default (Undo works) | Action menu appears on selection; all actions behave per PRD; apply controls are explicit and Undo is clean | Pending | Spec locked in `docs/PRD.md` PRD-WTR-AI-001..004. |
-| 18-QA-023 | Selection action menu visibility | In Writer Content, select text (short + multi-line); then clear selection; then select inside code/markdown; resize window | Menu appears only when a non-empty selection exists; anchors near selection and stays usable on resize | Pending | Desktop + mobile behavior may differ; ensure touch targets remain >=44px on mobile. |
-| 18-QA-024 | Auto-send actions send to Writer chat | Select text → click Simplify / Concise / Translate / Explain | Auto-sends; Writer chat shows the user prompt + AI response | Pending | Phase A: response is a normal assistant message; “suggestion card + apply buttons” is tracked under 18-QA-026. |
-| 18-QA-025 | Ask AI is draft-only | Select text → click Ask AI | Chat input is prefilled with `Context:` (selected text) + `Instruction:` and focused; does not auto-send | Pending | Must match Reader Ask AI behavior for consistency. |
-| 18-QA-026 | Apply actions + Undo | After a suggestion card appears: click Replace selection; then Undo once; repeat with Insert below; verify Copy | Replace/Insert change Content correctly; a single Undo restores the previous state; Copy matches suggestion text | Pending | Replace/Insert must be a single editor transaction. |
+| 18-QA-023 | Selection action menu visibility | In Writer Content, select text (short + multi-line); then clear selection; then select inside code/markdown; resize window | Menu appears only when a non-empty selection exists; anchors near selection and stays usable on resize | Pass | Verified by user. |
+| 18-QA-024 | Auto-send actions send to Writer chat | Select text → click Simplify / Concise / Translate / Explain | Auto-sends; Writer chat shows the user prompt + AI response | Pass | Verified by user. Phase A: response is a normal assistant message; “suggestion card + apply buttons” is tracked under 18-QA-026. |
+| 18-QA-025 | Ask AI is draft-only | Select text → click Ask AI | Chat input is prefilled with `Context:` (selected text) + `Instruction:` and focused; does not auto-send | Pass | Verified by user. Must match Reader Ask AI behavior for consistency. |
+| 18-QA-026 | Apply actions + Undo | After a suggestion card appears: click Replace selection or Insert below; then click Undo in the apply notice bar (or Ctrl+Z); verify Copy | Replace/Insert change Content correctly; a single Undo restores the previous state; Copy matches suggestion text | Pending | Replace/Insert must be a single editor transaction. |
 | 18-QA-027 | Rewrite tone submenu | Select text → click Rewrite → choose Default/Formal/Friendly/Academic/Bullet (at least 2) | Auto-sends; outputs differ in style/structure; Bullet produces bullet formatting | Pending | Tone is a parameter on the Rewrite template (not separate templates). |
 | 18-QA-028 | Translate default target language | Open Settings → set Translate default target language; then run Translate on a selection | Translation targets the configured language immediately | Pending | Initial default should be English. |
 | 18-QA-029 | Writer templates: defaults + reset safety | Settings → Writer AI Templates → make a template “bad” → run the corresponding action; toggle Use defaults; test Reset and Reset all | Bad template degrades output; Use defaults restores defaults without crashes; Reset/Reset all restore defaults as expected | Pending | Same recovery UX expectations as Reader templates (Use defaults + Reset). |
@@ -135,3 +135,44 @@
 | 34-QA-003 | Left sidebar scroll independence | Scroll Library list; then scroll TOC/Bookmarks/Highlights area | Library scroll does not move the TOC/Bookmarks area and vice versa | Pass | Layout note: large blank gap between Library and TOC; prefer Library keep compact height and TOC expands. |
 | 34-QA-004 | Bottom PDF toolbar availability | In Reader (desktop), use bottom bar to Jump/Find/Zoom/Fit | Controls work and do not obscure floating menu/popovers | Pass | Fixed by ensuring ReaderPane container is a flex column so the scroll area leaves space for the toolbar. |
 | 34-QA-005 | Writer header is view-aware | In Writer view, verify top bar does not show Reader-only status blocks | Header shows Writer-relevant state; Global settings entry remains available | Pass |  |
+
+## 2025-12-26 — Writer layout density + adjustable split (Task 35)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 35-QA-001 | Layout control visibility (Writer-only) | Desktop: switch to Writer → confirm top-right shows `Layout` next to Settings; switch to Reader; switch to mobile width | `Layout` only appears in Writer desktop; Reader/mobile unaffected | Pass | Mobile not tested |
+| 35-QA-002 | Lock/unlock behavior | In Writer desktop: confirm default Locked; click `Layout` to enter Adjust mode; click `Done` to lock | In Adjust mode, splitter becomes draggable; in Locked mode, splitter is not draggable (or hidden) | Pass |  |
+| 35-QA-003 | Drag split + min widths | In Adjust mode: drag Editor↔Chat boundary left/right | Editor and Chat resize smoothly; cannot shrink Editor < 520px or Chat < 320px | Pass |  |
+| 35-QA-004 | Persist + restore | Adjust ratio → refresh/restart app → return to Writer | Ratio restores to last value; no layout break | Pass |  |
+| 35-QA-005 | Reset to defaults | In Adjust mode: click Reset | Ratio resets to 65/35 and density resets to Comfortable | Pass |  |
+| 35-QA-006 | Density presets (Writer-only) | In Writer desktop: switch density Comfortable↔Compact | Header/toolbars, panel gutters, and card paddings become visibly tighter in Compact; Reader/mobile unchanged | Pass | Mobile not tested |
+| 35-QA-007 | Middle column 2-card split | In Writer desktop: verify middle column shows separate Content card and Context card (stacked) | Content and Context read as sibling panels; no nested-card confusion | Pass |  |
+| 35-QA-008 | Right column Studio+Chat are siblings | In Writer desktop: verify Studio is its own card above Chat; toggle Studio collapse/expand | Studio never appears to cover chat; Chat messages scroll and input stays visible | Pass |  |
+| 35-QA-009 | Artifacts list density | Generate several artifacts; observe list; expand/collapse Preview for one item | Each artifact is a compact single-line item; Preview expands per item without dominating layout | Pass |  |
+| 35-QA-010 | Hide chat reclaims space | Click `Hide` in Writer AI; observe editor width; find and click the show handle | Hide removes the chat column entirely and editor expands immediately; show handle is discoverable and restores chat | Pass |  |
+
+## 2025-12-30 — Desktop sidebar resizing + nav toggle ergonomics (Task 36)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 36-QA-001 | Sidebar drag + clamp (gated) | Desktop (Writer): click `Layout` to enter Adjust mode → drag left sidebar splitter left/right; click `Done` → try dragging again | In Adjust mode: width changes smoothly and clamps within min/max; in Locked mode: no splitter handle (divider only) and not draggable | Pass | Confirmed after 36.2 gating. |
+| 36-QA-002 | Persist + reset | Desktop: click `Layout` (Adjust) → drag sidebar width → restart/refresh → confirm restore; then `Layout` (Adjust) → click Reset | Width restores after restart; Reset returns to default width | Pass | Confirmed after 36.3. |
+| 36-QA-003 | Nav toggle icon placement | Desktop: locate nav toggle icon (no text “Hide navigation” button); toggle on/off | Toggle works; control is discoverable; no duplicate toggle | Pass | Verified by user. |
+| 36-QA-004 | Mobile unaffected | Narrow to mobile width | No resizer handle; no layout break | Pass | Verified by user. |
+
+## 2026-01-01 — Global Layout toggle (Task 37)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 37-QA-001 | Layout toggle is global (desktop) | Desktop: Reader view → confirm header shows `Layout`; click `Layout` → scope hint shows `Adjusting: Reader`; switch to Writer → scope hint updates | `Layout/Done` available in both views; Adjust mode carries across views but scope hint matches current view | Pass | Verified by user. |
+| 37-QA-002 | Reset is per-view | Desktop: in Reader Adjust mode click Reset; then go to Writer and verify Writer split/density unchanged; then in Writer Adjust mode click Reset and verify Reader layout unchanged | Reset affects only current view | Pass | Verified by user. |
+| 37-QA-003 | Reader main split adjust + persist | Desktop: in Reader Adjust mode drag Reader↔Chat splitter; refresh/restart; confirm ratio restores; click Reset (Reader) | Drag works and clamps; persists; Reset restores defaults (Reader-only) | Pass | Verified by user. |
+| 37-QA-004 | Mobile unaffected | Narrow to mobile width | No Layout controls; no splitters; layout unchanged | Deferred | Mobile optimization postponed; verify later. |
+| 37-QA-005 | Reader density presets (Reader-only) | Desktop: Reader view → Layout (Adjust) → toggle Comfortable/Compact → refresh/restart; then switch to Writer and confirm unchanged | Reader spacing tightens/loosens; persists; Writer not affected | Pass | Verified by user. |
+| 37-QA-006 | Divider clarity + consistent gutters | Desktop: exit Layout mode (Done) → hover dividers; enter Layout mode (Layout) and compare sidebar divider vs Reader↔Chat divider gutters | Locked mode divider never looks draggable; Adjust mode split gutters match width/visuals | Pass | Verified by user. |
+
+## 2026-01-02 — Flomo export core (Task 23)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 23-QA-001 | Flomo webhook POST smoke | Set `VITE_FLOMO_API` or `FLOMO_API`; run `cd ai-readwrite-flow; node scripts/flomo-smoke.mjs` | A new Flomo note is created; command prints `Flomo POST ok` | Pass | Verified by agent. |

@@ -28,7 +28,7 @@
 | 20 | Backlog     | P1       | RAG "Ask the book" global search using FTS; prompt with citations; fallback when empty/offline.             | High - requires extraction/indexing. |
 | 21 | Backlog     | P1       | Extraction & indexing: Rust background text extraction, chunking, insert into FTS with progress.            | High - Rust worker and error reporting. |
 | 22 | Backlog     | P1       | Gestures (mobile): swipe delete in Library; swipe back in Reader; consider desktop shortcuts later.         | Low |
-| 23 | Backlog     | P1       | Flomo export from chat bubble with validation and markdown stripping.                                        | Low |
+| 23 | In Progress | P1       | Flomo export (core API + plain-text formatting first; UI/wiring later).                                      | Low |
 | 24 | Backlog     | P2       | Streaming chat responses and editor auto-insert sequencing.                                                  | Medium |
 | 25 | Backlog     | P2       | OCR for scanned PDFs via Rust/Tesseract; plain-text per page; optional FTS ingest.                          | Medium |
 | 26 | Backlog     | P2       | EPUB support and multi-theme polish beyond presets.                                                          | Low |
@@ -40,6 +40,9 @@
 | 32 | Done        | P2       | Code discipline compliance: add Zod validation for persisted JSON, split oversized modules, remove lint suppressions. | Low - refactor-only; behavior should remain stable. |
 | 33 | Done        | P1       | Reader AI templates + Questions shortcut (selection + highlight popover).                                     | Low - QA 33-QA-001..004 pass. |
 | 34 | In Progress | P1       | Desktop layout density: Settings drawer + left Library + bottom PDF toolbar (Reader/Writer share global settings). | Medium - layout refactor; must not break mobile or web/desktop separation. |
+| 35 | Done        | P1       | Writer layout density: adjustable Editor↔Chat split + compact spacing (Writer-only).                          | Medium - user-adjustable layout needs min-width guards + reset; migrate to Reader later if proven. |
+| 36 | Done        | P1       | Desktop sidebar resizing + nav toggle ergonomics.                                                             | Medium - resizable sidebar needs min/max + reset; avoid mobile impact and keep controls discoverable. |
+| 37 | Done        | P1       | Global Layout toggle + per-view adjustments (Reader split + scope hint).                                      | Medium - desktop complete; mobile QA deferred. |
 
 ## Progress Notes
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
@@ -99,6 +102,38 @@ Progress update (reported by user): 33-QA-001..004 pass.
 | 34.7 | Done | P1 | TOC collapse | Allow collapsing long TOC sections (per heading) to improve navigation on large outlines | Manual: collapse/expand works; jump still works |
 | 34.6 | Todo | P1 | QA | Run 34-QA scenarios and record results | `docs/QA.md` 34-QA-001.. |
 
+## Task 35 Breakdown (Writer layout density + adjustable split)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify |
+| -- | ------ | -------- | -------- | -------------- | ------ |
+| 35.1 | Done | P1 | Docs: layout + density spec | Define Writer-only Layout adjust mode (lock/unlock), default Editor/Chat ratio 65/35, min widths 520/320, and density presets (Comfortable/Compact) scoped to Writer desktop | PRD IDs present; QA rows present |
+| 35.2 | Done | P1 | Layout button | Add a top-right `Layout` control next to Settings (Writer desktop only); default Locked; Done returns to Locked | Manual: toggle visible only in Writer desktop; no effect in Reader/mobile |
+| 35.3 | Done | P1 | Draggable splitter | Implement Editor↔Writer AI draggable boundary; enforce min widths; live resize feedback | Manual: drag resizes; cannot shrink below mins |
+| 35.4 | Done | P1 | Persist + reset | Persist ratio + density locally; provide Reset to defaults; restore on relaunch | Manual: persists; reset restores 65/35 + Comfortable |
+| 35.5 | Done | P1 | Density presets | Provide Comfortable/Compact density that reduces header/toolbars/panel gutters/card paddings (Writer-only) | Manual: visible reduction without breaking layout |
+| 35.6 | Done | P1 | QA | Run 35-QA scenarios and record results | `docs/QA.md` 35-QA-001.. |
+| 35.7 | Done | P2 | Writer middle column: 2-card split | Split middle column into two sibling cards: Content (top) and Context (bottom), default height ratio 65/35; reduce nested-card feel | Manual: Content/Context look like peers; no confusing nesting |
+| 35.8 | Done | P2 | Writer right column: Studio + Chat cards | Split right column into two sibling cards: Studio (top) and Chat (bottom); Studio default collapsed showing only title bar | Manual: Studio no longer appears to “float over”/cover chat; Chat remains usable |
+| 35.9 | Done | P2 | Artifacts list density | Render each artifact as a single-line list item with compact actions; preview is collapsible per item (default collapsed) | Manual: artifacts list no longer dominates vertical space |
+| 35.10 | Done | P1 | Hide chat: reclaim space + show handle | Writer AI Hide fully removes chat column (Editor expands immediately); provide a comfortable “Show Writer AI” handle on the right edge | Manual: Hide expands editor; Show handle easy to discover; no layout jump |
+
+## Task 36 Breakdown (Desktop sidebar resizing + nav toggle ergonomics)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify |
+| -- | ------ | -------- | -------- | -------------- | ------ |
+| 36.1 | Todo | P1 | Docs: shell layout spec | Define desktop left sidebar resizable width (drag handle), min/max, persist + reset, and nav-toggle icon placement | PRD IDs present; QA rows present |
+| 36.2 | In Progress | P1 | Sidebar splitter | Implement draggable splitter for left sidebar width (desktop only; gated by Writer Layout Adjust mode) | Manual: in Adjust mode drag works; in Locked mode disabled; width clamps |
+| 36.3 | Done | P1 | Persist + reset | Persist sidebar width locally; add Reset to default width | Manual: persists across restart; reset restores |
+| 36.4 | Done | P2 | Nav toggle ergonomics | Replace “Hide navigation” text button with a compact icon toggle in a consistent location | Manual: toggle still works; no duplicate controls |
+| 36.5 | Done | P1 | QA | Run 36-QA scenarios and record results | `docs/QA.md` 36-QA-001.. |
+
+## Task 37 Breakdown (Global Layout toggle + per-view adjustments)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify |
+| -- | ------ | -------- | -------- | -------------- | ------ |
+| 37.1 | Done | P1 | Docs: PRD/QA/task breakdown | Define global Layout toggle, scope hint, per-view Reset semantics, Reader main split data contract + persistence shape | PRD ID added; `docs/QA.md` 37-QA rows added |
+| 37.2 | Done | P1 | Global Layout toggle | Desktop header shows `Layout/Done` in Reader+Writer; Adjusting scope hint; no change on mobile | Manual: button visible on desktop both views; scope hint correct; mobile unchanged |
+| 37.3 | Done | P1 | Reader main split | Reader supports adjusting Reader↔Chat width split (desktop only) gated by Layout Adjust mode; persist + clamp + Reset (Reader-only) | Manual: drag works; persists; reset only affects Reader |
+| 37.4 | Done | P1 | Reset semantics | Reset affects only current view (Reader reset does not affect Writer; Writer reset does not affect Reader) | Manual: reset isolation verified |
+| 37.5 | Done | P1 | Reader density + divider clarity | Reader adds Comfortable/Compact density in Layout Adjust (Reader-only; persisted+Zod; Reset Reader-only); locked mode dividers are non-draggable and split gutters are consistent | Manual: density affects Reader only; persists; Reset resets Reader density; locked mode dividers don't look draggable |
+
 ## Task 18 Breakdown (Writer - deferred until Task 29 complete)
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify |
 | -- | ------ | -------- | -------- | -------------- | ------ |
@@ -112,7 +147,7 @@ Progress update (reported by user): 33-QA-001..004 pass.
 | 18.8 | Done | P2 | Markdown preview | Edit/Preview toggle (preview render is read-only) | Pass (`docs/QA.md` 18-QA-010) |
 | 18.12 | Done | P1 | Writer sidebar layout | Writer view hides ReaderNav and uses WriterSidebar (Projects + References); set a sane default Content/Context ratio (or adjustable split) so context is not squeezed | Pass (`docs/QA.md` 18-QA-014) |
 | 18.14 | Done | P1 | Projects picker UX | Projects menu closes via outside click/Esc/X; create project requires explicit Save/Cancel; rename supports Save/Cancel | Pass (`docs/QA.md` 18-QA-016) |
-| 18.13 | In Progress | P1 | Content selection AI actions | Select text in Writer Content → action menu: Simplify/Concise/Rewrite (tone submenu)/Translate/Explain/Ask AI; auto-send except Ask AI; results appear as applyable suggestion cards in Writer chat (Replace selection default, Insert below, Copy; single-step Undo) | In progress: Phase A (selection menu + auto-send/draft wiring). Manual (`docs/QA.md` 18-QA-023..025). |
+| 18.13 | In Progress | P1 | Content selection AI actions | Select text in Writer Content → action menu: Simplify/Concise/Rewrite (tone submenu)/Translate/Explain/Ask AI; auto-send except Ask AI; results appear as applyable suggestion cards in Writer chat (Replace/Insert/Copy) with an explicit Undo affordance (mobile-friendly) | Phase A verified (`docs/QA.md` 18-QA-023..025); remaining: apply Undo bar + verify (`docs/QA.md` 18-QA-026). |
 | 18.15 | Done | P1 | Writer Studio artifacts | Kickoff/Definition/Explanation/Rewrite(style)/Polish generate saved artifacts first; Insert applies to Content; citation constraint On by default when refs available | Pass (`docs/QA.md` 18-QA-017). Includes “Recent 3 + All…” artifacts list to keep chat usable. |
 | 18.16 | In Progress | P1 | Outline + reference preview | Outline derives from markdown headings in Content and supports click-to-jump; references support expand/collapse preview; sidebar width increased for readability | Manual (`docs/QA.md` 18-QA-019, 18-QA-020) |
 | 18.17 | In Progress | P0 | Draft persistence hardening | Prevent empty overwrites during Writer mount/project switch (hydration gate); drafts should survive abrupt app restarts with write-through local fallback + flush-on-exit | Manual (`docs/QA.md` 18-QA-021, 18-QA-022) |

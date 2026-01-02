@@ -10,9 +10,7 @@ import useWriterChatStore from './stores/writerChatStore'
 import { chatSessionIdForProject } from './services/writerChatSession'
 import useWriterContextStore from './stores/writerContextStore'
 import { buildWriterUserPrompt } from './services/writerChatPrompt'
-import useWriterArtifactsStore from './stores/writerArtifactsStore'
 import WriterChatMessages from './components/WriterChatMessages'
-import WriterStudioPanel from './components/WriterStudioPanel'
 import { parseWriterSelectionQuickPromptMeta } from '../../lib/quickPrompt'
 import useWriterSelectionSuggestionStore from './stores/writerSelectionSuggestionStore'
 type Props = {
@@ -28,7 +26,6 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
   const { setMetrics } = useMetricsStore()
   const activeProjectId = useWriterProjectStore((s) => s.activeProjectId)
   const { messages, addMessage, clear, hydrate } = useWriterChatStore()
-  const hydrateArtifacts = useWriterArtifactsStore((s) => s.hydrate)
   const setSuggestionSession = useWriterSelectionSuggestionStore((s) => s.setSession)
   const setSuggestion = useWriterSelectionSuggestionStore((s) => s.setSuggestion)
   const contextText = useWriterContextStore((s) => s.contextText)
@@ -62,10 +59,6 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
     void hydrate(sessionId)
     setSuggestionSession(sessionId)
   }, [hydrate, sessionId, setSuggestionSession])
-
-  useEffect(() => {
-    void hydrateArtifacts(activeProjectId)
-  }, [activeProjectId, hydrateArtifacts])
 
   const doSend = useCallback(
     async (content: string, includeContextOverride?: boolean, meta?: unknown) => {
@@ -163,7 +156,7 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
 
   return (
     <Card
-      title="Writer AI"
+      title="Chat"
       action={
         <div className="flex items-center gap-2">
           <button
@@ -182,14 +175,13 @@ const WriterChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, collapsed, onCol
           </button>
         </div>
       }
-      className="flex h-full max-h-[calc(100vh-160px)] flex-col"
+      className="flex h-full min-h-0 flex-col"
     >
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex items-center gap-2 text-xs text-ink-muted">
           <MessageCircle className="size-4 text-accent" />
           <span>Chat is scoped to the active writing project.</span>
         </div>
-        <WriterStudioPanel />
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           <WriterChatMessages messages={messages} />
           {error && (

@@ -1,6 +1,16 @@
 # Changelog
 
 ## Unreleased
+- Desktop: persist Reader/Writer left sidebar width; reset via Writer `Layout` controls.
+- Desktop: replace “Hide navigation” text button with a compact icon toggle.
+- Writer: restore visual distinction between user and AI chat bubbles.
+- Desktop: add global `Layout/Done` toggle (Reader + Writer) with explicit scope hint and per-view Reset semantics (Task 37).
+- Desktop (Reader): add Comfortable/Compact density in `Layout` adjust mode (Reader-only), persisted locally and reset via Reader Reset.
+- Desktop layout: locked-mode dividers are non-draggable, and sidebar vs Reader↔Chat split gutters match in adjust mode.
+- Writer: selection apply now shows an Undo notice bar (mobile-friendly) after Replace/Insert.
+- Integrations: add Flomo export core (webhook POST + note builder) and a smoke script (`node scripts/flomo-smoke.mjs`).
+- Writer: added a locked-by-default `Layout` mode with draggable Editor↔Writer AI split (default 65/35, min widths 520/320), Comfortable/Compact density presets, and Reset; persists locally.
+- Writer: UI polish—Content/Context are separate cards (65/35), Studio and Chat are separate cards, artifacts list is compact, Hide chat fully reclaims space, and fixed a card corner artifact caused by overflow clipping.
 - Reader: added `Questions` shortcut (auto-send) and a Settings editor for Reader AI templates (Ask AI/Summarize/Explain/Questions) with `Use defaults` + reset controls.
 - Desktop layout: moved Settings to a `⚙` drawer (Global/Reader/Chat tabs), moved Library into the left sidebar, and added a bottom PDF toolbar (Jump/Find/Zoom/Fit).
 - Code discipline: added Zod validation for persisted JSON (templates/settings/books local fallback), split oversized TS modules to meet the 250-LOC rule, and removed eslint-disable suppressions by restructuring effects.

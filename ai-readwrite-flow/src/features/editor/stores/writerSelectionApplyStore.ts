@@ -7,21 +7,46 @@ export type WriterSelectionApplyRequest = {
   text: string
 }
 
-type State = {
-  pending: WriterSelectionApplyRequest | null
-  requestApply: (req: WriterSelectionApplyRequest) => void
-  consume: () => WriterSelectionApplyRequest | null
+export type WriterSelectionApplyNotice = {
+  mode: WriterSelectionApplyRequest['mode']
 }
 
-const useWriterSelectionApplyStore = create<State>((set, get) => ({
-  pending: null,
-  requestApply: (req) => set({ pending: req }),
-  consume: () => {
-    const value = get().pending
-    set({ pending: null })
-    return value
-  },
-}))
+type State = {
+  pending: WriterSelectionApplyRequest | null
+  notice: WriterSelectionApplyNotice | null
+  requestApply: (req: WriterSelectionApplyRequest) => void
+  consume: () => WriterSelectionApplyRequest | null
+  clearNotice: () => void
+}
+
+let clearTimer: number | null = null
+
+const useWriterSelectionApplyStore = create<State>((set, get) => {
+  const clearNotice = () => {
+    if (clearTimer !== null) {
+      window.clearTimeout(clearTimer)
+      clearTimer = null
+    }
+    set({ notice: null })
+  }
+
+  const scheduleClear = () => {
+    if (clearTimer !== null) window.clearTimeout(clearTimer)
+    clearTimer = window.setTimeout(() => clearNotice(), 7000)
+  }
+
+  return {
+    pending: null,
+    notice: null,
+    requestApply: (req) => set({ pending: req }),
+    consume: () => {
+      const value = get().pending
+      set({ pending: null, notice: value ? { mode: value.mode } : null })
+      if (value) scheduleClear()
+      return value
+    },
+    clearNotice,
+  }
+})
 
 export default useWriterSelectionApplyStore
-

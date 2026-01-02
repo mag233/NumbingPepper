@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Bot, LayoutPanelTop, Settings, Smartphone, Sparkles } from 'lucide-react'
 import SettingsPanel from './features/settings/SettingsPanel'
 import LibraryPanel from './features/library/LibraryPanel'
 import ReaderPane from './features/reader/ReaderPane'
 import EditorPane from './features/editor/EditorPane'
-import WriterSidebar from './features/editor/WriterSidebar'
 import ChatSidebar from './features/ai/ChatSidebar'
-import WriterChatSidebar from './features/editor/WriterChatSidebar'
 import PanelErrorBoundary from './shared/components/PanelErrorBoundary'
 import { useMediaQuery } from './lib/hooks/useMediaQuery'
 import { appTitle } from './lib/constants'
@@ -16,11 +14,16 @@ import useReaderStore from './stores/readerStore'
 import useMetricsStore from './stores/metricsStore'
 import useLibraryStore from './stores/libraryStore'
 import { normalizeThemePreset } from './lib/theme'
-import { getWriterGridCols } from './lib/layout'
 import useReaderShortcutTemplateStore, { type ReaderShortcutAction } from './stores/readerShortcutTemplateStore'
 import SettingsDrawer from './features/settings/SettingsDrawer'
-import ReaderDesktopSidebar from './features/reader/components/ReaderDesktopSidebar'
 import type { QuickPrompt } from './lib/quickPrompt'
+import DesktopWorkspace from './features/shell/DesktopWorkspace'
+import useWriterLayoutStore, { type WriterLayoutDensity } from './stores/writerLayoutStore'
+import useShellLayoutStore from './stores/shellLayoutStore'
+import useShellLayoutModeStore from './stores/shellLayoutModeStore'
+import LayoutControls from './features/shell/components/LayoutControls'
+
+type LayoutDensity = 'comfortable' | 'compact'
 
 const NAV_TABS: { id: TabKey; label: string }[] = [
   { id: 'library', label: 'Library' },
@@ -40,9 +43,23 @@ const App = () => {
   const [showNav, setShowNav] = useState(true)
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
   const [writerChatCollapsed, setWriterChatCollapsed] = useState(false)
-  const writerCols = getWriterGridCols(showNav, writerChatCollapsed)
+  const readerSidebarWidthPx = useShellLayoutStore((s) => s.readerSidebarWidthPx)
+  const writerSidebarWidthPx = useShellLayoutStore((s) => s.writerSidebarWidthPx)
+  const readerMainSplitRatio = useShellLayoutStore((s) => s.readerMainSplitRatio)
+  const setReaderSidebarWidthPx = useShellLayoutStore((s) => s.setReaderSidebarWidthPx)
+  const setWriterSidebarWidthPx = useShellLayoutStore((s) => s.setWriterSidebarWidthPx)
+  const setReaderMainSplitRatio = useShellLayoutStore((s) => s.setReaderMainSplitRatio)
+  const resetReaderLayout = useShellLayoutStore((s) => s.resetReaderLayout)
+  const resetWriterSidebarLayout = useShellLayoutStore((s) => s.resetWriterLayout)
+  const readerDensity = useShellLayoutStore((s) => s.readerDensity)
+  const setReaderDensity = useShellLayoutStore((s) => s.setReaderDensity)
   const buildReaderQuickPrompt = useReaderShortcutTemplateStore((s) => s.buildQuickPrompt)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const writerDensity = useWriterLayoutStore((s) => s.density)
+  const setWriterDensity = useWriterLayoutStore((s) => s.setDensity)
+  const resetWriterLayout = useWriterLayoutStore((s) => s.reset)
+  const layoutAdjusting = useShellLayoutModeStore((s) => s.adjusting)
+  const toggleLayoutAdjusting = useShellLayoutModeStore((s) => s.toggle)
 
   useEffect(() => {
     void hydrate()
@@ -65,12 +82,52 @@ const App = () => {
     if (!autoSend) setActiveTab('chat')
   }, [isMobile, quickPrompt, setActiveTab])
 
+  const consumeQuickPrompt = () => setQuickPrompt(undefined)
+
+  const densityVars = (density: LayoutDensity) => {
+    if (density === 'compact') {
+      return {
+        '--app-gap': '0.75rem',
+        '--app-pad-x': '1rem',
+        '--app-pad-y': '1rem',
+        '--app-header-py': '0.5rem',
+        '--app-footer-px': '1rem',
+        '--app-footer-py': '0.5rem',
+        '--card-pad': '0.75rem',
+        '--card-header-mb': '0.5rem',
+      } as const
+    }
+    return {
+      '--app-gap': '1rem',
+      '--app-pad-x': '1.5rem',
+      '--app-pad-y': '1.5rem',
+      '--app-header-py': '0.75rem',
+      '--app-footer-px': '1rem',
+      '--app-footer-py': '0.75rem',
+      '--card-pad': '1rem',
+      '--card-header-mb': '0.75rem',
+    } as const
+  }
+
+  const currentDensity: LayoutDensity = desktopView === 'writer' ? (writerDensity as LayoutDensity) : readerDensity
+
+  const appStyle: CSSProperties | undefined = !isMobile ? (densityVars(currentDensity) as unknown as CSSProperties) : undefined
+
+  const onSetCurrentDensity = (density: LayoutDensity) => {
+    if (desktopView === 'writer') {
+      setWriterDensity(density as WriterLayoutDensity)
+      return
+    }
+    setReaderDensity(density)
+  }
+
   return (
     <div
       className={`${isMobile ? 'min-h-screen' : 'h-screen overflow-hidden'} flex flex-col bg-surface-base text-ink-primary`}
+      style={appStyle}
     >
       <header className="border-b border-chrome-border/70 bg-surface-base/70 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-screen-3xl items-center justify-between px-6 py-3">
+        <div className="mx-auto flex w-full max-w-screen-3xl items-center justify-between px-[var(--app-pad-x,1.5rem)] py-[var(--app-header-py,0.75rem)]">
           <div className="flex items-center gap-2 text-sm font-semibold text-ink-primary">
             <Bot className="size-5 text-accent" />
             <span>{appTitle}</span>
@@ -86,6 +143,23 @@ const App = () => {
                 {desktopView === 'reader' ? 'Reader' : 'Writer'}
               </span>
             )}
+            {!isMobile && (
+              <LayoutControls
+                desktopView={desktopView}
+                adjusting={layoutAdjusting}
+                density={currentDensity}
+                onToggleAdjusting={toggleLayoutAdjusting}
+                onSetDensity={onSetCurrentDensity}
+                onResetCurrentView={() => {
+                  if (desktopView === 'reader') {
+                    resetReaderLayout()
+                    return
+                  }
+                  resetWriterLayout()
+                  resetWriterSidebarLayout()
+                }}
+              />
+            )}
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
@@ -100,7 +174,9 @@ const App = () => {
         </div>
       </header>
 
-      <main className={`mx-auto flex w-full max-w-screen-3xl flex-1 flex-col gap-4 px-6 py-6 min-h-0 ${isMobile ? '' : 'overflow-hidden'}`}>
+      <main
+        className={`mx-auto flex w-full max-w-screen-3xl flex-1 flex-col gap-[var(--app-gap,1rem)] px-[var(--app-pad-x,1.5rem)] py-[var(--app-pad-y,1.5rem)] min-h-0 ${isMobile ? '' : 'overflow-x-hidden overflow-y-visible'}`}
+      >
         {isMobile ? (
           <section className="flex flex-col gap-3">
             <SettingsPanel />
@@ -128,110 +204,40 @@ const App = () => {
                   <ReaderPane onAction={handleReaderAction} />
                 </PanelErrorBoundary>
               )}
-                  {activeTab === 'editor' && <EditorPane onQuickPrompt={setQuickPrompt} />}
+              {activeTab === 'editor' && <EditorPane onQuickPrompt={setQuickPrompt} />}
               {activeTab === 'chat' && (
                 <PanelErrorBoundary title="Chat">
-                  <ChatSidebar
-                    quickPrompt={quickPrompt}
-                    onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
-                  />
+                  <ChatSidebar quickPrompt={quickPrompt} onConsumeQuickPrompt={consumeQuickPrompt} />
                 </PanelErrorBoundary>
               )}
             </div>
           </section>
         ) : (
-            <div className="flex min-h-0 flex-1 flex-col gap-4">
-              <div className="hidden items-center gap-3 text-xs text-ink-muted md:flex">
-                <span>View:</span>
-                <button
-                  className="rounded-lg border border-chrome-border/70 px-2 py-1 hover:border-accent hover:text-ink-primary"
-                  onClick={() => setShowNav((v) => !v)}
-                >
-                  {showNav ? 'Hide navigation' : 'Show navigation'}
-                </button>
-              <button
-                className={`rounded-lg border px-2 py-1 ${
-                  desktopView === 'reader'
-                    ? 'border-accent bg-accent/15 text-ink-primary'
-                    : 'border-chrome-border/70 text-ink-muted hover:border-accent hover:text-ink-primary'
-                }`}
-                onClick={() => setDesktopView('reader')}
-              >
-                Reader
-              </button>
-              <button
-                className={`rounded-lg border px-2 py-1 ${
-                  desktopView === 'writer'
-                    ? 'border-accent bg-accent/15 text-ink-primary'
-                    : 'border-chrome-border/70 text-ink-muted hover:border-accent hover:text-ink-primary'
-                }`}
-                onClick={() => setDesktopView('writer')}
-              >
-                Writer
-              </button>
-            </div>
-
-            <div className="min-h-0 flex-1">
-              {desktopView === 'reader' && (
-              <section
-                className={`grid h-full min-h-0 items-stretch gap-4 ${
-                  showNav ? 'md:grid-cols-[320px_minmax(0,3.5fr)_1.1fr]' : 'md:grid-cols-[minmax(0,3.5fr)_1.1fr]'
-                }`}
-              >
-                {showNav && (
-                  <div className="min-h-0">
-                    <ReaderDesktopSidebar
-                      scrollMode={scrollMode}
-                      onToggleScrollMode={toggleScrollMode}
-                      onOpenBook={() => setDesktopView('reader')}
-                    />
-                  </div>
-                )}
-                <div className="h-full min-h-0">
-                  <PanelErrorBoundary title="Reader">
-                    <ReaderPane onAction={handleReaderAction} showBottomToolbar />
-                  </PanelErrorBoundary>
-                </div>
-                <div className="h-full min-h-0">
-                  <PanelErrorBoundary title="Chat">
-                    <ChatSidebar
-                      quickPrompt={quickPrompt}
-                      onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
-                    />
-                  </PanelErrorBoundary>
-                </div>
-              </section>
-              )}
-
-               {desktopView === 'writer' && (
-               <section className={`grid h-full min-h-0 items-stretch gap-4 ${writerCols}`}>
-                 {showNav && (
-                   <div className="min-h-0 relative z-20">
-                     <WriterSidebar />
-                   </div>
-                 )}
-                 <div className="h-full min-h-0 relative z-10">
-                   <EditorPane onQuickPrompt={setQuickPrompt} />
-                 </div>
-                 <div className="h-full min-h-0 relative z-10">
-                   <PanelErrorBoundary title="Chat">
-                     <WriterChatSidebar
-                       quickPrompt={quickPrompt}
-                       onConsumeQuickPrompt={() => setQuickPrompt(undefined)}
-                      collapsed={writerChatCollapsed}
-                      onCollapsedChange={setWriterChatCollapsed}
-                    />
-                  </PanelErrorBoundary>
-                </div>
-              </section>
-              )}
-            </div>
-          </div>
+          <DesktopWorkspace
+            showNav={showNav}
+            onToggleNav={() => setShowNav((v) => !v)}
+            desktopView={desktopView}
+            onSetDesktopView={setDesktopView}
+            scrollMode={scrollMode}
+            onToggleScrollMode={toggleScrollMode}
+            onReaderAction={handleReaderAction}
+            quickPrompt={quickPrompt}
+            onConsumeQuickPrompt={consumeQuickPrompt}
+            onSetQuickPrompt={(prompt) => setQuickPrompt(prompt)}
+            writerChatCollapsed={writerChatCollapsed}
+            onWriterChatCollapsedChange={setWriterChatCollapsed}
+            readerSidebarWidthPx={readerSidebarWidthPx}
+            onReaderSidebarWidthPxChange={setReaderSidebarWidthPx}
+            writerSidebarWidthPx={writerSidebarWidthPx}
+            onWriterSidebarWidthPxChange={setWriterSidebarWidthPx}
+            readerMainSplitRatio={readerMainSplitRatio}
+            onReaderMainSplitRatioChange={setReaderMainSplitRatio}
+          />
         )}
       </main>
 
       <footer className="border-t border-chrome-border/70 bg-surface-base/70">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 text-xs text-ink-muted">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-[var(--app-footer-px,1rem)] py-[var(--app-footer-py,0.75rem)] text-xs text-ink-muted">
           <LayoutPanelTop className="size-4" />
           Desktop: Split View (Reader | Writer/Chat), Mobile: Tabs (Library/Reader/Writer/Chat)
           <span className="ml-auto inline-flex items-center gap-1">
