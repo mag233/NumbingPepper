@@ -3,6 +3,7 @@ import type { WriterChatMessage } from '../stores/writerChatStore'
 import useWriterSelectionSuggestionStore from '../stores/writerSelectionSuggestionStore'
 import useWriterSelectionApplyStore from '../stores/writerSelectionApplyStore'
 import { copyTextToClipboard } from '../../../lib/clipboard'
+import useWriterContextStore from '../stores/writerContextStore'
 
 const bubbleBase = 'rounded-xl px-3 py-2 text-sm shadow-sm'
 
@@ -14,6 +15,7 @@ const WriterChatMessages = ({ messages }: Props) => {
   const messagesRef = useRef<HTMLDivElement>(null)
   const suggestionsByMessageId = useWriterSelectionSuggestionStore((s) => s.byMessageId)
   const requestApply = useWriterSelectionApplyStore((s) => s.requestApply)
+  const appendToContext = useWriterContextStore((s) => s.appendToContext)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -73,10 +75,23 @@ const WriterChatMessages = ({ messages }: Props) => {
                   onClick={() => {
                     const s = suggestionsByMessageId[msg.id]
                     if (!s) return
-                    requestApply({ messageId: msg.id, mode: 'insert', selection: s.selection, text: msg.content })
+                    requestApply({
+                      messageId: msg.id,
+                      mode: 'insert',
+                      selection: s.selection,
+                      text: msg.content,
+                      insertLeadingBlankLine: true,
+                    })
                   }}
                 >
                   Insert below
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-3 py-1.5 text-xs text-ink-primary hover:border-accent"
+                  onClick={() => appendToContext(msg.content)}
+                >
+                  To Context
                 </button>
                 <button
                   type="button"

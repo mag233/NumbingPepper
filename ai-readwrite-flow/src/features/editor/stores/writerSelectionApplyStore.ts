@@ -5,6 +5,7 @@ export type WriterSelectionApplyRequest = {
   mode: 'replace' | 'insert'
   selection: { from: number; to: number }
   text: string
+  insertLeadingBlankLine?: boolean
 }
 
 export type WriterSelectionApplyNotice = {

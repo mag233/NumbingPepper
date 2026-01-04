@@ -17,8 +17,8 @@
 | 9  | Done        | P0       | Implement file copy into `$APP_DATA/library`, persist metadata (hash/size/mtime) in SQLite, hydrate on load.| Medium - OS paths, permissions, partial copy cleanup. |
 | 10 | Backlog     | P2       | Reader selection UX polish (reduce adjacent-line overlap; predictable menu bounds).                          | Low - non-blocker; some PDFs still overlap. |
 | 11 | Done        | P0       | Save/restore `last_read_position` (page/scroll/zoom/fit_mode) per book.                                      | Medium - continuous vs paged restore details. |
-| 12 | In Progress | P0       | Highlights: persistence + overlays + interactions (see breakdown below).                                     | Medium - geometry edge cases + perf. |
-| 13 | In Progress | P0       | Persist chat history and writer drafts; add basic telemetry/logging (local-only).                            | Medium - 13-QA-001..002 pass; 13-QA-003 pending; 13-QA-004 N/A (Writer is project-scoped; see 18-QA-021/022). |
+| 12 | Done        | P0       | Highlights: persistence + overlays + interactions (see breakdown below).                                     | Medium - geometry edge cases + perf. |
+| 13 | Done        | P0       | Persist chat history and writer drafts; add basic telemetry/logging (local-only).                            | Medium - 13-QA-001..003 pass; 13-QA-004 N/A (Writer is project-scoped; see 18-QA-021/022). |
 | 14 | Done        | P0       | Add error boundaries for Reader/Chat (and Writer later) with reload affordance.                              | Low |
 | 15 | Todo        | P1       | Add smoke tests (stores/hooks/api client); mock Tauri plugins.                                               | Medium - harness setup needed. |
 | 16 | Todo        | P1       | Performance guards: virtualization for large lists (>100), main-thread budget on import.                    | Medium - needs profiling and thresholds. |
@@ -58,7 +58,7 @@
 | 12.2 | Done | P0 | Interaction model | Click-to-select single highlight; popover: recolor/delete/note/actions | Popover works; delete confirm; Ask AI focuses input | `docs/QA.md` |
 | 12.3 | Done | P0 | Persistence & restore | Write-through create/edit/delete; hydrate by book; skip invalid rows | Restart/refresh restores; note persists | `docs/QA.md` |
 | 12.4 | Backlog | P2 | Performance | Progressive rendering in continuous scroll; avoid heavy work on scroll | Verify smooth scroll on >=50 pages; no long UI freezes | `docs/QA.md` |
-| 12.5 | Backlog | P2 | Multi-column gutter | Improve rect splitting so highlights spanning columns do not fill the gutter | Multi-column highlight should not bridge gutter | `docs/QA.md` (12-QA-009) |
+| 12.5 | Done | P2 | Multi-column gutter | Improve rect splitting so highlights spanning columns do not fill the gutter | Multi-column highlight should not bridge gutter | `docs/QA.md` (12-QA-009) |
 
 ## Task 10 Notes (Selection UX)
 - 10.1 (P1): Investigate and mitigate selection "ghosting/double shading" and adjacent-line overlap during drag-select (web + app). Track via `docs/QA.md` (10-QA-001).
@@ -160,7 +160,7 @@ Progress update (reported by user): 33-QA-001..004 pass.
 | 18.8 | Done | P2 | Markdown preview | Edit/Preview toggle (preview render is read-only) | Pass (`docs/QA.md` 18-QA-010) |
 | 18.12 | Done | P1 | Writer sidebar layout | Writer view hides ReaderNav and uses WriterSidebar (Projects + References); set a sane default Content/Context ratio (or adjustable split) so context is not squeezed | Pass (`docs/QA.md` 18-QA-014) |
 | 18.14 | Done | P1 | Projects picker UX | Projects menu closes via outside click/Esc/X; create project requires explicit Save/Cancel; rename supports Save/Cancel | Pass (`docs/QA.md` 18-QA-016) |
-| 18.13 | In Progress | P1 | Content selection AI actions | Select text in Writer Content → action menu: Simplify/Concise/Rewrite (tone submenu)/Translate/Explain/Ask AI; auto-send except Ask AI; results appear as applyable suggestion cards in Writer chat (Replace/Insert/Copy) with an explicit Undo affordance (mobile-friendly) | Phase A verified (`docs/QA.md` 18-QA-023..025); remaining: apply Undo bar + verify (`docs/QA.md` 18-QA-026). |
+| 18.13 | In Progress | P1 | Content selection AI actions | Select text in Writer Content → action menu: Simplify/Concise/Rewrite (tone submenu)/Translate/Explain/Ask AI; auto-send except Ask AI; results appear as applyable suggestion cards in Writer chat (Replace/Insert/Copy/To Context) with an explicit Undo affordance (mobile-friendly) | Phase A verified (`docs/QA.md` 18-QA-023..025); remaining: apply Undo bar + verify (`docs/QA.md` 18-QA-026); To Context verify (`docs/QA.md` 18-QA-030). |
 | 18.15 | Done | P1 | Writer Studio artifacts | Kickoff/Definition/Explanation/Rewrite(style)/Polish generate saved artifacts first; Insert applies to Content; citation constraint On by default when refs available | Pass (`docs/QA.md` 18-QA-017). Includes “Recent 3 + All…” artifacts list to keep chat usable. |
 | 18.16 | In Progress | P1 | Outline + reference preview | Outline derives from markdown headings in Content and supports click-to-jump; references support expand/collapse preview; sidebar width increased for readability | Manual (`docs/QA.md` 18-QA-019, 18-QA-020) |
 | 18.17 | In Progress | P0 | Draft persistence hardening | Prevent empty overwrites during Writer mount/project switch (hydration gate); drafts should survive abrupt app restarts with write-through local fallback + flush-on-exit | Manual (`docs/QA.md` 18-QA-021, 18-QA-022) |

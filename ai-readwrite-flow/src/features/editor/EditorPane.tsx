@@ -9,6 +9,7 @@ import { draftIdForProject } from './services/draftIds'
 import {
   insertPlainTextAsParagraphs,
   insertPlainTextAsParagraphsAt,
+  insertPlainTextAsParagraphsAtWithLeadingBlankLine,
   replaceRangeWithPlainTextAsParagraphs,
   scrollEditorToNeedle,
 } from './services/editorCommands'
@@ -98,6 +99,10 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
     if (!req) return
     if (req.mode === 'replace') {
       replaceRangeWithPlainTextAsParagraphs(editor, { from: req.selection.from, to: req.selection.to, text: req.text })
+      return
+    }
+    if (req.insertLeadingBlankLine) {
+      insertPlainTextAsParagraphsAtWithLeadingBlankLine(editor, { pos: req.selection.to, text: req.text })
       return
     }
     insertPlainTextAsParagraphsAt(editor, { pos: req.selection.to, text: req.text })

@@ -1,39 +1,44 @@
 import type { Editor as TipTapEditor, JSONContent } from '@tiptap/core'
 import { TextSelection } from 'prosemirror-state'
 
-export const insertPlainTextAsParagraphs = (editor: TipTapEditor, text: string) => {
+const plainTextToParagraphNodes = (text: string): JSONContent[] => {
   const normalized = text.replace(/\r\n/g, '\n').trim()
-  if (!normalized) return
+  if (!normalized) return []
   const paragraphs = normalized.split(/\n{2,}/g)
-  const content: JSONContent[] = paragraphs.map((p) => ({
+  return paragraphs.map((p) => ({
     type: 'paragraph',
     content: [{ type: 'text', text: p }],
   }))
+}
+
+export const insertPlainTextAsParagraphs = (editor: TipTapEditor, text: string) => {
+  const content = plainTextToParagraphNodes(text)
+  if (!content.length) return
   editor.chain().focus().insertContent(content).run()
 }
 
 export const insertPlainTextAsParagraphsAt = (editor: TipTapEditor, args: { pos: number; text: string }) => {
-  const normalized = args.text.replace(/\r\n/g, '\n').trim()
-  if (!normalized) return
-  const paragraphs = normalized.split(/\n{2,}/g)
-  const content: JSONContent[] = paragraphs.map((p) => ({
-    type: 'paragraph',
-    content: [{ type: 'text', text: p }],
-  }))
+  const content = plainTextToParagraphNodes(args.text)
+  if (!content.length) return
   editor.chain().focus().insertContentAt(args.pos, content).run()
+}
+
+export const insertPlainTextAsParagraphsAtWithLeadingBlankLine = (
+  editor: TipTapEditor,
+  args: { pos: number; text: string },
+) => {
+  const content = plainTextToParagraphNodes(args.text)
+  if (!content.length) return
+  const withGap: JSONContent[] = [{ type: 'paragraph' }, ...content]
+  editor.chain().focus().insertContentAt(args.pos, withGap).run()
 }
 
 export const replaceRangeWithPlainTextAsParagraphs = (
   editor: TipTapEditor,
   args: { from: number; to: number; text: string },
 ) => {
-  const normalized = args.text.replace(/\r\n/g, '\n').trim()
-  if (!normalized) return
-  const paragraphs = normalized.split(/\n{2,}/g)
-  const content: JSONContent[] = paragraphs.map((p) => ({
-    type: 'paragraph',
-    content: [{ type: 'text', text: p }],
-  }))
+  const content = plainTextToParagraphNodes(args.text)
+  if (!content.length) return
   editor.chain().focus().insertContentAt({ from: args.from, to: args.to }, content).run()
 }
 

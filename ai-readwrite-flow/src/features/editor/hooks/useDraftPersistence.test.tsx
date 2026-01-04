@@ -30,6 +30,8 @@ const createFakeEditor = () => {
     text: string
   } = { isDestroyed: false, doc: { type: 'doc', content: [{ type: 'paragraph' }] }, text: '' }
 
+  const setContent = vi.fn()
+
   const editor = {
     get isDestroyed() {
       return state.isDestroyed
@@ -45,7 +47,7 @@ const createFakeEditor = () => {
       handlers.delete(handler)
     },
     commands: {
-      setContent: () => undefined,
+      setContent,
     },
     __emitUpdate: () => {
       for (const handler of handlers) handler()
@@ -68,6 +70,7 @@ const createFakeEditor = () => {
     __emitUpdate: () => void
     __setText: (text: string) => void
     __destroy: () => void
+    commands: { setContent: typeof setContent }
   }
 }
 
@@ -180,6 +183,61 @@ describe('useDraftPersistence', () => {
     await vi.advanceTimersByTimeAsync(600)
 
     expect(mockSaveDraft).toHaveBeenCalledTimes(1)
+    root.unmount()
+    host.remove()
+    vi.useRealTimers()
+  })
+
+  it('saves user edits made before hydration resolves (prevents loss on slow load)', async () => {
+    resetMocks()
+    vi.useFakeTimers()
+
+    let resolveDraft!: (value: unknown) => void
+    mockLoadDraft.mockImplementationOnce(
+      () =>
+        new Promise<unknown>((resolve) => {
+          resolveDraft = resolve
+        }),
+    )
+    mockLoadWritingContent.mockResolvedValueOnce(null)
+    mockSaveDraft.mockResolvedValue(true)
+    mockUpsertWritingContent.mockResolvedValue(true)
+
+    const editor = createFakeEditor()
+
+    const App = () => {
+      useDraftPersistence({ editor, draftId: 'project:test' })
+      return null
+    }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    await new Promise<void>((resolve) => {
+      const Wrapper = () => {
+        useEffect(() => resolve(), [])
+        return <App />
+      }
+      root.render(<Wrapper />)
+    })
+    await flushMicrotasks()
+
+    editor.__setText('typed before hydration')
+    editor.__emitUpdate()
+    await vi.advanceTimersByTimeAsync(600)
+
+    expect(mockSaveDraft).toHaveBeenCalledTimes(1)
+    expect(editor.commands.setContent).toHaveBeenCalledTimes(0)
+
+    resolveDraft({
+      id: 'project:test',
+      editorDoc: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'disk' }] }] },
+      updatedAt: Date.now(),
+    })
+    await flushMicrotasks()
+
+    expect(editor.commands.setContent).toHaveBeenCalledTimes(0)
+
     root.unmount()
     host.remove()
     vi.useRealTimers()

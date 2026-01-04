@@ -60,8 +60,32 @@ const mergeLineGroup = (rects: HighlightRect[]): HighlightRect => {
   })
 }
 
+const median = (values: number[]) => {
+  if (values.length === 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[Math.floor(sorted.length / 2)] ?? 0
+}
+
 const splitByHorizontalGap = (rects: HighlightRect[], gapThreshold = 0.06): HighlightRect[][] => {
   const sorted = [...rects].sort((a, b) => a.x - b.x)
+  const heights = sorted.map((r) => r.height).filter((h) => h > 0)
+  const dynamicThreshold = Math.max(0.01, median(heights) * 1.5, gapThreshold * 0.35)
+  const center = 0.5
+  const centerGapMin = Math.max(0.012, median(heights) * 0.8)
+
+  for (let idx = 1; idx < sorted.length; idx += 1) {
+    const prev = sorted[idx - 1]!
+    const next = sorted[idx]!
+    const gapStart = rectRight(prev)
+    const gapEnd = next.x
+    const gap = gapEnd - gapStart
+    if (gap <= 0) continue
+    const crossesCenter = gapStart < center && center < gapEnd
+    if (crossesCenter && gap >= centerGapMin) {
+      return [sorted.slice(0, idx), sorted.slice(idx)]
+    }
+  }
+
   const groups: HighlightRect[][] = []
   for (const rect of sorted) {
     const lastGroup = groups[groups.length - 1]
@@ -71,19 +95,13 @@ const splitByHorizontalGap = (rects: HighlightRect[], gapThreshold = 0.06): High
     }
     const last = lastGroup[lastGroup.length - 1]
     const gap = rect.x - rectRight(last)
-    if (gap > gapThreshold) {
+    if (gap > dynamicThreshold) {
       groups.push([rect])
       continue
     }
     lastGroup.push(rect)
   }
   return groups
-}
-
-const median = (values: number[]) => {
-  if (values.length === 0) return 0
-  const sorted = [...values].sort((a, b) => a - b)
-  return sorted[Math.floor(sorted.length / 2)] ?? 0
 }
 
 const filterOutlierRects = (rects: HighlightRect[]) => {

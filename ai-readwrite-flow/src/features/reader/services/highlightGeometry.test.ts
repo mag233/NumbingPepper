@@ -28,6 +28,17 @@ describe('highlightGeometry', () => {
     expect(merged[1]!.x).toBeCloseTo(0.62, 3)
   })
 
+  it('splits on center gutter even when the gap is small', () => {
+    const rects = [
+      { x: 0.08, y: 0.1, width: 0.39, height: 0.03, normalized: true as const },
+      { x: 0.52, y: 0.101, width: 0.3, height: 0.03, normalized: true as const },
+    ]
+    const merged = mergeRectsByLine(rects)
+    expect(merged).toHaveLength(2)
+    expect(merged[0]!.x).toBeCloseTo(0.08, 3)
+    expect(merged[1]!.x).toBeCloseTo(0.52, 3)
+  })
+
   it('trims adjacent lines to avoid vertical overlap', () => {
     const rects = normalizeHighlightRects([
       { x: 0.1, y: 0.1, width: 0.6, height: 0.03, normalized: true },

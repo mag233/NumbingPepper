@@ -148,7 +148,13 @@ export const useDraftPersistence = ({ editor, draftId }: Args) => {
     }
 
     const scheduleSave = () => {
-      if (isHydratingRef.current) return
+      if (isHydratingRef.current) {
+        const snapshot = isEditorDestroyed(editor) ? null : snapshotFromEditor(editor)
+        if (!snapshot || snapshot.text.trim().length === 0) return
+        loadSeqRef.current += 1
+        isHydratingRef.current = false
+        lastSnapshotRef.current = snapshot
+      }
       if (isEditorDestroyed(editor)) return
       lastSnapshotRef.current = snapshotFromEditor(editor)
       dirtyRef.current = true

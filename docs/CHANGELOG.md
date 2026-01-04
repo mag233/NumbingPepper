@@ -8,6 +8,7 @@
 - Desktop (Reader): add Comfortable/Compact density in `Layout` adjust mode (Reader-only), persisted locally and reset via Reader Reset.
 - Desktop layout: locked-mode dividers are non-draggable, and sidebar vs Reader↔Chat split gutters match in adjust mode.
 - Writer: selection apply now shows an Undo notice bar (mobile-friendly) after Replace/Insert.
+- Writer: suggestion actions add `To Context`, and `Insert below` adds a blank line before inserted text for readability.
 - Integrations: add Flomo export core (webhook POST + note builder) and a smoke script (`node scripts/flomo-smoke.mjs`).
 - Settings: add an Integrations tab with Flomo webhook URL config + `Test & Save` (env `VITE_FLOMO_API` used as a default/placeholder).
 - Integrations: add a “Send to Flomo” composer modal for Reader/Writer drafts; Writer Context defaults expanded on desktop and collapsible on mobile; tags are deduped and headings are English.
@@ -32,7 +33,8 @@
 - Reader: zoom (buttons + Ctrl/⌘ shortcuts), fit modes (manual/fit width/fit page), and copy selection with newline cleanup.
 - Reader: added Find-in-document (paged-mode search with next/prev and in-page highlighting).
 - Reader: Find highlight now tracks an “active” hit (blue outline) and retries longer until the text layer is measurable to reduce “no highlight on first jump”.
-- Known: multi-column PDFs can still produce gutter-bridging highlight rects; tracked as a non-blocker in `docs/QA.md`.
+- Reader: improve multi-column highlight splitting (detect center gutter even when the gap is small) to avoid filling the gutter.
+- Known: some multi-column PDFs may still produce gutter-bridging highlight rects; tracked as `12-QA-009` in `docs/QA.md`.
 - Chat: persist messages per book session (`session_id=book:{bookId}`) with localStorage fallback for web dev.
 - Writer: persist TipTap draft per book (`drafts.id=book:{bookId}`) with debounce + flush on book switch; localStorage fallback for web dev.
 - Logging: added local-only event logging with secret redaction and 7-day retention; stores to localStorage and to a `app_logs` SQLite table (created if missing).
@@ -78,4 +80,6 @@
 - Writer: fix markdown normalization that incorrectly transformed `## Heading` into `# # Heading`, which broke Outline levels and preview rendering.
 - Writer: fix autosave debounce bookkeeping and snapshot-based flush so the active project is not overwritten with an empty doc during app close/unmount.
 - Writer: block autosave during editor hydration so switching Reader→Writer or switching projects cannot overwrite an existing draft with the initial empty editor state.
+- Writer: if the user types before hydration finishes, cancel hydration and save to reduce data loss on slow loads.
+- Fix: avoid a Writer crash in dev during draft hydration (invalidate in-flight hydration via sequence bump rather than adding a new hook).
 - Writer: add explicit `Save` button + “Saved/Saving/Failed” status in the Writer header; harden SQLite init (fail-closed to local fallback) and persist content to `writing_contents` as a second-layer restore path.
