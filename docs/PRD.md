@@ -188,7 +188,10 @@ See `docs/writer-srs.md` for testable details and acceptance criteria.
 - For scanned PDFs: run Tesseract via Rust; output plain text per page (readable). Store alongside book folder; optional ingest into FTS when available.
 
 ### Flomo (P1/backlog)
-- Button on chat bubble to POST structured payload (quote, question, AI reply, optional note) with markdown stripped. Validate URL presence; surface toast on success/error.
+- Reader/Writer: export notes to Flomo via webhook (write-only), plain text with tags (one per line) and default tag prefixes (`#books/<book>` / `#写作/<project>`).
+- Reader: selection `Note` flow can save a highlight note and optionally `Save & Send` to Flomo; Writer: export selection (plus Context) to Flomo.
+- UX/Safety: never reveal or copy the webhook URL in UI; show clear success/error feedback; optionally show a local-only “Last sent” timestamp to reduce duplicate sends.
+- Writer UX: provide a local-only `Flomo History` list (outbox) per writing project to review what was sent and support quick resend (Flomo is write-only; no remote history).
 
 ## 6. AI Prompt Contract (Baseline)
 - System prompt defines assistant role/safety. Selection-based: `Explain this text: "<quote>"`. Global query: plain question. When RAG active, append cited chunks with `[p{page}]` tags and require citations; if none, state lack of context.

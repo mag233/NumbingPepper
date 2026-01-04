@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Command, Eye, Pencil, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import { useDraftPersistence } from './hooks/useDraftPersistence'
 import { draftIdForProject } from './services/draftIds'
@@ -24,6 +24,7 @@ import useWriterSelectionApplyStore from './stores/writerSelectionApplyStore'
 import WriterSlashCommands from './components/WriterSlashCommands'
 import WriterMarkdownPreview from './components/WriterMarkdownPreview'
 import WriterSelectionApplyNotice from './components/WriterSelectionApplyNotice'
+import WriterEditorActionBar from './components/WriterEditorActionBar'
 
 type Props = {
   onQuickPrompt: (prompt: { text: string; autoSend: boolean; meta?: unknown }) => void
@@ -160,43 +161,15 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
     <Card
       title="Writer / TipTap"
       action={
-        <div className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
-          <span className="max-w-[12rem] truncate text-xs text-ink-muted" title={activeTitle}>
-            Active: {activeTitle}
-          </span>
-          <span
-            className={`rounded-lg border px-2 py-1 ${
-              saveStatus === 'error'
-                ? 'border-red-500/40 bg-red-500/10 text-red-200'
-                : 'border-chrome-border/70 bg-surface-raised/40 text-ink-muted'
-            }`}
-            title={lastSavedAt ? new Date(lastSavedAt).toISOString() : undefined}
-          >
-            {saveLabel}
-          </span>
-          <button
-            type="button"
-            onClick={() => void flushNow()}
-            className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/60 px-3 py-2 text-ink-primary hover:border-accent"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsPreview((value) => !value)
-            }}
-            className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/60 px-3 py-2 text-ink-primary hover:border-accent"
-            aria-pressed={isPreview}
-          >
-            {isPreview ? <Pencil className="size-4" /> : <Eye className="size-4" />}
-            {isPreview ? 'Edit' : 'Preview'}
-          </button>
-          <span className="inline-flex items-center gap-2">
-            <Command className="size-4" />
-            Type "/" to open commands
-          </span>
-        </div>
+        <WriterEditorActionBar
+          activeTitle={activeTitle}
+          saveLabel={saveLabel}
+          saveStatus={saveStatus}
+          lastSavedAt={lastSavedAt ?? null}
+          isPreview={isPreview}
+          onSave={() => void flushNow()}
+          onTogglePreview={() => setIsPreview((value) => !value)}
+        />
       }
       className="flex h-full min-h-0 flex-col"
     >

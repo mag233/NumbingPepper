@@ -175,4 +175,18 @@
 
 | ID | Scenario | Steps | Expected | Result | Notes |
 | -- | -------- | ----- | -------- | ------ | ----- |
-| 23-QA-001 | Flomo webhook POST smoke | Set `VITE_FLOMO_API` or `FLOMO_API`; run `cd ai-readwrite-flow; node scripts/flomo-smoke.mjs` | A new Flomo note is created; command prints `Flomo POST ok` | Pass | Verified by agent. |
+| 23-QA-001 | Flomo webhook POST smoke | Set `VITE_FLOMO_API` or `FLOMO_API`; run `cd ai-readwrite-flow; node scripts/flomo-smoke.mjs` | A new Flomo note is created; command prints `Flomo POST ok` | Pass | Verified by user. |
+| 23-QA-002 | Settings: Flomo URL + Test | Settings → Integrations → (A) Replace → paste Flomo webhook URL OR (B) leave empty when `VITE_FLOMO_API` is set at build time → click `Test & Save`; restart app and confirm URL persists | Test creates a Flomo note; settings persist across restart; URL is never shown or copyable in the UI | Pass | Verified by user. |
+| 23-QA-003 | Composer: Reader/Writer drafts | DEV: Settings → Integrations → Dev tools → open Reader/Writer composer; edit Tags; (Writer) collapse/expand Context; click Send | Note is created in Flomo with English headings and tags one-per-line; duplicate tags are removed; Writer Context defaults expanded on desktop and collapsed on mobile | Pass | Verified by user. |
+| 23-QA-004 | Reader: Note → Save highlight | Reader: select text in PDF → click `Note` in floating menu → type note → click `Save` | A highlight is created for the selected text; note is saved on that highlight; composer closes; no Flomo note is sent | Pass | Verified by user. |
+| 23-QA-005 | Reader: Save & Send to Flomo | Reader: select text → `Note` → type note → click `Save & Send` | Highlight is created (or updated) and note saved; a Flomo card is created with Quote/Note/Tags and no duplicate tags; composer closes on success | Pass | Verified by user. |
+| 23-QA-006 | Writer: Export selection to Flomo | Writer: select text in Content → click `Flomo` in selection bubble menu → adjust tags → click `Send` | A Flomo card is created with Selection/Context/Tags; tags are one-per-line and deduped | Pass | Verified by user. |
+| 23-QA-007 | Composer: Save vs Save & Close | Reader: select text → Note → type note → click `Save` | Highlight note is saved but composer stays open; `Save & Close` closes; `Save & Send` sends and closes on success | Pass | Verified by user. |
+| 23-QA-008 | Composer: Last sent timestamp | (A) Reader: from highlight popover click `Flomo…` → click `Save & Send` → re-open `Flomo…` (B) Writer: open Flomo export → Send → reopen | Composer shows `Last sent: ...` matching the most recent successful send | Pass | Verified by user. |
+| 23-QA-009 | Writer: Flomo History (local outbox) | Writer: send 2 different selections via Flomo → click `Flomo History` in Writer header → click `Resend` on an item | History lists both sends (newest first) with time + snippet preview; Resend opens composer with that selection prefilled and can send again | Pass | Verified by user. |
+
+## 2026-01-04 — Settings UX (Task 38)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 38-QA-001 | Reader templates hint clarity | Settings → Reader → select `Explain` then select `Questions` | Only `Questions` shows the contract hint (inside the editor panel, above the textarea); no confusing extra section at the bottom | Pass | Verified by user. |

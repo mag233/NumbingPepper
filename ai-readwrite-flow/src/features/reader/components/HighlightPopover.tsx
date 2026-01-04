@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { CircleHelp, FolderPlus, MessageSquare, Paintbrush, Sparkles, StickyNote, Trash2 } from 'lucide-react'
 import { type Highlight, type HighlightColor } from '../types'
+import useFlomoComposerStore from '../../integrations/flomo/flomoComposerStore'
+import useLibraryStore from '../../../stores/libraryStore'
+import { defaultBookTag } from '../../integrations/flomo/flomoNoteBuilder'
 
 type Props = {
   highlight: Highlight
@@ -39,6 +42,8 @@ const HighlightPopover = ({
   onSetColor,
   onSetNote,
 }: Props) => {
+  const openFlomoComposer = useFlomoComposerStore((s) => s.open)
+  const bookTitle = useLibraryStore((s) => s.items.find((item) => item.id === highlight.bookId)?.title) ?? 'Untitled'
   const [note, setNote] = useState(highlight.note ?? '')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [deleteArmed, setDeleteArmed] = useState(false)
@@ -144,7 +149,25 @@ const HighlightPopover = ({
       </div>
 
       <div className="mt-3">
-        <label className="mb-1 block text-[11px] text-ink-muted">Note</label>
+        <div className="mb-1 flex items-center justify-between">
+          <label className="block text-[11px] text-ink-muted">Note</label>
+          <button
+            type="button"
+            onClick={() =>
+              openFlomoComposer({
+                mode: 'reader',
+                quote: highlight.content,
+                note: note.trim(),
+                bookTitle,
+                tags: [defaultBookTag(bookTitle)],
+                source: { type: 'highlight', bookId: highlight.bookId, highlightId: highlight.id },
+              })
+            }
+            className="rounded-md border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-muted hover:border-accent hover:text-ink-primary"
+          >
+            Flomo…
+          </button>
+        </div>
         <textarea
           value={note}
           onChange={(event) => setNote(event.target.value)}

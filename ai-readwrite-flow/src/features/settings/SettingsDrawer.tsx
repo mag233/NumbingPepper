@@ -3,8 +3,9 @@ import { Settings, X } from 'lucide-react'
 import GlobalSettingsSection from './GlobalSettingsSection'
 import ReaderShortcutTemplatesSection from './ReaderShortcutTemplatesSection'
 import ChatPromptTemplatesSection from './ChatPromptTemplatesSection'
+import IntegrationsSettingsSection from './IntegrationsSettingsSection'
 
-export type SettingsTab = 'global' | 'reader' | 'chat'
+export type SettingsTab = 'global' | 'reader' | 'chat' | 'integrations'
 
 type Props = {
   onClose: () => void
@@ -30,6 +31,7 @@ const SettingsDrawer = ({ onClose, initialTab = 'global' }: Props) => {
   const body = useMemo(() => {
     if (tab === 'reader') return <ReaderShortcutTemplatesSection />
     if (tab === 'chat') return <ChatPromptTemplatesSection />
+    if (tab === 'integrations') return <IntegrationsSettingsSection />
     return <GlobalSettingsSection />
   }, [tab])
 
@@ -66,6 +68,9 @@ const SettingsDrawer = ({ onClose, initialTab = 'global' }: Props) => {
           </button>
           <button type="button" className={tabButton(tab === 'chat')} onClick={() => setTab('chat')}>
             Chat
+          </button>
+          <button type="button" className={tabButton(tab === 'integrations')} onClick={() => setTab('integrations')}>
+            Integrations
           </button>
         </div>
 

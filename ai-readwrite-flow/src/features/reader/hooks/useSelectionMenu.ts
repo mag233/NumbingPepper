@@ -3,6 +3,9 @@ import { selectionToHighlight } from '../services/selectionToHighlight'
 import { type Highlight, type HighlightRect } from '../types'
 import { copyTextToClipboard } from '../../../lib/clipboard'
 import { cleanPdfCopiedText } from '../services/selectionText'
+import useFlomoComposerStore from '../../integrations/flomo/flomoComposerStore'
+import useLibraryStore from '../../../stores/libraryStore'
+import { defaultBookTag } from '../../integrations/flomo/flomoNoteBuilder'
 
 export type SelectionMenuState = {
   visible: boolean
@@ -27,6 +30,8 @@ const clearSelection = () => {
 }
 
 export const useSelectionMenu = ({ container, activeBookId, addHighlight, onAction }: Args) => {
+  const openFlomoComposer = useFlomoComposerStore((s) => s.open)
+  const activeItem = useLibraryStore((s) => s.items.find((item) => item.id === s.activeId))
   const [menu, setMenu] = useState<SelectionMenuState>({
     visible: false,
     x: 0,
@@ -72,13 +77,28 @@ export const useSelectionMenu = ({ container, activeBookId, addHighlight, onActi
   }, [container])
 
   const handleAction = async (
-    action: 'summarize' | 'explain' | 'chat' | 'questions' | 'highlight' | 'copy',
+    action: 'summarize' | 'explain' | 'chat' | 'questions' | 'highlight' | 'copy' | 'note',
   ) => {
     if (!menu.text) return
     if (action === 'copy') {
       const ok = await copyTextToClipboard(cleanPdfCopiedText(menu.text))
       setMenu((state) => ({ ...state, copyStatus: ok ? 'copied' : 'error' }))
       window.setTimeout(() => setMenu((state) => ({ ...state, copyStatus: 'idle' })), 900)
+      return
+    }
+    if (action === 'note') {
+      if (!activeBookId || !menu.page || !menu.rects?.length) return
+      const bookTitle = activeItem?.title?.trim() || 'Untitled'
+      openFlomoComposer({
+        mode: 'reader',
+        quote: menu.text,
+        note: '',
+        bookTitle,
+        tags: [defaultBookTag(bookTitle)],
+        source: { type: 'selection', bookId: activeBookId, page: menu.page, rects: menu.rects },
+      })
+      clearSelection()
+      setMenu((state) => ({ ...state, visible: false }))
       return
     }
     if (action === 'highlight') {

@@ -12,9 +12,15 @@ const tagFromPath = (prefix: string, name: string) => {
 }
 
 const joinTagLines = (tags: string[]) => {
+  const seen = new Set<string>()
   const lines = tags
     .map(normalizeHashtag)
     .filter((tag): tag is string => Boolean(tag))
+    .filter((tag) => {
+      if (seen.has(tag)) return false
+      seen.add(tag)
+      return true
+    })
   return lines.length ? lines.join('\n') : ''
 }
 
@@ -35,16 +41,18 @@ export const buildReaderFlomoContent = (args: {
   const allTags = [defaultTag, ...(args.tags ?? [])]
   const tagLines = joinTagLines(allTags)
   return joinContentLines([
-    '引用：',
+    'Quote:',
     args.quote.trim(),
     '',
-    '笔记：',
+    'Note:',
     args.note.trim(),
     '',
     'Tags:',
     tagLines,
   ])
 }
+
+export const defaultBookTag = (bookTitle: string) => tagFromPath('books', bookTitle) ?? '#books'
 
 export const buildWriterFlomoContent = (args: {
   selection: string
@@ -56,13 +64,15 @@ export const buildWriterFlomoContent = (args: {
   const allTags = [defaultTag, ...(args.tags ?? [])]
   const tagLines = joinTagLines(allTags)
   return joinContentLines([
-    '选段：',
+    'Selection:',
     args.selection.trim(),
     '',
-    'Context：',
+    'Context:',
     args.context.trim(),
     '',
     'Tags:',
     tagLines,
   ])
 }
+
+export const defaultProjectTag = (projectTitle: string) => tagFromPath('写作', projectTitle) ?? '#写作'

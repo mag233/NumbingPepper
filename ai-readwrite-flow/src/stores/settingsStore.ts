@@ -10,12 +10,14 @@ type SettingsState = {
   baseUrl: string
   model: string
   themePreset: ThemePreset
+  flomoWebhookUrl: string
   status: Status
   error?: string
   setApiKey: (apiKey: string) => void
   setBaseUrl: (baseUrl: string) => void
   setModel: (model: string) => void
   setThemePreset: (theme: ThemePreset) => void
+  setFlomoWebhookUrl: (url: string) => void
   hydrate: () => Promise<void>
   save: () => Promise<void>
 }
@@ -25,12 +27,14 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
   baseUrl: defaultBaseUrl,
   model: defaultModel,
   themePreset: defaultThemePreset,
+  flomoWebhookUrl: '',
   status: 'idle',
   error: undefined,
   setApiKey: (apiKey) => set({ apiKey }),
   setBaseUrl: (baseUrl) => set({ baseUrl }),
   setModel: (model) => set({ model }),
   setThemePreset: (themePreset) => set({ themePreset }),
+  setFlomoWebhookUrl: (flomoWebhookUrl) => set({ flomoWebhookUrl }),
   hydrate: async () => {
     set({ status: 'loading', error: undefined })
     const stored = await loadSettingsFromStore()
@@ -42,6 +46,7 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
       baseUrl: get().baseUrl,
       model: get().model,
       themePreset: get().themePreset,
+      flomoWebhookUrl: get().flomoWebhookUrl,
     }
     try {
       await persistSettings(snapshot)

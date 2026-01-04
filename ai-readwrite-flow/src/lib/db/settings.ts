@@ -13,6 +13,7 @@ export type StoredSettings = {
   baseUrl: string
   model: string
   themePreset: ThemePreset
+  flomoWebhookUrl: string
 }
 
 const LOCAL_STORAGE_KEY = 'ai-readwrite-flow-settings'
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   baseUrl: defaultBaseUrl,
   model: defaultModel,
   themePreset: defaultThemePreset,
+  flomoWebhookUrl: '',
 }
 
 const storedSettingsInputSchema = z.object({
@@ -28,7 +30,14 @@ const storedSettingsInputSchema = z.object({
   baseUrl: z.string().optional(),
   model: z.string().optional(),
   themePreset: z.string().optional(),
+  flomoWebhookUrl: z.string().optional(),
 })
+
+const getDefaultFlomoWebhookUrl = () => {
+  return (import.meta.env.VITE_FLOMO_API ?? '').trim()
+}
+
+const normalizeFlomoWebhookUrl = (raw: string | undefined) => (raw ?? '').trim()
 
 export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
   const st = await ensureStore()
@@ -37,10 +46,12 @@ export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
       const raw: unknown = await st.get('settings')
       const parsed = storedSettingsInputSchema.safeParse(raw)
       if (parsed.success) {
+        const envDefaultFlomoUrl = getDefaultFlomoWebhookUrl()
         return {
           ...DEFAULT_SETTINGS,
           ...parsed.data,
           themePreset: normalizeThemePreset(parsed.data.themePreset ?? getPreferredThemePreset()),
+          flomoWebhookUrl: normalizeFlomoWebhookUrl(parsed.data.flomoWebhookUrl) || envDefaultFlomoUrl,
         }
       }
     } catch (error) {
@@ -54,10 +65,12 @@ export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
       const json: unknown = JSON.parse(raw)
       const parsed = storedSettingsInputSchema.safeParse(json)
       if (!parsed.success) throw new Error('Invalid settings in localStorage')
+      const envDefaultFlomoUrl = getDefaultFlomoWebhookUrl()
       return {
         ...DEFAULT_SETTINGS,
         ...parsed.data,
         themePreset: normalizeThemePreset(parsed.data.themePreset ?? getPreferredThemePreset()),
+        flomoWebhookUrl: normalizeFlomoWebhookUrl(parsed.data.flomoWebhookUrl) || envDefaultFlomoUrl,
       }
     }
   } catch (error) {
@@ -77,18 +90,20 @@ export const loadSettingsFromStore = async (): Promise<StoredSettings> => {
         return acc
       }, {})
       const preferred = getPreferredThemePreset()
+      const envDefaultFlomoUrl = getDefaultFlomoWebhookUrl()
       return {
         apiKey: record.apiKey ?? '',
         baseUrl: record.baseUrl ?? defaultBaseUrl,
         model: record.model ?? defaultModel,
         themePreset: normalizeThemePreset(record.themePreset ?? preferred),
+        flomoWebhookUrl: normalizeFlomoWebhookUrl(record.flomoWebhookUrl) || envDefaultFlomoUrl,
       }
     } catch (error) {
       console.warn('SQLite settings read failed, using defaults', error)
     }
   }
 
-  return DEFAULT_SETTINGS
+  return { ...DEFAULT_SETTINGS, flomoWebhookUrl: getDefaultFlomoWebhookUrl() }
 }
 
 export const persistSettings = async (settings: StoredSettings) => {
@@ -110,6 +125,10 @@ export const persistSettings = async (settings: StoredSettings) => {
       await db.execute('INSERT OR REPLACE INTO settings (key, value) VALUES ($1, $2)', [
         'themePreset',
         settings.themePreset,
+      ])
+      await db.execute('INSERT OR REPLACE INTO settings (key, value) VALUES ($1, $2)', [
+        'flomoWebhookUrl',
+        settings.flomoWebhookUrl,
       ])
     } catch (error) {
       console.warn('SQLite settings write failed, still persisting to store/localStorage', error)

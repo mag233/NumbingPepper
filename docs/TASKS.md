@@ -43,6 +43,7 @@
 | 35 | Done        | P1       | Writer layout density: adjustable Editor↔Chat split + compact spacing (Writer-only).                          | Medium - user-adjustable layout needs min-width guards + reset; migrate to Reader later if proven. |
 | 36 | Done        | P1       | Desktop sidebar resizing + nav toggle ergonomics.                                                             | Medium - resizable sidebar needs min/max + reset; avoid mobile impact and keep controls discoverable. |
 | 37 | Done        | P1       | Global Layout toggle + per-view adjustments (Reader split + scope hint).                                      | Medium - desktop complete; mobile QA deferred. |
+| 38 | Done        | P2       | Settings UX: Reader templates hint clarity.                                                                    | Low - move Questions contract hint into Questions editor to avoid confusion. |
 
 ## Progress Notes
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
@@ -133,6 +134,18 @@ Progress update (reported by user): 33-QA-001..004 pass.
 | 37.3 | Done | P1 | Reader main split | Reader supports adjusting Reader↔Chat width split (desktop only) gated by Layout Adjust mode; persist + clamp + Reset (Reader-only) | Manual: drag works; persists; reset only affects Reader |
 | 37.4 | Done | P1 | Reset semantics | Reset affects only current view (Reader reset does not affect Writer; Writer reset does not affect Reader) | Manual: reset isolation verified |
 | 37.5 | Done | P1 | Reader density + divider clarity | Reader adds Comfortable/Compact density in Layout Adjust (Reader-only; persisted+Zod; Reset Reader-only); locked mode dividers are non-draggable and split gutters are consistent | Manual: density affects Reader only; persists; Reset resets Reader density; locked mode dividers don't look draggable |
+
+## Task 23 Breakdown (Flomo export)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify |
+| -- | ------ | -------- | -------- | -------------- | ------ |
+| 23.1 | Done | P1 | Docs: contracts + QA rows | Define Flomo write-only contract, note formats (Reader/Writer), tag rules (one-per-line, defaults), and failure modes | `docs/QA.md` 23-QA-001..002 added |
+| 23.2 | Done | P1 | Settings: webhook + test | Settings → Integrations: configure Flomo webhook URL, validate + persist; `Test & Save` sends a test note | Pass (`docs/QA.md` 23-QA-002) |
+| 23.3 | Done | P1 | Composer modal | Add a shared “Send to Flomo” composer modal for Reader/Writer drafts; Writer Context is expanded on desktop and collapsible on mobile; send shows errors and closes on success | Pass (`docs/QA.md` 23-QA-003) |
+| 23.4 | Done | P1 | Reader: Note composer + Flomo | Reader selection menu adds `Note` which opens the Flomo composer (merged): Quote read-only, Note editable, Tags editable (one-per-line, default `#books/<book>`). `Save` creates a highlight and saves Note; `Save & Send` also posts to Flomo; buttons disabled when Note is empty. Highlight popover can open the same composer to reuse an existing highlight note. | Pass (`docs/QA.md` 23-QA-004/005) |
+| 23.5 | Done | P1 | Writer: Export selection to Flomo | Writer selection bubble menu adds `Flomo` entry to open composer prefilled with Selection + current Context + default tags (`#写作/<project>`); Send posts to Flomo and closes on success. | Pass (`docs/QA.md` 23-QA-006) |
+| 23.6 | Done | P1 | Composer buttons | Reader Note composer: `Save` persists highlight note but stays open; add `Save & Close`; keep `Save & Send` (saves then sends) | Pass (`docs/QA.md` 23-QA-007) |
+| 23.7 | Done | P2 | Send history | Show `Last sent: <timestamp>` in composer for Reader/Writer exports (local-only); update timestamp on successful send | Pass (`docs/QA.md` 23-QA-008) |
+| 23.8 | Done | P2 | Writer: Flomo History | Writer adds a `Flomo History` popover (local-only) showing recent successful sends for the active writing project; each item shows time + snippet preview and supports `Resend` (reopens composer). No manual delete. | Pass (`docs/QA.md` 23-QA-009) |
 
 ## Task 18 Breakdown (Writer - deferred until Task 29 complete)
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify |

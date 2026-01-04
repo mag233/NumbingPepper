@@ -1,4 +1,4 @@
-import { CircleHelp, Copy, FolderPlus, Highlighter, MessageSquare, Sparkles, StickyNote } from 'lucide-react'
+import { CircleHelp, Copy, FolderPlus, Highlighter, MessageSquare, NotebookPen, Sparkles, StickyNote } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useWriterHighlightActions } from './hooks/useWriterHighlightActions'
 import type { Highlight, HighlightRect } from './types'
@@ -11,7 +11,7 @@ type FloatingMenuProps = {
   rects?: HighlightRect[]
   activeBookId?: string
   copyStatus?: 'idle' | 'copied' | 'error'
-  onAction: (action: 'summarize' | 'explain' | 'chat' | 'questions' | 'highlight' | 'copy') => void
+  onAction: (action: 'summarize' | 'explain' | 'chat' | 'questions' | 'highlight' | 'copy' | 'note') => void
   onDismiss: () => void
 }
 
@@ -113,6 +113,13 @@ const FloatingMenu = ({ x, y, text, page, rects, activeBookId, copyStatus = 'idl
       >
         <Highlighter className="size-4" />
         Highlight
+      </button>
+      <button
+        onClick={() => onAction('note')}
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-amber-500/20"
+      >
+        <NotebookPen className="size-4" />
+        Note
       </button>
       <button
         onClick={() => void addToWritingContext()}

@@ -112,6 +112,14 @@ const ReaderShortcutTemplatesSection = () => {
 
           <div className="mt-3 grid gap-2">
             <label className="text-[11px] uppercase tracking-wide text-ink-muted">Instruction text</label>
+            {activeId === 'reader-questions' && (
+              <div className="rounded-lg border border-chrome-border/70 bg-surface-base/70 p-2 text-xs text-ink-muted">
+                <span className="font-semibold text-ink-primary">Questions output contract:</span> 3–5 items, each with{' '}
+                <span className="text-ink-primary">Q:</span> and <span className="text-ink-primary">A:</span>; include tags{' '}
+                <span className="text-ink-primary">[Terminology]</span>/<span className="text-ink-primary">[Logic]</span>/
+                <span className="text-ink-primary">[Insight]</span>.
+              </div>
+            )}
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -136,8 +144,7 @@ const ReaderShortcutTemplatesSection = () => {
               </button>
             </div>
             <p className="text-xs text-ink-muted">
-              Questions contract: 3–5 items, each with <span className="text-ink-primary">Q:</span> and{' '}
-              <span className="text-ink-primary">A:</span>, include tags [Terminology]/[Logic]/[Insight].
+              Changes here affect Reader shortcuts only. Writer templates are not configurable yet.
             </p>
           </div>
         </div>
@@ -147,4 +154,3 @@ const ReaderShortcutTemplatesSection = () => {
 }
 
 export default ReaderShortcutTemplatesSection
-

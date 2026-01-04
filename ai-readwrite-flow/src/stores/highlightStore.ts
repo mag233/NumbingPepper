@@ -65,6 +65,7 @@ const useHighlightStore = create<HighlightState>((set, get) => ({
       ...primary,
       content: primary.content === highlight.content ? primary.content : `${primary.content}\n${highlight.content}`,
       contextRange: { ...primary.contextRange, rects: mergedRects },
+      note: primary.note ?? highlight.note,
     }
 
     // Remove the extra highlights that were merged into the primary.

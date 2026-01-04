@@ -9,6 +9,13 @@
 - Desktop layout: locked-mode dividers are non-draggable, and sidebar vs Reader↔Chat split gutters match in adjust mode.
 - Writer: selection apply now shows an Undo notice bar (mobile-friendly) after Replace/Insert.
 - Integrations: add Flomo export core (webhook POST + note builder) and a smoke script (`node scripts/flomo-smoke.mjs`).
+- Settings: add an Integrations tab with Flomo webhook URL config + `Test & Save` (env `VITE_FLOMO_API` used as a default/placeholder).
+- Integrations: add a “Send to Flomo” composer modal for Reader/Writer drafts; Writer Context defaults expanded on desktop and collapsible on mobile; tags are deduped and headings are English.
+- Reader: selection menu adds `Note` which uses the Flomo composer (merged) to save a highlight note and optionally `Save & Send` to Flomo.
+- Writer: selection bubble menu adds `Flomo` export for sending the selected snippet (plus Context) to Flomo.
+- Flomo composer: add `Save & Close` and keep `Save` open; show local-only “Last sent” timestamp after successful sends.
+- Writer: add `Flomo History` (local-only outbox) to review recent sends per project and quickly `Resend`.
+- Settings (Reader): show the Questions output contract hint only within the Questions template editor (avoids a confusing “extra section”).
 - Writer: added a locked-by-default `Layout` mode with draggable Editor↔Writer AI split (default 65/35, min widths 520/320), Comfortable/Compact density presets, and Reset; persists locally.
 - Writer: UI polish—Content/Context are separate cards (65/35), Studio and Chat are separate cards, artifacts list is compact, Hide chat fully reclaims space, and fixed a card corner artifact caused by overflow clipping.
 - Reader: added `Questions` shortcut (auto-send) and a Settings editor for Reader AI templates (Ask AI/Summarize/Explain/Questions) with `Use defaults` + reset controls.

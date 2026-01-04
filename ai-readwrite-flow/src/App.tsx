@@ -22,8 +22,9 @@ import useWriterLayoutStore, { type WriterLayoutDensity } from './stores/writerL
 import useShellLayoutStore from './stores/shellLayoutStore'
 import useShellLayoutModeStore from './stores/shellLayoutModeStore'
 import LayoutControls from './features/shell/components/LayoutControls'
-
-type LayoutDensity = 'comfortable' | 'compact'
+import useFlomoComposerStore from './features/integrations/flomo/flomoComposerStore'
+import FlomoComposer from './features/integrations/flomo/components/FlomoComposer'
+import { densityVars, type LayoutDensity } from './features/shell/appDensity'
 
 const NAV_TABS: { id: TabKey; label: string }[] = [
   { id: 'library', label: 'Library' },
@@ -60,6 +61,8 @@ const App = () => {
   const resetWriterLayout = useWriterLayoutStore((s) => s.reset)
   const layoutAdjusting = useShellLayoutModeStore((s) => s.adjusting)
   const toggleLayoutAdjusting = useShellLayoutModeStore((s) => s.toggle)
+  const flomoDraft = useFlomoComposerStore((s) => s.draft)
+  const closeFlomoComposer = useFlomoComposerStore((s) => s.close)
 
   useEffect(() => {
     void hydrate()
@@ -83,31 +86,6 @@ const App = () => {
   }, [isMobile, quickPrompt, setActiveTab])
 
   const consumeQuickPrompt = () => setQuickPrompt(undefined)
-
-  const densityVars = (density: LayoutDensity) => {
-    if (density === 'compact') {
-      return {
-        '--app-gap': '0.75rem',
-        '--app-pad-x': '1rem',
-        '--app-pad-y': '1rem',
-        '--app-header-py': '0.5rem',
-        '--app-footer-px': '1rem',
-        '--app-footer-py': '0.5rem',
-        '--card-pad': '0.75rem',
-        '--card-header-mb': '0.5rem',
-      } as const
-    }
-    return {
-      '--app-gap': '1rem',
-      '--app-pad-x': '1.5rem',
-      '--app-pad-y': '1.5rem',
-      '--app-header-py': '0.75rem',
-      '--app-footer-px': '1rem',
-      '--app-footer-py': '0.75rem',
-      '--card-pad': '1rem',
-      '--card-header-mb': '0.75rem',
-    } as const
-  }
 
   const currentDensity: LayoutDensity = desktopView === 'writer' ? (writerDensity as LayoutDensity) : readerDensity
 
@@ -255,6 +233,7 @@ const App = () => {
         </div>
       </footer>
       {settingsOpen && <SettingsDrawer onClose={() => setSettingsOpen(false)} />}
+      {flomoDraft && <FlomoComposer draft={flomoDraft} onClose={closeFlomoComposer} />}
     </div>
   )
 }
