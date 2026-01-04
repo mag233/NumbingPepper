@@ -92,6 +92,15 @@ const WriterSelectionBubbleMenu = ({ editor, disabled, onQuickPrompt }: Props) =
     queueMicrotask(scheduleCompute)
     editor.on('focus', scheduleCompute)
     editor.on('blur', hide)
+    const onSelectionUpdate = () => {
+      const text = getSelectedText(editor)
+      if (!text) {
+        hide()
+        return
+      }
+      scheduleCompute()
+    }
+    editor.on('selectionUpdate', onSelectionUpdate)
     window.addEventListener('scroll', scheduleCompute, true)
     window.addEventListener('resize', scheduleCompute)
 
@@ -142,6 +151,7 @@ const WriterSelectionBubbleMenu = ({ editor, disabled, onQuickPrompt }: Props) =
       }
       editor.off('focus', scheduleCompute)
       editor.off('blur', hide)
+      editor.off('selectionUpdate', onSelectionUpdate)
       window.removeEventListener('scroll', scheduleCompute, true)
       window.removeEventListener('resize', scheduleCompute)
       dom.removeEventListener('mousedown', hide)

@@ -112,12 +112,17 @@
 - **PRD-WTR-AI-001 (P1): Writer selection AI actions (auto-send)**
   - In Writer Content, selecting text shows a compact action menu: `Simplify` / `Concise` / `Rewrite` / `Translate` / `Explain` / `Ask AI`.
   - `Simplify/Concise/Rewrite/Translate/Explain` auto-send and write a result card into Writer chat.
+  - After applying a suggestion via `Replace selection` or `Insert below`, the newly inserted text briefly flash-highlights (theme-aware) and clears on next user input or after 7s.
   - `Rewrite` supports a tone submenu: Default / Formal / Friendly / Academic / Bullet.
   - `Translate` default target language is configurable in Settings (initial default: English).
 - **PRD-WTR-AI-002 (P1): Writer “Ask AI” is draft-only**
   - `Ask AI` must NOT auto-send; it pre-fills the chat input with `Context:` (selected text) + `Instruction:` and focuses the cursor at the end.
 - **PRD-WTR-AI-003 (P1): Centralized Writer templates with safe defaults**
   - Writer selection actions share a template registry (single source of truth) and are end-user editable.
+  - Settings exposes a Writer templates editor with:
+    - `Use defaults` (ignore overrides; instant recovery if overrides break prompts)
+    - `Reset` per template and `Reset all` for overrides
+  - Rewrite tone is implemented as a set of tone profiles (directive/description/examples) applied as additional prompt directives; tone does not require separate template IDs.
   - Must include `Use defaults` + per-template reset + reset-all recovery (same behavior expectations as Reader templates).
 - **PRD-WTR-AI-004 (P1): Non-destructive apply controls**
   - Result cards provide explicit apply actions: `Replace selection` (default primary), `Insert below`, and `Copy`.

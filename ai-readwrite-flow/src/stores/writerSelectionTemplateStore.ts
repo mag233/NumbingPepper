@@ -1,150 +1,52 @@
 import { create } from 'zustand'
-import { z } from 'zod'
+import {
+  defaultWriterRewriteToneProfiles,
+  defaultWriterSelectionTemplates,
+  actionToTemplateId,
+} from './writerSelectionTemplateDefaults'
+import {
+  loadWriterSelectionTemplatesState,
+  persistWriterSelectionTemplatesState,
+} from './writerSelectionTemplatePersistence'
+import type {
+  WriterRewriteTone,
+  WriterRewriteToneProfile,
+  WriterRewriteToneProfileOverride,
+  WriterRewriteToneProfileOverrides,
+  WriterSelectionAction,
+  WriterSelectionBuildOptions,
+  WriterSelectionTemplate,
+  WriterSelectionTemplateId,
+  WriterTemplateOverrides,
+} from './writerSelectionTemplateModel'
 
-export type WriterSelectionAction =
-  | 'simplify'
-  | 'concise'
-  | 'rewrite'
-  | 'translate'
-  | 'explain'
-  | 'ask-ai'
+export type {
+  WriterRewriteTone,
+  WriterRewriteToneProfile,
+  WriterSelectionAction,
+  WriterSelectionBuildOptions,
+  WriterSelectionTemplate,
+  WriterSelectionTemplateId,
+} from './writerSelectionTemplateModel'
 
-export type WriterRewriteTone = 'default' | 'formal' | 'friendly' | 'academic' | 'bullet'
-
-export type WriterSelectionTemplateId =
-  | 'writer-ask-ai'
-  | 'writer-simplify'
-  | 'writer-concise'
-  | 'writer-rewrite'
-  | 'writer-translate'
-  | 'writer-explain'
-
-export type WriterSelectionTemplate = {
-  id: WriterSelectionTemplateId
-  label: string
-  shortLabel: string
-  description: string
-  instruction: string
-  autoSend: boolean
-}
-
-type WriterTemplateOverrides = Partial<Record<WriterSelectionTemplateId, { instruction: string }>>
-
-export type WriterSelectionBuildOptions = {
-  rewriteTone?: WriterRewriteTone
-  translateTargetLanguage?: string
-}
-
-type WriterSelectionTemplateState = {
+type State = {
   useDefaults: boolean
-  overrides: WriterTemplateOverrides
+  templateOverrides: WriterTemplateOverrides
+  rewriteToneProfiles: WriterRewriteToneProfileOverrides
   setUseDefaults: (useDefaults: boolean) => void
-  setInstruction: (id: WriterSelectionTemplateId, instruction: string) => void
+  setTemplateInstruction: (id: WriterSelectionTemplateId, instruction: string) => void
   resetTemplate: (id: WriterSelectionTemplateId) => void
-  resetAll: () => void
+  resetAllTemplates: () => void
   getEffectiveTemplate: (id: WriterSelectionTemplateId) => WriterSelectionTemplate
+  setRewriteToneProfile: (tone: WriterRewriteTone, patch: WriterRewriteToneProfileOverride) => void
+  resetRewriteToneProfile: (tone: WriterRewriteTone) => void
+  resetAllRewriteToneProfiles: () => void
+  getEffectiveRewriteToneProfile: (tone: WriterRewriteTone) => WriterRewriteToneProfile
   buildSelectionPrompt: (
     action: WriterSelectionAction,
     selectedText: string,
     options?: WriterSelectionBuildOptions,
   ) => { text: string; autoSend: boolean }
-}
-
-const STORAGE_KEY = 'ai-readwrite-flow-writer-selection-templates-v1'
-
-const templateIdSchema = z.enum([
-  'writer-ask-ai',
-  'writer-simplify',
-  'writer-concise',
-  'writer-rewrite',
-  'writer-translate',
-  'writer-explain',
-])
-
-const persistedSchema = z.object({
-  useDefaults: z.boolean().optional(),
-  overrides: z
-    .array(
-      z.object({
-        id: templateIdSchema,
-        instruction: z.string(),
-      }),
-    )
-    .optional(),
-})
-
-const defaults: Record<WriterSelectionTemplateId, WriterSelectionTemplate> = {
-  'writer-ask-ai': {
-    id: 'writer-ask-ai',
-    label: 'Ask AI',
-    shortLabel: 'Ask AI',
-    description: 'Prefill Context + Instruction and focus input (no auto-send).',
-    instruction: '',
-    autoSend: false,
-  },
-  'writer-simplify': {
-    id: 'writer-simplify',
-    label: 'Simplify',
-    shortLabel: 'Simplify',
-    description: 'Auto-send: simplify the selected text without changing meaning.',
-    instruction:
-      'Rewrite the context in simpler language.\n' +
-      'Keep meaning and facts unchanged.\n' +
-      'Output ONLY the rewritten text (no preface, no bullets unless the original is bullets).',
-    autoSend: true,
-  },
-  'writer-concise': {
-    id: 'writer-concise',
-    label: 'Concise',
-    shortLabel: 'Concise',
-    description: 'Auto-send: make the selected text shorter and clearer.',
-    instruction:
-      'Rewrite the context to be more concise.\n' +
-      'Remove redundancy, keep key details.\n' +
-      'Output ONLY the rewritten text.',
-    autoSend: true,
-  },
-  'writer-rewrite': {
-    id: 'writer-rewrite',
-    label: 'Rewrite',
-    shortLabel: 'Rewrite',
-    description: 'Auto-send: rewrite the selected text in a chosen tone.',
-    instruction:
-      'Rewrite the context with improved clarity and flow.\n' +
-      'Output ONLY the rewritten text.',
-    autoSend: true,
-  },
-  'writer-translate': {
-    id: 'writer-translate',
-    label: 'Translate',
-    shortLabel: 'Translate',
-    description: 'Auto-send: translate the selected text to a target language.',
-    instruction:
-      'Translate the context to the target language.\n' +
-      'Preserve meaning and proper nouns.\n' +
-      'Output ONLY the translated text.',
-    autoSend: true,
-  },
-  'writer-explain': {
-    id: 'writer-explain',
-    label: 'Explain',
-    shortLabel: 'Explain',
-    description: 'Auto-send: explain the selected text for better understanding.',
-    instruction:
-      'Explain the context in 3–6 bullets.\n' +
-      'Define key terms and describe the logic flow.\n' +
-      'Keep it grounded in the context.',
-    autoSend: true,
-  },
-}
-
-const actionToTemplateId = (action: WriterSelectionAction): WriterSelectionTemplateId => {
-  if (action === 'ask-ai') return 'writer-ask-ai'
-  if (action === 'simplify') return 'writer-simplify'
-  if (action === 'concise') return 'writer-concise'
-  if (action === 'rewrite') return 'writer-rewrite'
-  if (action === 'translate') return 'writer-translate'
-  return 'writer-explain'
 }
 
 const normalizeSelectedText = (text: string) => text.trim()
@@ -162,104 +64,135 @@ const buildContextInstructionMessage = (context: string, instruction: string, ex
   return `Context:\n${context}\n\nInstruction:\n${trimmedInstruction}${suffix}`
 }
 
-const toneDirective = (tone: WriterRewriteTone) => {
-  if (tone === 'default') return ''
-  if (tone === 'formal') return 'Tone: Formal'
-  if (tone === 'friendly') return 'Tone: Friendly'
-  if (tone === 'academic') return 'Tone: Academic'
-  return 'Tone: Bullet points'
-}
-
-const loadPersisted = (): { useDefaults: boolean; overrides: WriterTemplateOverrides } => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { useDefaults: false, overrides: {} }
-    const json: unknown = JSON.parse(raw)
-    const parsed = persistedSchema.safeParse(json)
-    if (!parsed.success) return { useDefaults: false, overrides: {} }
-    const overrides: WriterTemplateOverrides = {}
-    for (const entry of parsed.data.overrides ?? []) {
-      overrides[entry.id] = { instruction: entry.instruction }
-    }
-    return { useDefaults: parsed.data.useDefaults ?? false, overrides }
-  } catch (error) {
-    console.warn('Failed to load writer selection templates', error)
-    return { useDefaults: false, overrides: {} }
+const rewriteToneProfileDirectives = (tone: WriterRewriteTone, profile: WriterRewriteToneProfile) => {
+  if (tone === 'default') return []
+  const directives: string[] = []
+  const directive = profile.directive.trim()
+  directives.push(directive ? directive : `Tone: ${profile.label.trim() || 'Rewrite'}`)
+  const description = profile.description.trim()
+  if (description) directives.push(`Description: ${description}`)
+  const examples = profile.examples.map((e) => e.trim()).filter(Boolean)
+  if (examples.length) {
+    directives.push('Examples:')
+    for (const example of examples) directives.push(`- ${example}`)
   }
+  return directives
 }
 
-const persist = (useDefaults: boolean, overrides: WriterTemplateOverrides) => {
-  try {
-    const rows = Object.entries(overrides).flatMap(([id, value]) => {
-      if (!value) return []
-      return [{ id, instruction: value.instruction }]
-    })
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ useDefaults, overrides: rows }))
-  } catch (error) {
-    console.warn('Failed to persist writer selection templates', error)
-  }
-}
+const initial = loadWriterSelectionTemplatesState()
 
-const initial = loadPersisted()
+const persistSnapshot = (snapshot: {
+  useDefaults: boolean
+  templateOverrides: WriterTemplateOverrides
+  rewriteToneProfiles: WriterRewriteToneProfileOverrides
+}) => persistWriterSelectionTemplatesState(snapshot)
 
-const useWriterSelectionTemplateStore = create<WriterSelectionTemplateState>((set, get) => ({
-  useDefaults: initial.useDefaults,
-  overrides: initial.overrides,
-  setUseDefaults: (useDefaults) =>
-    set((state) => {
-      persist(useDefaults, state.overrides)
-      return { useDefaults }
-    }),
-  setInstruction: (id, instruction) =>
-    set((state) => {
-      const next: WriterTemplateOverrides = { ...state.overrides, [id]: { instruction } }
-      persist(state.useDefaults, next)
-      return { overrides: next }
-    }),
-  resetTemplate: (id) =>
-    set((state) => {
-      const next: WriterTemplateOverrides = { ...state.overrides }
-      delete next[id]
-      persist(state.useDefaults, next)
-      return { overrides: next }
-    }),
-  resetAll: () =>
-    set((state) => {
-      const next: WriterTemplateOverrides = {}
-      persist(state.useDefaults, next)
-      return { overrides: next }
-    }),
-  getEffectiveTemplate: (id) => {
+const createTemplateSelectors = (get: () => State) => ({
+  getEffectiveTemplate: (id: WriterSelectionTemplateId) => {
     const state = get()
-    const base = defaults[id]
+    const base = defaultWriterSelectionTemplates[id]
     if (state.useDefaults) return base
-    const override = state.overrides[id]
+    const override = state.templateOverrides[id]
     if (!override) return base
     return { ...base, instruction: override.instruction }
   },
-  buildSelectionPrompt: (action, selectedText, options) => {
+})
+
+const createToneSelectors = (get: () => State) => ({
+  getEffectiveRewriteToneProfile: (tone: WriterRewriteTone) => {
+    const state = get()
+    const base = defaultWriterRewriteToneProfiles[tone]
+    if (state.useDefaults) return base
+    const override = state.rewriteToneProfiles[tone]
+    if (!override) return base
+    return { ...base, ...override, tone }
+  },
+})
+
+const createTemplateActions = (set: (fn: (s: State) => Partial<State>) => void) => ({
+  setTemplateInstruction: (id: WriterSelectionTemplateId, instruction: string) =>
+    set((state) => {
+      const templateOverrides: WriterTemplateOverrides = { ...state.templateOverrides, [id]: { instruction } }
+      persistSnapshot({ useDefaults: state.useDefaults, templateOverrides, rewriteToneProfiles: state.rewriteToneProfiles })
+      return { templateOverrides }
+    }),
+  resetTemplate: (id: WriterSelectionTemplateId) =>
+    set((state) => {
+      const templateOverrides: WriterTemplateOverrides = { ...state.templateOverrides }
+      delete templateOverrides[id]
+      persistSnapshot({ useDefaults: state.useDefaults, templateOverrides, rewriteToneProfiles: state.rewriteToneProfiles })
+      return { templateOverrides }
+    }),
+  resetAllTemplates: () =>
+    set((state) => {
+      const templateOverrides: WriterTemplateOverrides = {}
+      persistSnapshot({ useDefaults: state.useDefaults, templateOverrides, rewriteToneProfiles: state.rewriteToneProfiles })
+      return { templateOverrides }
+    }),
+})
+
+const createToneActions = (set: (fn: (s: State) => Partial<State>) => void) => ({
+  setRewriteToneProfile: (tone: WriterRewriteTone, patch: WriterRewriteToneProfileOverride) =>
+    set((state) => {
+      const prev = state.rewriteToneProfiles[tone] ?? {}
+      const rewriteToneProfiles: WriterRewriteToneProfileOverrides = { ...state.rewriteToneProfiles, [tone]: { ...prev, ...patch } }
+      persistSnapshot({ useDefaults: state.useDefaults, templateOverrides: state.templateOverrides, rewriteToneProfiles })
+      return { rewriteToneProfiles }
+    }),
+  resetRewriteToneProfile: (tone: WriterRewriteTone) =>
+    set((state) => {
+      const rewriteToneProfiles: WriterRewriteToneProfileOverrides = { ...state.rewriteToneProfiles }
+      delete rewriteToneProfiles[tone]
+      persistSnapshot({ useDefaults: state.useDefaults, templateOverrides: state.templateOverrides, rewriteToneProfiles })
+      return { rewriteToneProfiles }
+    }),
+  resetAllRewriteToneProfiles: () =>
+    set((state) => {
+      const rewriteToneProfiles: WriterRewriteToneProfileOverrides = {}
+      persistSnapshot({ useDefaults: state.useDefaults, templateOverrides: state.templateOverrides, rewriteToneProfiles })
+      return { rewriteToneProfiles }
+    }),
+})
+
+const createPromptBuilder = (get: () => State) => ({
+  buildSelectionPrompt: (
+    action: WriterSelectionAction,
+    selectedText: string,
+    options?: WriterSelectionBuildOptions,
+  ): { text: string; autoSend: boolean } => {
     const context = normalizeSelectedText(selectedText)
     const id = actionToTemplateId(action)
     const template = get().getEffectiveTemplate(id)
-    if (id === 'writer-ask-ai') {
-      return { text: buildAskAiDraft(context, template.instruction), autoSend: false }
-    }
+    if (id === 'writer-ask-ai') return { text: buildAskAiDraft(context, template.instruction), autoSend: false }
 
     const extraDirectives: string[] = []
     if (id === 'writer-rewrite') {
-      extraDirectives.push(toneDirective(options?.rewriteTone ?? 'default'))
+      const tone = options?.rewriteTone ?? 'default'
+      extraDirectives.push(...rewriteToneProfileDirectives(tone, get().getEffectiveRewriteToneProfile(tone)))
     }
     if (id === 'writer-translate') {
       const lang = (options?.translateTargetLanguage ?? 'English').trim()
       if (lang) extraDirectives.push(`Target language: ${lang}`)
     }
 
-    return {
-      text: buildContextInstructionMessage(context, template.instruction, extraDirectives),
-      autoSend: template.autoSend,
-    }
+    return { text: buildContextInstructionMessage(context, template.instruction, extraDirectives), autoSend: template.autoSend }
   },
+})
+
+const useWriterSelectionTemplateStore = create<State>((set, get) => ({
+  useDefaults: initial.useDefaults,
+  templateOverrides: initial.templateOverrides,
+  rewriteToneProfiles: initial.rewriteToneProfiles,
+  setUseDefaults: (useDefaults) =>
+    set((state) => {
+      persistSnapshot({ useDefaults, templateOverrides: state.templateOverrides, rewriteToneProfiles: state.rewriteToneProfiles })
+      return { useDefaults }
+    }),
+  ...createTemplateSelectors(get),
+  ...createToneSelectors(get),
+  ...createTemplateActions(set),
+  ...createToneActions(set),
+  ...createPromptBuilder(get),
 }))
 
 export default useWriterSelectionTemplateStore
-

@@ -9,6 +9,7 @@
   --text-muted: 148 163 184;
   --border: 51 65 85;
   --accent: 56 189 248;
+  --writer-insert-flash: 56 189 248;
   color-scheme: dark;
   background-color: rgb(var(--surface-base));
 }
@@ -20,6 +21,7 @@
   --text-muted: 148 163 184;
   --border: 51 65 85;
   --accent: 56 189 248;
+  --writer-insert-flash: 56 189 248;
   color-scheme: dark;
 }
 
@@ -30,6 +32,7 @@
     --text-muted: 148 163 184;
     --border: 34 80 94;
     --accent: 34 211 238;
+    --writer-insert-flash: 34 211 238;
     color-scheme: dark;
   }
 
@@ -40,6 +43,7 @@
   --text-muted: 148 163 184;
   --border: 51 65 85;
   --accent: 52 211 153;
+  --writer-insert-flash: 52 211 153;
   color-scheme: dark;
 }
 
@@ -50,6 +54,7 @@
   --text-muted: 148 163 184;
   --border: 64 59 47;
   --accent: 251 191 36;
+  --writer-insert-flash: 251 191 36;
   color-scheme: dark;
 }
 
@@ -60,6 +65,7 @@
     --text-muted: 71 85 105;
     --border: 226 232 240;
     --accent: 37 99 235;
+    --writer-insert-flash: 37 99 235;
     color-scheme: light;
   }
 

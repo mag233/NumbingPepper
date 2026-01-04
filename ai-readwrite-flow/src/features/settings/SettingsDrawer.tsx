@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Settings, X } from 'lucide-react'
 import GlobalSettingsSection from './GlobalSettingsSection'
 import ReaderShortcutTemplatesSection from './ReaderShortcutTemplatesSection'
+import WriterSelectionTemplatesSection from './WriterSelectionTemplatesSection'
 import ChatPromptTemplatesSection from './ChatPromptTemplatesSection'
 import IntegrationsSettingsSection from './IntegrationsSettingsSection'
 
-export type SettingsTab = 'global' | 'reader' | 'chat' | 'integrations'
+export type SettingsTab = 'global' | 'reader' | 'writer' | 'chat' | 'integrations'
 
 type Props = {
   onClose: () => void
@@ -30,6 +31,7 @@ const SettingsDrawer = ({ onClose, initialTab = 'global' }: Props) => {
 
   const body = useMemo(() => {
     if (tab === 'reader') return <ReaderShortcutTemplatesSection />
+    if (tab === 'writer') return <WriterSelectionTemplatesSection />
     if (tab === 'chat') return <ChatPromptTemplatesSection />
     if (tab === 'integrations') return <IntegrationsSettingsSection />
     return <GlobalSettingsSection />
@@ -65,6 +67,9 @@ const SettingsDrawer = ({ onClose, initialTab = 'global' }: Props) => {
           </button>
           <button type="button" className={tabButton(tab === 'reader')} onClick={() => setTab('reader')}>
             Reader
+          </button>
+          <button type="button" className={tabButton(tab === 'writer')} onClick={() => setTab('writer')}>
+            Writer
           </button>
           <button type="button" className={tabButton(tab === 'chat')} onClick={() => setTab('chat')}>
             Chat

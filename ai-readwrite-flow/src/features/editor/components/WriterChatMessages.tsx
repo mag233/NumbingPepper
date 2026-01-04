@@ -89,7 +89,11 @@ const WriterChatMessages = ({ messages }: Props) => {
                 <button
                   type="button"
                   className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-3 py-1.5 text-xs text-ink-primary hover:border-accent"
-                  onClick={() => appendToContext(msg.content)}
+                  onClick={() => {
+                    const s = suggestionsByMessageId[msg.id]
+                    if (!s) return
+                    appendToContext(s.outputText)
+                  }}
                 >
                   To Context
                 </button>

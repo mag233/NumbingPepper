@@ -22,6 +22,20 @@ export default {
         accent: {
           DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
         },
+        writer: {
+          insert: {
+            flash: 'rgb(var(--writer-insert-flash) / <alpha-value>)',
+          },
+        },
+      },
+      keyframes: {
+        'writer-insert-flash': {
+          '0%, 100%': { backgroundColor: 'rgb(var(--writer-insert-flash) / 0.12)' },
+          '50%': { backgroundColor: 'rgb(var(--writer-insert-flash) / 0.28)' },
+        },
+      },
+      animation: {
+        'writer-insert-flash': 'writer-insert-flash 2.6s ease-in-out infinite',
       },
       boxShadow: {
         card: '0 12px 40px -18px rgba(0,0,0,0.55)',

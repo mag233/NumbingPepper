@@ -13,6 +13,8 @@ import {
   replaceRangeWithPlainTextAsParagraphs,
   scrollEditorToNeedle,
 } from './services/editorCommands'
+import { writerInsertFlashExtension } from './extensions/writerInsertFlashExtension'
+import { useWriterInsertFlash } from './hooks/useWriterInsertFlash'
 import useWriterProjectStore from './stores/writerProjectStore'
 import useWriterReferencesStore from './stores/writerReferencesStore'
 import { extractTagPathsFromTipTapDoc } from './services/writerTags'
@@ -73,6 +75,7 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
         Placeholder.configure({
           placeholder: 'Start writing. Type "/" to open AI commands; responses will be inserted at the cursor.',
         }),
+        writerInsertFlashExtension,
       ],
       content: '<p></p>',
     },
@@ -80,6 +83,7 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
   )
 
   const { status: saveStatus, lastSavedAt, flushNow } = useDraftPersistence({ editor, draftId })
+  const { flash: flashInsertedRange } = useWriterInsertFlash({ editor })
 
   useEffect(() => {
     editor?.setEditable(!isPreview)
@@ -98,15 +102,22 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
     const req = consumeSelectionApply()
     if (!req) return
     if (req.mode === 'replace') {
-      replaceRangeWithPlainTextAsParagraphs(editor, { from: req.selection.from, to: req.selection.to, text: req.text })
+      const range = replaceRangeWithPlainTextAsParagraphs(editor, {
+        from: req.selection.from,
+        to: req.selection.to,
+        text: req.text,
+      })
+      flashInsertedRange(range)
       return
     }
     if (req.insertLeadingBlankLine) {
-      insertPlainTextAsParagraphsAtWithLeadingBlankLine(editor, { pos: req.selection.to, text: req.text })
+      const range = insertPlainTextAsParagraphsAtWithLeadingBlankLine(editor, { pos: req.selection.to, text: req.text })
+      flashInsertedRange(range)
       return
     }
-    insertPlainTextAsParagraphsAt(editor, { pos: req.selection.to, text: req.text })
-  }, [consumeSelectionApply, editor, pendingSelectionApply])
+    const range = insertPlainTextAsParagraphsAt(editor, { pos: req.selection.to, text: req.text })
+    flashInsertedRange(range)
+  }, [consumeSelectionApply, editor, flashInsertedRange, pendingSelectionApply])
   useEffect(() => {
     if (!editor) return
     if (!pendingScroll) return

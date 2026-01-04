@@ -6,7 +6,8 @@ type State = ReturnType<typeof useWriterSelectionTemplateStore.getState>
 const resetStore = (partial: Partial<State>) => {
   useWriterSelectionTemplateStore.setState({
     useDefaults: false,
-    overrides: {},
+    templateOverrides: {},
+    rewriteToneProfiles: {},
     ...partial,
   })
 }
@@ -31,6 +32,7 @@ describe('writerSelectionTemplateStore', () => {
     expect(text).toContain('Context:\nHello')
     expect(text).toContain('Instruction:\n')
     expect(text).toContain('Tone: Bullet points')
+    expect(text).toContain('Examples:')
   })
 
   it('injects translate target language (defaults to English)', () => {
@@ -44,11 +46,40 @@ describe('writerSelectionTemplateStore', () => {
   })
 
   it('uses overrides when defaults are off and ignores them when defaults are on', () => {
-    const { setInstruction, setUseDefaults, getEffectiveTemplate } = useWriterSelectionTemplateStore.getState()
-    setInstruction('writer-explain', 'OVERRIDE')
+    const { setTemplateInstruction, setUseDefaults, getEffectiveTemplate } = useWriterSelectionTemplateStore.getState()
+    setTemplateInstruction('writer-explain', 'OVERRIDE')
     expect(getEffectiveTemplate('writer-explain').instruction).toBe('OVERRIDE')
     setUseDefaults(true)
     expect(getEffectiveTemplate('writer-explain').instruction).not.toBe('OVERRIDE')
   })
-})
 
+  it('ignores rewrite tone overrides when defaults are on', () => {
+    const { setRewriteToneProfile, setUseDefaults, buildSelectionPrompt } = useWriterSelectionTemplateStore.getState()
+    setRewriteToneProfile('formal', { directive: 'Tone: Very Formal' })
+    expect(buildSelectionPrompt('rewrite', 'Hello', { rewriteTone: 'formal' }).text).toContain('Tone: Very Formal')
+    setUseDefaults(true)
+    expect(buildSelectionPrompt('rewrite', 'Hello', { rewriteTone: 'formal' }).text).not.toContain('Tone: Very Formal')
+  })
+
+  it('includes tone description and examples in rewrite prompt', () => {
+    const { setRewriteToneProfile, buildSelectionPrompt } = useWriterSelectionTemplateStore.getState()
+    setRewriteToneProfile('formal', { description: 'DESC', examples: ['EX1'] })
+    const { text } = buildSelectionPrompt('rewrite', 'Hello', { rewriteTone: 'formal' })
+    expect(text).toContain('Description: DESC')
+    expect(text).toContain('Examples:')
+    expect(text).toContain('- EX1')
+  })
+
+  it('supports reset and reset all', () => {
+    const { setTemplateInstruction, getEffectiveTemplate, resetTemplate, resetAllTemplates } =
+      useWriterSelectionTemplateStore.getState()
+    const before = getEffectiveTemplate('writer-explain').instruction
+    setTemplateInstruction('writer-explain', 'OVERRIDE')
+    expect(getEffectiveTemplate('writer-explain').instruction).toBe('OVERRIDE')
+    resetTemplate('writer-explain')
+    expect(getEffectiveTemplate('writer-explain').instruction).toBe(before)
+    setTemplateInstruction('writer-explain', 'OVERRIDE2')
+    resetAllTemplates()
+    expect(getEffectiveTemplate('writer-explain').instruction).toBe(before)
+  })
+})

@@ -61,6 +61,24 @@ Right side:
 7) AI actions on highlighted text (Writer)
 - Select text in Content → actions (e.g., Simplify, Concise, Rewrite, Translate, Explain).
 - Non-destructive by default: preview/insert at cursor; undo works.
+- UX polish (Task 39): after applying a suggestion (Replace/Insert), the newly inserted text briefly flash-highlights (theme-aware) and clears on next user input or after 7s. This highlight is non-persistent and must not affect undo history.
+
+7.2) Writer templates management (Settings) (18-QA-029)
+- Writer selection actions use a safe default template registry; templates are end-user editable via Settings.
+- `Use defaults`:
+  - When on, Writer selection actions must use built-in defaults immediately (ignore overrides).
+  - Overrides may still be edited/saved but must not affect runtime until `Use defaults` is turned off.
+- Reset safety:
+  - `Reset` restores a single template override back to default.
+  - `Reset all` clears all overrides.
+
+7.3) Rewrite tone profiles (Settings) (18-QA-032)
+- Rewrite tone is driven by per-tone profiles with `directive`, `description`, and optional `examples`.
+- The base Rewrite template remains a single template (`writer-rewrite`) and tone profiles are applied as extra prompt directives.
+- Tone profile overrides follow the same recovery semantics:
+  - `Use defaults` ignores tone profile overrides immediately.
+  - `Reset` restores one tone profile to default.
+  - `Reset all tones` clears tone profile overrides.
 
 7.1) Writer Studio — Artifacts (writing-first, safe insert)
 - Goal: generate reusable writing blocks (artifacts) that are stored first, then optionally inserted into Content/Context/References.

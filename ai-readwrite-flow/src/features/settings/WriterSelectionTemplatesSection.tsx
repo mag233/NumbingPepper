@@ -1,34 +1,37 @@
 import { useMemo, useState } from 'react'
 import { AlertTriangle, RefreshCcw } from 'lucide-react'
-import useReaderShortcutTemplateStore, {
-  type ReaderShortcutTemplateId,
-} from '../../stores/readerShortcutTemplateStore'
+import useWriterSelectionTemplateStore, {
+  type WriterSelectionTemplateId,
+} from '../../stores/writerSelectionTemplateStore'
+import WriterRewriteToneProfilesEditor from './WriterRewriteToneProfilesEditor'
 
 const inputClass =
   'w-full rounded-lg border border-chrome-border/80 bg-surface-raised/70 px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
 
-const templatesOrder: ReaderShortcutTemplateId[] = [
-  'reader-ask-ai',
-  'reader-summarize',
-  'reader-explain',
-  'reader-questions',
+const templatesOrder: WriterSelectionTemplateId[] = [
+  'writer-ask-ai',
+  'writer-simplify',
+  'writer-concise',
+  'writer-rewrite',
+  'writer-translate',
+  'writer-explain',
 ]
 
-const ReaderShortcutTemplatesSection = () => {
-  const useDefaults = useReaderShortcutTemplateStore((s) => s.useDefaults)
-  const setUseDefaults = useReaderShortcutTemplateStore((s) => s.setUseDefaults)
-  const setInstruction = useReaderShortcutTemplateStore((s) => s.setInstruction)
-  const resetTemplate = useReaderShortcutTemplateStore((s) => s.resetTemplate)
-  const resetAll = useReaderShortcutTemplateStore((s) => s.resetAll)
-  const getEffectiveTemplate = useReaderShortcutTemplateStore((s) => s.getEffectiveTemplate)
+const WriterSelectionTemplatesSection = () => {
+  const useDefaults = useWriterSelectionTemplateStore((s) => s.useDefaults)
+  const setUseDefaults = useWriterSelectionTemplateStore((s) => s.setUseDefaults)
+  const setTemplateInstruction = useWriterSelectionTemplateStore((s) => s.setTemplateInstruction)
+  const resetTemplate = useWriterSelectionTemplateStore((s) => s.resetTemplate)
+  const resetAllTemplates = useWriterSelectionTemplateStore((s) => s.resetAllTemplates)
+  const getEffectiveTemplate = useWriterSelectionTemplateStore((s) => s.getEffectiveTemplate)
 
-  const [activeId, setActiveId] = useState<ReaderShortcutTemplateId>('reader-questions')
+  const [activeId, setActiveId] = useState<WriterSelectionTemplateId>('writer-rewrite')
   const template = getEffectiveTemplate(activeId)
   const [draft, setDraft] = useState(template.instruction)
 
   const list = useMemo(() => templatesOrder.map((id) => getEffectiveTemplate(id)), [getEffectiveTemplate])
 
-  const select = (id: ReaderShortcutTemplateId) => {
+  const select = (id: WriterSelectionTemplateId) => {
     setActiveId(id)
     setDraft(getEffectiveTemplate(id).instruction)
   }
@@ -36,8 +39,8 @@ const ReaderShortcutTemplatesSection = () => {
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-sm font-semibold text-ink-primary">Reader Shortcut Templates</p>
-        <p className="text-xs text-ink-muted">Controls Ask AI / Summarize / Explain / Questions.</p>
+        <p className="text-sm font-semibold text-ink-primary">Writer AI Templates</p>
+        <p className="text-xs text-ink-muted">Controls selection actions (Simplify/Concise/Rewrite/Translate/Explain/Ask AI).</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-chrome-border/70 bg-surface-raised/50 p-3">
@@ -54,10 +57,11 @@ const ReaderShortcutTemplatesSection = () => {
           type="button"
           onClick={() => {
             if (!window.confirm('Reset ALL template overrides?')) return
-            resetAll()
+            resetAllTemplates()
             setDraft(getEffectiveTemplate(activeId).instruction)
           }}
           className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-2 text-xs text-ink-primary hover:border-amber-400 hover:text-amber-200"
+          title="Reset all overrides"
         >
           <RefreshCcw className="size-4" />
           Reset all
@@ -78,7 +82,9 @@ const ReaderShortcutTemplatesSection = () => {
               type="button"
               onClick={() => select(t.id)}
               className={`w-full rounded-xl border px-3 py-2 text-left ${
-                t.id === activeId ? 'border-accent bg-accent/10' : 'border-chrome-border/70 bg-surface-raised/50 hover:border-accent'
+                t.id === activeId
+                  ? 'border-accent bg-accent/10'
+                  : 'border-chrome-border/70 bg-surface-raised/50 hover:border-accent'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
@@ -112,14 +118,6 @@ const ReaderShortcutTemplatesSection = () => {
 
           <div className="mt-3 grid gap-2">
             <label className="text-[11px] uppercase tracking-wide text-ink-muted">Instruction text</label>
-            {activeId === 'reader-questions' && (
-              <div className="rounded-lg border border-chrome-border/70 bg-surface-base/70 p-2 text-xs text-ink-muted">
-                <span className="font-semibold text-ink-primary">Questions output contract:</span> 3–5 items, each with{' '}
-                <span className="text-ink-primary">Q:</span> and <span className="text-ink-primary">A:</span>; include tags{' '}
-                <span className="text-ink-primary">[Terminology]</span>/<span className="text-ink-primary">[Logic]</span>/
-                <span className="text-ink-primary">[Insight]</span>.
-              </div>
-            )}
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -137,20 +135,22 @@ const ReaderShortcutTemplatesSection = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setInstruction(activeId, draft)}
+                onClick={() => setTemplateInstruction(activeId, draft)}
                 className="rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent/90"
               >
                 Save
               </button>
             </div>
-            <p className="text-xs text-ink-muted">
-              Changes here affect Reader shortcuts only. Writer templates are configured separately under the Writer tab.
-            </p>
+            <p className="text-xs text-ink-muted">These templates only affect Writer selection actions.</p>
           </div>
         </div>
+      </div>
+
+      <div className="border-t border-chrome-border/70 pt-3">
+        <WriterRewriteToneProfilesEditor />
       </div>
     </div>
   )
 }
 
-export default ReaderShortcutTemplatesSection
+export default WriterSelectionTemplatesSection

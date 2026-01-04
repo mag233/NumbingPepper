@@ -7,8 +7,12 @@
 - Desktop: add global `Layout/Done` toggle (Reader + Writer) with explicit scope hint and per-view Reset semantics (Task 37).
 - Desktop (Reader): add Comfortable/Compact density in `Layout` adjust mode (Reader-only), persisted locally and reset via Reader Reset.
 - Desktop layout: locked-mode dividers are non-draggable, and sidebar vs Reader↔Chat split gutters match in adjust mode.
-- Writer: selection apply now shows an Undo notice bar (mobile-friendly) after Replace/Insert.
+- Writer: selection apply is a single-step Undo (mobile-friendly notice bar) after Replace/Insert.
+- Writer: after applying a suggestion (Replace/Insert), briefly flash-highlight the newly inserted text (theme-aware); clears on next input or after 7s.
+- Settings: add Writer AI Templates manager (Use defaults / Reset / Reset all) for selection actions.
+- Writer: Rewrite tone profiles support in Settings (directive/description/examples), applied as extra prompt directives per tone.
 - Writer: suggestion actions add `To Context`, and `Insert below` adds a blank line before inserted text for readability.
+- Writer: fix a ghost Writer selection menu that could re-appear after selection clears and become non-clickable.
 - Integrations: add Flomo export core (webhook POST + note builder) and a smoke script (`node scripts/flomo-smoke.mjs`).
 - Settings: add an Integrations tab with Flomo webhook URL config + `Test & Save` (env `VITE_FLOMO_API` used as a default/placeholder).
 - Integrations: add a “Send to Flomo” composer modal for Reader/Writer drafts; Writer Context defaults expanded on desktop and collapsible on mobile; tags are deduped and headings are English.
