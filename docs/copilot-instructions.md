@@ -67,6 +67,7 @@ Senior Full Stack Systems Engineer specializing in Tauri v2 (Rust), React (TypeS
   - `docs/CHANGELOG.md` (what changed)
   - `docs/PRD.md` and relevant SRS files if requirements changed
   - `docs/QA.md` (manual test steps + outcomes for changed flows)
+- Always provide QA navigation steps (where to go and what to test) in the final response after coding.
 
 ### Shortcut actions (Reader/Writer)
 - Before implementing a new shortcut/action (e.g., “Generate Questions”), specify:

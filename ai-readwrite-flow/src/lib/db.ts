@@ -20,3 +20,10 @@ export {
   persistHighlight,
   updateHighlightNote,
 } from './db/highlights'
+
+export {
+  deleteBookmark,
+  loadBookmarks,
+  persistBookmark,
+  updateBookmarkTitle,
+} from './db/bookmarks'

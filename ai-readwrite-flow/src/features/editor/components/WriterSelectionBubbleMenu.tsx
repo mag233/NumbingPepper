@@ -6,6 +6,7 @@ import useWriterSelectionTemplateStore, {
   type WriterRewriteTone,
   type WriterSelectionAction,
 } from '../../../stores/writerSelectionTemplateStore'
+import { writerRewriteTones } from '../../../stores/writerSelectionTemplateModel'
 import WriterSelectionBubbleMenuView from './WriterSelectionBubbleMenuView'
 import useFlomoComposerStore from '../../integrations/flomo/flomoComposerStore'
 import useWriterProjectStore from '../stores/writerProjectStore'
@@ -35,8 +36,19 @@ const selectionAnchorForKey = (editor: TipTapEditor) => {
 
 const closeEnough = (a: number, b: number, threshold = 8) => Math.abs(a - b) < threshold
 
+const toneLabel = (tone: WriterRewriteTone) => {
+  if (tone === 'default') return 'Default'
+  if (tone === 'formal') return 'Formal'
+  if (tone === 'friendly') return 'Friendly'
+  if (tone === 'academic') return 'Academic'
+  return 'Bullet'
+}
+
 const WriterSelectionBubbleMenu = ({ editor, disabled, onQuickPrompt }: Props) => {
   const buildSelectionPrompt = useWriterSelectionTemplateStore((s) => s.buildSelectionPrompt)
+  const getEffectiveRewriteToneProfile = useWriterSelectionTemplateStore((s) => s.getEffectiveRewriteToneProfile)
+  const rewriteToneProfiles = useWriterSelectionTemplateStore((s) => s.rewriteToneProfiles)
+  const useDefaults = useWriterSelectionTemplateStore((s) => s.useDefaults)
   const openFlomoComposer = useFlomoComposerStore((s) => s.open)
   const contextText = useWriterContextStore((s) => s.contextText)
   const projectId = useWriterProjectStore((s) => s.activeProjectId)
@@ -53,6 +65,16 @@ const WriterSelectionBubbleMenu = ({ editor, disabled, onQuickPrompt }: Props) =
     const text = getSelectedText(editor)
     return text.length > 0 && rect !== null && anchor !== null
   }, [anchor, disabled, editor, rect])
+
+  const toneItems = useMemo(() => {
+    void useDefaults
+    void rewriteToneProfiles
+    return writerRewriteTones.map((tone) => {
+      const profile = getEffectiveRewriteToneProfile(tone)
+      const label = profile.label.trim()
+      return { id: tone, label: label ? label : toneLabel(tone) }
+    })
+  }, [getEffectiveRewriteToneProfile, rewriteToneProfiles, useDefaults])
 
   useEffect(() => {
     if (disabled) return
@@ -234,6 +256,7 @@ const WriterSelectionBubbleMenu = ({ editor, disabled, onQuickPrompt }: Props) =
         onToggleRewrite={() => setRewriteOpen((v) => !v)}
         onRunAction={runQuickPromptAction}
         onExportFlomo={exportToFlomo}
+        toneItems={toneItems}
       />
     </div>
   )

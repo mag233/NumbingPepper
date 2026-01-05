@@ -75,10 +75,17 @@ Right side:
 7.3) Rewrite tone profiles (Settings) (18-QA-032)
 - Rewrite tone is driven by per-tone profiles with `directive`, `description`, and optional `examples`.
 - The base Rewrite template remains a single template (`writer-rewrite`) and tone profiles are applied as extra prompt directives.
+- Examples are limited to 3 lines, 60 words per example (validation blocks Save when exceeded).
+- Future requirement (Option B): allow separate per-tone rewrite templates if tone profiles are insufficient.
 - Tone profile overrides follow the same recovery semantics:
   - `Use defaults` ignores tone profile overrides immediately.
   - `Reset` restores one tone profile to default.
   - `Reset all tones` clears tone profile overrides.
+
+7.4) Writer global search (18-QA-033)
+- Provide a Writer search modal with a query input and filters for Content, Context, References, Chat, and Studio.
+- Results are clickable and jump to the matching area (editor selection, context focus, or card scroll).
+- Follow-up UX polish (low priority): inline match highlight with next/prev navigation, keyboard shortcuts, and a scope toggle (current project vs all projects).
 
 7.1) Writer Studio — Artifacts (writing-first, safe insert)
 - Goal: generate reusable writing blocks (artifacts) that are stored first, then optionally inserted into Content/Context/References.

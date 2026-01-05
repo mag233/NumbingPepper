@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, RefreshCw, Search, ZoomIn, ZoomOut } from 'lucide-react'
+import { BookmarkPlus, ChevronLeft, ChevronRight, RefreshCw, Search, ZoomIn, ZoomOut } from 'lucide-react'
 import useReaderStore from '../../../stores/readerStore'
+import useLibraryStore from '../../../stores/libraryStore'
+import useBookmarkStore from '../../../stores/bookmarkStore'
 import FindInDocument from './FindInDocument'
 import { formatPageForDisplay, resolveJumpTarget } from '../services/pageLabels'
+import { generateBookmarkId } from '../services/bookmarkIds'
+import type { Bookmark } from '../types'
 
 type Props = {
   scrollMode: 'paged' | 'continuous'
@@ -18,8 +22,10 @@ const pill =
   'rounded-lg border border-chrome-border/70 bg-surface-raised/60 px-2 py-1 text-xs text-ink-primary'
 
 const ReaderBottomToolbar = ({ scrollMode, onToggleScrollMode, onRefresh, onJump }: Props) => {
-  const { currentPage, pageCount, pageLabels, setPage, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode } =
+  const { currentPage, pageCount, pageLabels, requestJump, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode } =
     useReaderStore()
+  const activeBookId = useLibraryStore((s) => s.activeId)
+  const addBookmarkEntry = useBookmarkStore((s) => s.add)
   const [inputPage, setInputPage] = useState('')
   const [showFind, setShowFind] = useState(false)
 
@@ -28,8 +34,24 @@ const ReaderBottomToolbar = ({ scrollMode, onToggleScrollMode, onRefresh, onJump
     pageLabels?.[currentPage - 1] && currentLabel !== String(currentPage) ? `${currentLabel} (PDF ${currentPage})` : `${currentPage}`
 
   const jumpTo = (page: number) => {
-    setPage(page)
+    requestJump(page)
     onJump?.(page)
+  }
+
+  const addBookmark = () => {
+    if (!activeBookId) return
+    const now = Date.now()
+    const pageLabel = formatPageForDisplay(currentPage, pageLabels)
+    const bookmark: Bookmark = {
+      id: generateBookmarkId(),
+      bookId: activeBookId,
+      page: currentPage,
+      pageLabel,
+      title: null,
+      createdAt: now,
+      updatedAt: now,
+    }
+    void addBookmarkEntry(bookmark)
   }
 
   return (
@@ -61,6 +83,15 @@ const ReaderBottomToolbar = ({ scrollMode, onToggleScrollMode, onRefresh, onJump
           </span>
           <button className={navButton} onClick={() => jumpTo(currentPage + 1)} disabled={currentPage >= pageCount}>
             <ChevronRight className="size-4" />
+          </button>
+          <button
+            type="button"
+            className={navButton}
+            onClick={addBookmark}
+            title="Add bookmark"
+            disabled={!activeBookId}
+          >
+            <BookmarkPlus className="size-4" />
           </button>
           <input
             type="text"

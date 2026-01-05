@@ -69,6 +69,16 @@
   - Provide Settings UI to edit the Reader shortcut templates (instruction text) locally.
   - Must include a fail-safe recovery: `Use defaults` + per-template reset + reset all overrides.
 - Render PDF via react-pdf; page nav + continuous scroll toggle; wheel scoped. Restore `last_read_position`. Floating menu on selection: Summarize/Explain/Chat/Save Highlight. Selection bounding uses normalized page coords (0–1); store zoom when available to aid re-projection.
+- **PRD-RDR-NAV-001 (P1): Bookmarks add UX**
+  - Provide an explicit "Add bookmark" action in Reader.
+  - Bookmarks persist per book and appear in the Bookmarks list with page labels.
+- **PRD-RDR-NAV-002 (P1): Mode switch preserves position**
+  - Switching between Paged and Continuous must preserve the current reading position (no jump to page 1).
+  - TOC jumps should not force a mode switch; the user controls the mode.
+- **PRD-RDR-NAV-003 (P1): Paged navigation inputs**
+  - In Paged mode, allow keyboard navigation (arrow keys) and optional wheel-to-next-page when at the bottom/top.
+- **PRD-RDR-NAV-004 (P1): Continuous page controls**
+  - In Continuous mode, page controls must either be disabled with a clear affordance or scroll to the next/previous page anchor.
 
 ### Highlights & Notes (P0/P1)
 - Overlay colors: yellow/red/blue; z-index above text layer; allow text selection through when not hovered; hover shows outline. Overlaps allowed; render in insertion order (or explicit merge rules). Save normalized context_range. Note editing inline in sidebar; delete with confirm.
@@ -123,10 +133,16 @@
     - `Use defaults` (ignore overrides; instant recovery if overrides break prompts)
     - `Reset` per template and `Reset all` for overrides
   - Rewrite tone is implemented as a set of tone profiles (directive/description/examples) applied as additional prompt directives; tone does not require separate template IDs.
+  - Tone profile examples are optional; limit to 3 examples with 60 words max per example.
   - Must include `Use defaults` + per-template reset + reset-all recovery (same behavior expectations as Reader templates).
+  - Future requirement (Option B): allow per-tone rewrite templates (separate template IDs) if tone profiles are insufficient.
 - **PRD-WTR-AI-004 (P1): Non-destructive apply controls**
   - Result cards provide explicit apply actions: `Replace selection` (default primary), `Insert below`, and `Copy`.
   - Apply actions must preserve a clean single-step Undo for replace/insert.
+- **PRD-WTR-SEARCH-001 (P1): Writer global search**
+  - Writer provides a global search modal with a query input and filters for Content, Context, References, Chat, and Studio.
+  - Clicking a result jumps to the corresponding area (editor selection for Content; focus in Context; scroll to reference/chat/studio cards).
+  - Follow-up UX polish (low priority): inline match highlight with next/prev navigation, keyboard shortcuts (e.g., Ctrl+K, Enter, Esc), and a scope toggle (current project vs all projects).
 - **PRD-CHAT-UX-001 (P1): Chat role visual distinction**
   - In both Reader and Writer chat, user and assistant/suggestion messages must be visually distinguishable (theme-aware), improving scanability.
 - **PRD-WTR-LAYOUT-001 (P1): Writer Editor↔Chat adjustable split**

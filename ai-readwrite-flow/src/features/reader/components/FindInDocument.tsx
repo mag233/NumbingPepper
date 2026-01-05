@@ -16,7 +16,7 @@ const navButton =
   'inline-flex items-center justify-center rounded-lg border border-chrome-border/60 bg-surface-raised/60 px-2 py-1 text-xs text-ink-primary hover:border-accent'
 
 const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
-  const { pageCount, setPage, setFindQuery, bumpFindToken, setFindActiveHit } = useReaderStore()
+  const { pageCount, requestJump, setFindQuery, bumpFindToken, setFindActiveHit } = useReaderStore()
   const { items, activeId } = useLibraryStore()
   const activeItem = useMemo(() => items.find((item) => item.id === activeId), [items, activeId])
   const { fileSrc } = usePdfFileSource(activeItem)
@@ -28,7 +28,7 @@ const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
   const docRef = useRef<{ src: string; doc: PdfDocumentProxyLike } | null>(null)
 
   const jumpTo = (page: number) => {
-    setPage(page)
+    requestJump(page)
     onJump?.(page)
   }
 
@@ -104,7 +104,7 @@ const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search text…"
+          placeholder="Search text..."
           className="w-full rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-2 py-1 text-sm text-ink-primary focus:border-accent focus:outline-none"
         />
         <button className={navButton} onClick={() => void runSearch()} disabled={searching}>
@@ -119,7 +119,7 @@ const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
           Next
         </button>
         <span className="text-xs text-ink-muted">
-          {hits.length ? `${activeHitIdx + 1}/${hits.length}` : searching ? 'Searching…' : '0'}
+          {hits.length ? `${activeHitIdx + 1}/${hits.length}` : searching ? 'Searching...' : '0'}
         </span>
       </div>
       {hits[activeHitIdx]?.snippet && (

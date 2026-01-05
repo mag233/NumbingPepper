@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react'
-import { BookCopy, ChevronDown, ChevronRight, List } from 'lucide-react'
+import { ChevronDown, ChevronRight, List } from 'lucide-react'
 import useReaderStore from '../../../stores/readerStore'
+import useLibraryStore from '../../../stores/libraryStore'
+import ReaderBookmarksPanel from './ReaderBookmarksPanel'
 import { formatPageForDisplay } from '../services/pageLabels'
 
 type Props = {
-  scrollMode: 'paged' | 'continuous'
-  onToggleScrollMode: () => void
   onJump?: (page: number) => void
 }
 
-const ReaderOutlinePanel = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
-  const { outline, outlineStatus, outlineError, pageLabels, setPage } = useReaderStore()
+const ReaderOutlinePanel = ({ onJump }: Props) => {
+  const { outline, outlineStatus, outlineError, pageLabels, requestJump, currentPage } = useReaderStore()
+  const activeBookId = useLibraryStore((s) => s.activeId)
   const tocLines = useMemo(() => outline.slice(0, 400), [outline])
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
     const next = new Set<string>()
@@ -60,15 +61,10 @@ const ReaderOutlinePanel = ({ scrollMode, onToggleScrollMode, onJump }: Props) =
 
   const expandAll = () => setCollapsed(new Set())
 
-  const jumpTo = (page: number) => {
-    setPage(page)
-    onJump?.(page)
-  }
-
   const jumpFromToc = (page: number | null) => {
     if (!page) return
-    if (scrollMode === 'continuous') onToggleScrollMode()
-    jumpTo(page)
+    requestJump(page)
+    onJump?.(page)
   }
 
   return (
@@ -157,13 +153,7 @@ const ReaderOutlinePanel = ({ scrollMode, onToggleScrollMode, onJump }: Props) =
         </div>
       )}
 
-      <div className="flex items-center gap-2 text-xs text-ink-muted">
-        <BookCopy className="size-4" />
-        <span>Saved marks</span>
-      </div>
-      <p className="rounded-lg border border-chrome-border/70 bg-surface-raised/60 p-2 text-xs text-ink-muted">
-        Future: support bookmarks and cross-device sync. Use highlights and page labels for now.
-      </p>
+      <ReaderBookmarksPanel activeBookId={activeBookId ?? null} currentPage={currentPage} pageLabels={pageLabels} />
     </div>
   )
 }

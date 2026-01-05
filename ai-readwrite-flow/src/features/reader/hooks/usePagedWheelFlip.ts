@@ -23,7 +23,13 @@ export const usePagedWheelFlip = ({
 
     const onWheel = (event: WheelEvent) => {
       const canScroll = el.scrollHeight > el.clientHeight + 2
-      if (canScroll) return
+      if (canScroll) {
+        const threshold = 12
+        const atTop = el.scrollTop <= threshold
+        const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold
+        if (event.deltaY < 0 && !atTop) return
+        if (event.deltaY > 0 && !atBottom) return
+      }
       const direction = event.deltaY > 0 ? 1 : -1
       const next = currentPage + direction
       if (next < 1 || next > pageCount) return
@@ -36,4 +42,3 @@ export const usePagedWheelFlip = ({
     return () => el.removeEventListener('wheel', onWheel as EventListener)
   }, [currentPage, enabled, pageCount, scrollRef, setPage])
 }
-

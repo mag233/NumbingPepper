@@ -155,7 +155,7 @@ const WriterStudioPanel = () => {
               <div className={`grid gap-2 ${showAllArtifacts ? 'max-h-72 overflow-y-auto pr-1' : ''}`}>
                 {(showAllArtifacts ? artifacts : artifacts.slice(0, 3)).map((artifact) => (
                   <div key={artifact.id} className="space-y-2">
-                    <div className={artifactRowClass}>
+                    <div id={`writer-artifact-${artifact.id}`} className={artifactRowClass}>
                       <button
                         type="button"
                         onClick={() => togglePreview(artifact.id)}

@@ -208,5 +208,24 @@ pub fn migrations() -> Vec<Migration> {
       ",
       kind: MigrationKind::Up,
     },
+    Migration {
+      version: 16,
+      description: "create bookmarks table",
+      sql: "
+        CREATE TABLE IF NOT EXISTS bookmarks (
+          id TEXT PRIMARY KEY,
+          book_id TEXT NOT NULL,
+          page INTEGER NOT NULL,
+          page_label TEXT,
+          title TEXT,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_bookmarks_book_id ON bookmarks(book_id);
+        CREATE INDEX IF NOT EXISTS idx_bookmarks_page ON bookmarks(book_id, page);
+      ",
+      kind: MigrationKind::Up,
+    },
   ]
 }

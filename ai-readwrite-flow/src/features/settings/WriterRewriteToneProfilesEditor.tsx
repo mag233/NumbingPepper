@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { AlertTriangle, RefreshCcw } from 'lucide-react'
 import useWriterSelectionTemplateStore from '../../stores/writerSelectionTemplateStore'
 import { writerRewriteTones, type WriterRewriteTone } from '../../stores/writerSelectionTemplateModel'
+
+const MAX_EXAMPLES = 3
+const MAX_EXAMPLE_WORDS = 60
 
 const inputClass =
   'w-full rounded-lg border border-chrome-border/80 bg-surface-raised/70 px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
@@ -19,12 +22,21 @@ const linesToExamples = (text: string) =>
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
-    .slice(0, 3)
 
 const examplesToLines = (examples: string[]) => examples.join('\n')
 
+const countWords = (value: string) => value.trim().split(/\s+/).filter(Boolean).length
+
+const getExamplesError = (examples: string[]) => {
+  if (examples.length > MAX_EXAMPLES) return `Use up to ${MAX_EXAMPLES} examples.`
+  const tooLong = examples.find((example) => countWords(example) > MAX_EXAMPLE_WORDS)
+  if (tooLong) return `Each example must be ${MAX_EXAMPLE_WORDS} words or fewer.`
+  return ''
+}
+
 const WriterRewriteToneProfilesEditor = () => {
   const useDefaults = useWriterSelectionTemplateStore((s) => s.useDefaults)
+  const rewriteToneProfiles = useWriterSelectionTemplateStore((s) => s.rewriteToneProfiles)
   const setRewriteToneProfile = useWriterSelectionTemplateStore((s) => s.setRewriteToneProfile)
   const resetRewriteToneProfile = useWriterSelectionTemplateStore((s) => s.resetRewriteToneProfile)
   const resetAllRewriteToneProfiles = useWriterSelectionTemplateStore((s) => s.resetAllRewriteToneProfiles)
@@ -38,7 +50,12 @@ const WriterRewriteToneProfilesEditor = () => {
   const [descriptionDraft, setDescriptionDraft] = useState(profile.description)
   const [examplesDraft, setExamplesDraft] = useState(examplesToLines(profile.examples))
 
-  const tones = useMemo(() => writerRewriteTones.map((tone) => ({ tone, label: toneLabel(tone) })), [])
+  const displayLabel = (tone: WriterRewriteTone) => {
+    const overrideLabel = rewriteToneProfiles[tone]?.label?.trim() ?? ''
+    if (!useDefaults && overrideLabel) return overrideLabel
+    const label = getEffectiveRewriteToneProfile(tone).label.trim()
+    return label ? label : toneLabel(tone)
+  }
 
   const loadDrafts = (tone: WriterRewriteTone) => {
     const next = getEffectiveRewriteToneProfile(tone)
@@ -47,6 +64,9 @@ const WriterRewriteToneProfilesEditor = () => {
     setDescriptionDraft(next.description)
     setExamplesDraft(examplesToLines(next.examples))
   }
+
+  const examples = linesToExamples(examplesDraft)
+  const examplesError = getExamplesError(examples)
 
   return (
     <div className="space-y-3">
@@ -65,22 +85,22 @@ const WriterRewriteToneProfilesEditor = () => {
 
       <div className="grid gap-3 md:grid-cols-[220px_1fr]">
         <div className="grid gap-2">
-          {tones.map((item) => (
+          {writerRewriteTones.map((tone) => (
             <button
-              key={item.tone}
+              key={tone}
               type="button"
               onClick={() => {
-                setActiveTone(item.tone)
-                loadDrafts(item.tone)
+                setActiveTone(tone)
+                loadDrafts(tone)
               }}
               className={`w-full rounded-xl border px-3 py-2 text-left ${
-                item.tone === activeTone
+                tone === activeTone
                   ? 'border-accent bg-accent/10'
                   : 'border-chrome-border/70 bg-surface-raised/50 hover:border-accent'
               }`}
             >
-              <span className="text-sm font-semibold text-ink-primary">{item.label}</span>
-              <p className="mt-1 text-xs text-ink-muted">{getEffectiveRewriteToneProfile(item.tone).description || '—'}</p>
+              <span className="text-sm font-semibold text-ink-primary">{displayLabel(tone)}</span>
+              <p className="mt-1 text-xs text-ink-muted">{getEffectiveRewriteToneProfile(tone).description || '-'}</p>
             </button>
           ))}
           <button
@@ -102,7 +122,7 @@ const WriterRewriteToneProfilesEditor = () => {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-ink-primary">{toneLabel(activeTone)}</p>
-              <p className="text-xs text-ink-muted">Used as extra directives for Rewrite (tone ≠ Default).</p>
+              <p className="text-xs text-ink-muted">Used as extra directives for Rewrite (tone not Default).</p>
             </div>
             <button
               type="button"
@@ -139,14 +159,17 @@ const WriterRewriteToneProfilesEditor = () => {
               placeholder="Optional..."
             />
 
-            <label className="text-[11px] uppercase tracking-wide text-ink-muted">Examples (max 3 lines)</label>
+            <label className="text-[11px] uppercase tracking-wide text-ink-muted">
+              Examples (max 3, 60 words each)
+            </label>
             <textarea
               value={examplesDraft}
               onChange={(e) => setExamplesDraft(e.target.value)}
               rows={4}
               className={inputClass}
-              placeholder="One example per line..."
+              placeholder="One example per line (max 3)"
             />
+            {examplesError && <p className="text-xs text-red-200">{examplesError}</p>}
 
             <div className="flex items-center justify-end gap-2">
               <button
@@ -163,10 +186,11 @@ const WriterRewriteToneProfilesEditor = () => {
                     label: labelDraft,
                     directive: directiveDraft,
                     description: descriptionDraft,
-                    examples: linesToExamples(examplesDraft),
+                    examples,
                   })
                 }
-                className="rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent/90"
+                disabled={Boolean(examplesError)}
+                className="rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Save
               </button>
@@ -179,4 +203,3 @@ const WriterRewriteToneProfilesEditor = () => {
 }
 
 export default WriterRewriteToneProfilesEditor
-

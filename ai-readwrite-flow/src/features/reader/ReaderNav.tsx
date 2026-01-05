@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { BookCopy, ChevronLeft, ChevronRight, List, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useReaderStore from '../../stores/readerStore'
+import useLibraryStore from '../../stores/libraryStore'
+import ReaderBookmarksPanel from './components/ReaderBookmarksPanel'
 import FindInDocument from './components/FindInDocument'
 import { formatPageForDisplay, resolveJumpTarget } from './services/pageLabels'
 
@@ -25,8 +27,9 @@ const ReaderNav = ({
   onToggleNav,
   navVisible,
 }: Props) => {
-  const { currentPage, pageCount, pageLabels, setPage, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode, outline, outlineStatus, outlineError } =
+  const { currentPage, pageCount, pageLabels, requestJump, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode, outline, outlineStatus, outlineError } =
     useReaderStore()
+  const activeBookId = useLibraryStore((s) => s.activeId)
   const [inputPage, setInputPage] = useState('')
 
   const tocLines = useMemo(() => outline.slice(0, 400), [outline])
@@ -35,13 +38,12 @@ const ReaderNav = ({
     pageLabels?.[currentPage - 1] && currentLabel !== String(currentPage) ? `${currentLabel} (PDF ${currentPage})` : `${currentPage}`
 
   const jumpTo = (page: number) => {
-    setPage(page)
+    requestJump(page)
     onJump?.(page)
   }
 
   const jumpFromToc = (page: number | null) => {
     if (!page) return
-    if (scrollMode === 'continuous') onToggleScrollMode()
     jumpTo(page)
   }
 
@@ -225,9 +227,7 @@ const ReaderNav = ({
             <BookCopy className="size-4" />
             <span>Saved marks</span>
           </div>
-          <p className="rounded-lg border border-chrome-border/70 bg-surface-raised/70 p-2 text-xs text-ink-muted">
-            Future: support bookmarks and cross-device sync. Use page jump for now.
-          </p>
+          <ReaderBookmarksPanel activeBookId={activeBookId ?? null} currentPage={currentPage} pageLabels={pageLabels} />
         </div>
       </div>
     </Card>

@@ -86,7 +86,11 @@ const WriterReferencesPanel = ({ noTopMargin, listClassName }: Props) => {
             const confirm = confirmDeleteId === r.id
             const expanded = expandedId === r.id
             return (
-              <div key={r.id} className="flex items-start gap-2 border-b border-chrome-border/60 p-2 last:border-b-0">
+              <div
+                key={r.id}
+                id={`writer-reference-${r.id}`}
+                className="flex items-start gap-2 border-b border-chrome-border/60 p-2 last:border-b-0"
+              >
                 <input
                   type="checkbox"
                   checked={included}

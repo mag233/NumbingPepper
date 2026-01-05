@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- Reader: add bookmark creation, list, edit title, and removal (per book).
+- Reader: preserve position when switching Paged/Continuous; TOC jumps no longer force mode switches.
+- Reader: paged navigation supports arrow keys and wheel-to-next/prev at edges; continuous prev/next controls now scroll to anchors.
+- Writer: Rewrite tone submenu now shows custom tone labels from Settings.
+- Writer: add a global search modal with filters for Content/Context/References/Chat/Studio and click-to-jump results.
+- Settings: rewrite tone profiles enforce a 3-example/60-word limit and update tone labels immediately after save.
 - Desktop: persist Reader/Writer left sidebar width; reset via Writer `Layout` controls.
 - Desktop: replace “Hide navigation” text button with a compact icon toggle.
 - Writer: restore visual distinction between user and AI chat bubbles.

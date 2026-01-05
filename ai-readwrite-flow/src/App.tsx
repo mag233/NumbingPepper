@@ -10,7 +10,6 @@ import { useMediaQuery } from './lib/hooks/useMediaQuery'
 import { appTitle } from './lib/constants'
 import useUiStore, { type TabKey } from './stores/uiStore'
 import useSettingsStore from './stores/settingsStore'
-import useReaderStore from './stores/readerStore'
 import useMetricsStore from './stores/metricsStore'
 import useLibraryStore from './stores/libraryStore'
 import { normalizeThemePreset } from './lib/theme'
@@ -37,7 +36,6 @@ const App = () => {
   const isMobile = useMediaQuery('(max-width: 767px)')
   const { activeTab, setActiveTab } = useUiStore()
   const { hydrate, model, themePreset } = useSettingsStore()
-  const { scrollMode, toggleScrollMode } = useReaderStore()
   const { lastLatencyMs, lastTokens, lastModel } = useMetricsStore()
   const { hydrate: hydrateLibrary } = useLibraryStore()
   const [quickPrompt, setQuickPrompt] = useState<QuickPrompt>()
@@ -196,8 +194,6 @@ const App = () => {
             onToggleNav={() => setShowNav((v) => !v)}
             desktopView={desktopView}
             onSetDesktopView={setDesktopView}
-            scrollMode={scrollMode}
-            onToggleScrollMode={toggleScrollMode}
             onReaderAction={handleReaderAction}
             quickPrompt={quickPrompt}
             onConsumeQuickPrompt={consumeQuickPrompt}

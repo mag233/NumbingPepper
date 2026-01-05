@@ -51,6 +51,7 @@ const WriterContextPanel = ({ fill, noTopMargin, embedded }: Props) => {
           </div>
         </div>
       <textarea
+        id="writer-context-textarea"
         value={contextText}
         onChange={(e) => setContextText(e.target.value)}
         placeholder="Paste or type context here. Reader highlights can be appended later."

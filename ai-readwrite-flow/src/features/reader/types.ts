@@ -35,3 +35,14 @@ export type SelectionInfo = {
   page: number
   rects: HighlightRect[]
 }
+
+export const bookmarkSchema = z.object({
+  id: z.string().min(1),
+  bookId: z.string().min(1),
+  page: z.number().int().min(1),
+  pageLabel: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  createdAt: z.number().int().nonnegative(),
+  updatedAt: z.number().int().nonnegative(),
+})
+export type Bookmark = z.infer<typeof bookmarkSchema>

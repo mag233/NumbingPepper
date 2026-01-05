@@ -120,3 +120,12 @@ export const scrollEditorToNeedle = (editor: TipTapEditor, args: { needle: strin
   editor.view.dispatch(tr)
   return true
 }
+
+export const scrollEditorToRange = (editor: TipTapEditor, args: { from: number; to: number }) => {
+  const max = editor.state.doc.content.size
+  const from = Math.min(Math.max(args.from, 0), max)
+  const to = Math.min(Math.max(args.to, from), max)
+  editor.commands.focus()
+  const tr = editor.state.tr.setSelection(TextSelection.create(editor.state.doc, from, to)).scrollIntoView()
+  editor.view.dispatch(tr)
+}

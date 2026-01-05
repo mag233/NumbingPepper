@@ -42,7 +42,11 @@ const WriterChatMessages = ({ messages }: Props) => {
     >
       {messages.length === 0 && <p className="text-sm text-ink-muted">No messages yet.</p>}
       {messages.map((msg) => (
-        <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+        <div
+          key={msg.id}
+          id={`writer-chat-${msg.id}`}
+          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+        >
           <div
             className={`${bubbleBase} max-w-[85%] ${
               msg.role === 'user'

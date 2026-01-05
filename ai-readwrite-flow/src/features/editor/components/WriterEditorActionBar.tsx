@@ -1,4 +1,4 @@
-import { Command, Eye, Pencil } from 'lucide-react'
+import { Command, Eye, Pencil, Search } from 'lucide-react'
 import FlomoHistoryButton from '../../integrations/flomo/components/FlomoHistoryButton'
 
 type Props = {
@@ -9,6 +9,7 @@ type Props = {
   isPreview: boolean
   onSave: () => void
   onTogglePreview: () => void
+  onOpenSearch: () => void
 }
 
 const WriterEditorActionBar = ({
@@ -19,6 +20,7 @@ const WriterEditorActionBar = ({
   isPreview,
   onSave,
   onTogglePreview,
+  onOpenSearch,
 }: Props) => (
   <div className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
     <span className="max-w-[12rem] truncate text-xs text-ink-muted" title={activeTitle}>
@@ -49,6 +51,14 @@ const WriterEditorActionBar = ({
     >
       {isPreview ? <Pencil className="size-4" /> : <Eye className="size-4" />}
       {isPreview ? 'Edit' : 'Preview'}
+    </button>
+    <button
+      type="button"
+      onClick={onOpenSearch}
+      className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/60 px-3 py-2 text-ink-primary hover:border-accent"
+    >
+      <Search className="size-4" />
+      Search
     </button>
     <span className="inline-flex items-center gap-2">
       <Command className="size-4" />

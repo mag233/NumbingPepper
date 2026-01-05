@@ -45,6 +45,8 @@
 | 37 | Done        | P1       | Global Layout toggle + per-view adjustments (Reader split + scope hint).                                      | Medium - desktop complete; mobile QA deferred. |
 | 38 | Done        | P2       | Settings UX: Reader templates hint clarity.                                                                    | Low - move Questions contract hint into Questions editor to avoid confusion. |
 | 39 | Done        | P2       | Writer: flash-highlight newly inserted text (suggestion apply) | Low - purely visual; must be theme-aware and non-persistent. |
+| 40 | In Progress | P1       | Writer: global search across Content/Context/References/Chat/Studio (modal + jump) | Medium - needs UX validation; keep mobile safe. |
+| 41 | Backlog     | P2       | Writer: search UX enhancements (inline highlight + next/prev, keyboard shortcuts, scope toggle) | Low - polish; define scope for cross-project search. |
 
 ## Progress Notes
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
@@ -73,6 +75,11 @@
 | 28.4 | Backlog | P2 | Find-in-document | Search text with next/prev; highlight matches; stable active hit | Search count works; Next/Prev jump; active hit outlined and stable | `docs/QA.md` (28-QA-007..010) |
 | 28.5 | Backlog | P2 | Page tools | Rotate page / download export current PDF | Actions work and don't break persistence |  |
 | 28.6 | Done | P2 | Page labels | If PDF provides printed page labels (PageLabels), show them alongside physical page numbers and allow jump by label | Pass (`docs/QA.md` 28-QA-011) |  |
+| 28.7 | Done | P1 | Bookmarks add UX | Provide an explicit "Add bookmark" action; bookmarks persist per book and appear in Bookmarks list | Manual: add/remove bookmarks; persists; list shows page labels | `docs/QA.md` (28-QA-012) |
+| 28.8 | Done | P1 | Mode switch preserves position | Switching Paged/Continuous preserves current position; TOC jumps do not force mode switch | Manual: no jump to page 1; TOC jump keeps mode | `docs/QA.md` (28-QA-013) |
+| 28.9 | Done | P1 | Paged navigation inputs | In Paged mode, support arrow keys and optional wheel-to-next/prev at edges | Manual: keys and wheel step pages without affecting inputs | `docs/QA.md` (28-QA-014) |
+| 28.10 | Done | P1 | Continuous page controls | In Continuous mode, page controls are disabled or scroll to next/prev anchors | Manual: controls are clear and functional | `docs/QA.md` (28-QA-015) |
+| 28.11 | Todo | P3 | Mode toggle flicker | Switching Continuous/Paged should not flash the PDF view | Manual: toggle modes mid-document without visible blink | `docs/QA.md` (28-QA-016) |
 
 ## Task 29 Breakdown (Reader hardening & completion - before returning to Writer)
 | ID | Status | Priority | Item | Spec (summary) | Verify |
@@ -162,10 +169,11 @@ Progress update (reported by user): 33-QA-001..004 pass.
 | 18.12 | Done | P1 | Writer sidebar layout | Writer view hides ReaderNav and uses WriterSidebar (Projects + References); set a sane default Content/Context ratio (or adjustable split) so context is not squeezed | Pass (`docs/QA.md` 18-QA-014) |
 | 18.14 | Done | P1 | Projects picker UX | Projects menu closes via outside click/Esc/X; create project requires explicit Save/Cancel; rename supports Save/Cancel | Pass (`docs/QA.md` 18-QA-016) |
 | 18.13 | Done | P1 | Content selection AI actions | Select text in Writer Content → action menu: Simplify/Concise/Rewrite (tone submenu)/Translate/Explain/Ask AI; auto-send except Ask AI; results appear as applyable suggestion cards in Writer chat (Replace/Insert/Copy/To Context) with an explicit Undo affordance (mobile-friendly) | Verified (`docs/QA.md` 18-QA-023..026, 18-QA-030, 18-QA-031). |
-| 18.19 | In Progress | P1 | Writer AI Templates settings | Settings exposes Writer selection templates manager with `Use defaults` recovery and `Reset`/`Reset all` override controls; Rewrite tone profiles (directive/description/examples) are configurable and apply as extra prompt directives | Manual (`docs/QA.md` 18-QA-029, 18-QA-032) |
+| 18.19 | Done | P1 | Writer AI Templates settings | Settings exposes Writer selection templates manager with `Use defaults` recovery and `Reset`/`Reset all` override controls; Rewrite tone profiles (directive/description/examples) are configurable and apply as extra prompt directives | Manual (`docs/QA.md` 18-QA-029, 18-QA-032) |
+| 18.20 | In Progress | P1 | Writer global search | Add a Writer search modal across Content/Context/References/Chat/Studio with click-to-jump | Manual (`docs/QA.md` 18-QA-033) |
 | 18.15 | Done | P1 | Writer Studio artifacts | Kickoff/Definition/Explanation/Rewrite(style)/Polish generate saved artifacts first; Insert applies to Content; citation constraint On by default when refs available | Pass (`docs/QA.md` 18-QA-017). Includes “Recent 3 + All…” artifacts list to keep chat usable. |
 | 18.16 | In Progress | P1 | Outline + reference preview | Outline derives from markdown headings in Content and supports click-to-jump; references support expand/collapse preview; sidebar width increased for readability | Manual (`docs/QA.md` 18-QA-019, 18-QA-020) |
-| 18.17 | In Progress | P0 | Draft persistence hardening | Prevent empty overwrites during Writer mount/project switch (hydration gate); drafts should survive abrupt app restarts with write-through local fallback + flush-on-exit | Manual (`docs/QA.md` 18-QA-021, 18-QA-022) |
+| 18.17 | Done | P0 | Draft persistence hardening | Prevent empty overwrites during Writer mount/project switch (hydration gate); drafts should survive abrupt app restarts with write-through local fallback + flush-on-exit | Manual (`docs/QA.md` 18-QA-021, 18-QA-022) |
 | 18.18 | Todo | P1 | Snapshots / History (manual) | Add manual snapshots for Writer Content (title+note+timestamp) with restore/duplicate; prevents autosave from overwriting “ideal” versions and provides safe rollbacks | Manual: create snapshot, restore snapshot, duplicate project |
 | 18.9 | Backlog | P2 | Flomo export | Export entry/selection to Flomo with templates + retry + success/failure feedback | Manual: success + failure paths |
 | 18.10 | Backlog | P2 | Synonyms/translation | Quick lookup via remote LLM first; local model optional later | Manual: action returns output |

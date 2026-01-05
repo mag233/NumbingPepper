@@ -11,6 +11,9 @@ type ReaderState = {
   currentPage: number
   pageCount: number
   setPage: (page: number) => void
+  requestJump: (page: number) => void
+  jumpPage: number | null
+  jumpToken: number
   setPageCount: (count: number) => void
   pageLabels: PageLabels | null
   setPageLabels: (labels: PageLabels | null) => void
@@ -49,10 +52,21 @@ const useReaderStore = create<ReaderState>((set, get) => ({
   scrollMode: 'continuous',
   zoom: 1,
   fitMode: 'fitWidth',
+  jumpPage: null,
+  jumpToken: 0,
   setPage: (page) =>
     set((state) => ({
       currentPage: clamp(page, 1, state.pageCount || 1),
     })),
+  requestJump: (page) =>
+    set((state) => {
+      const nextPage = clamp(page, 1, state.pageCount || 1)
+      return {
+        currentPage: nextPage,
+        jumpPage: nextPage,
+        jumpToken: state.jumpToken + 1,
+      }
+    }),
   setPageCount: (count) => {
     const current = get().currentPage
     set({

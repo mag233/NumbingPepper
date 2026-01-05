@@ -1,20 +1,15 @@
 import { ChevronDown } from 'lucide-react'
 import type { WriterRewriteTone, WriterSelectionAction } from '../../../stores/writerSelectionTemplateStore'
 
+type ToneItem = { id: WriterRewriteTone; label: string }
+
 type Props = {
   rewriteOpen: boolean
   onToggleRewrite: () => void
   onRunAction: (action: WriterSelectionAction, options?: { rewriteTone?: WriterRewriteTone }) => void
   onExportFlomo: () => void
+  toneItems: ToneItem[]
 }
-
-const toneItems: { id: WriterRewriteTone; label: string }[] = [
-  { id: 'default', label: 'Default' },
-  { id: 'formal', label: 'Formal' },
-  { id: 'friendly', label: 'Friendly' },
-  { id: 'academic', label: 'Academic' },
-  { id: 'bullet', label: 'Bullet' },
-]
 
 const prevent = (event: { preventDefault: () => void; stopPropagation: () => void }) => {
   event.preventDefault()
@@ -23,7 +18,13 @@ const prevent = (event: { preventDefault: () => void; stopPropagation: () => voi
 
 const buttonClass = 'rounded-lg px-2 py-1 text-xs text-ink-primary hover:bg-surface-raised/60'
 
-const WriterSelectionBubbleMenuView = ({ rewriteOpen, onToggleRewrite, onRunAction, onExportFlomo }: Props) => (
+const WriterSelectionBubbleMenuView = ({
+  rewriteOpen,
+  onToggleRewrite,
+  onRunAction,
+  onExportFlomo,
+  toneItems,
+}: Props) => (
   <div className="relative flex items-center gap-1 rounded-xl border border-chrome-border/70 bg-surface-base/95 p-1 shadow-xl backdrop-blur">
     <button
       type="button"
@@ -158,4 +159,3 @@ const WriterSelectionBubbleMenuView = ({ rewriteOpen, onToggleRewrite, onRunActi
 )
 
 export default WriterSelectionBubbleMenuView
-

@@ -21,8 +21,6 @@ type Props = {
   onToggleNav: () => void
   desktopView: 'reader' | 'writer'
   onSetDesktopView: (view: 'reader' | 'writer') => void
-  scrollMode: 'paged' | 'continuous'
-  onToggleScrollMode: () => void
   onReaderAction: (action: ReaderShortcutAction, text: string) => void
   quickPrompt?: QuickPrompt
   onConsumeQuickPrompt: () => void
@@ -42,8 +40,6 @@ const DesktopWorkspace = ({
   onToggleNav,
   desktopView,
   onSetDesktopView,
-  scrollMode,
-  onToggleScrollMode,
   onReaderAction,
   quickPrompt,
   onConsumeQuickPrompt,
@@ -137,8 +133,6 @@ const DesktopWorkspace = ({
               <>
                 <div className="min-h-0 shrink-0" style={{ width: readerSidebarWidthPx }}>
                   <ReaderDesktopSidebar
-                    scrollMode={scrollMode}
-                    onToggleScrollMode={onToggleScrollMode}
                     onOpenBook={() => onSetDesktopView('reader')}
                   />
                 </div>

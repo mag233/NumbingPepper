@@ -6,15 +6,10 @@ import { Sparkles } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import { useDraftPersistence } from './hooks/useDraftPersistence'
 import { draftIdForProject } from './services/draftIds'
-import {
-  insertPlainTextAsParagraphs,
-  insertPlainTextAsParagraphsAt,
-  insertPlainTextAsParagraphsAtWithLeadingBlankLine,
-  replaceRangeWithPlainTextAsParagraphs,
-  scrollEditorToNeedle,
-} from './services/editorCommands'
+import { insertPlainTextAsParagraphs, scrollEditorToNeedle } from './services/editorCommands'
 import { writerInsertFlashExtension } from './extensions/writerInsertFlashExtension'
 import { useWriterInsertFlash } from './hooks/useWriterInsertFlash'
+import { useWriterSelectionApplyEffect } from './hooks/useWriterSelectionApplyEffect'
 import useWriterProjectStore from './stores/writerProjectStore'
 import useWriterReferencesStore from './stores/writerReferencesStore'
 import { extractTagPathsFromTipTapDoc } from './services/writerTags'
@@ -28,6 +23,7 @@ import WriterSlashCommands from './components/WriterSlashCommands'
 import WriterMarkdownPreview from './components/WriterMarkdownPreview'
 import WriterSelectionApplyNotice from './components/WriterSelectionApplyNotice'
 import WriterEditorActionBar from './components/WriterEditorActionBar'
+import WriterSearchModal from './components/WriterSearchModal'
 
 type Props = {
   onQuickPrompt: (prompt: { text: string; autoSend: boolean; meta?: unknown }) => void
@@ -36,6 +32,7 @@ type Props = {
 const EditorPane = ({ onQuickPrompt }: Props) => {
   const [showMenu, setShowMenu] = useState(false)
   const [isPreview, setIsPreview] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const { hydrate, activeProjectId } = useWriterProjectStore()
   const projects = useWriterProjectStore((s) => s.projects)
   const setProjectTags = useWriterProjectStore((s) => s.setProjectTags)
@@ -45,8 +42,6 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
   const setOutlineFromMarkdown = useWriterOutlineStore((s) => s.setFromMarkdown)
   const consumeScrollRequest = useWriterEditorCommandStore((s) => s.consumeScrollRequest)
   const pendingScroll = useWriterEditorCommandStore((s) => s.pendingScroll)
-  const consumeSelectionApply = useWriterSelectionApplyStore((s) => s.consume)
-  const pendingSelectionApply = useWriterSelectionApplyStore((s) => s.pending)
   const selectionApplyNotice = useWriterSelectionApplyStore((s) => s.notice)
   const clearSelectionApplyNotice = useWriterSelectionApplyStore((s) => s.clearNotice)
   useEffect(() => {
@@ -84,6 +79,7 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
 
   const { status: saveStatus, lastSavedAt, flushNow } = useDraftPersistence({ editor, draftId })
   const { flash: flashInsertedRange } = useWriterInsertFlash({ editor })
+  useWriterSelectionApplyEffect({ editor, onApplied: flashInsertedRange })
 
   useEffect(() => {
     editor?.setEditable(!isPreview)
@@ -96,28 +92,6 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
     consumeInsert()
   }, [consumeInsert, editor, pendingInsert])
 
-  useEffect(() => {
-    if (!pendingSelectionApply) return
-    if (!editor) return
-    const req = consumeSelectionApply()
-    if (!req) return
-    if (req.mode === 'replace') {
-      const range = replaceRangeWithPlainTextAsParagraphs(editor, {
-        from: req.selection.from,
-        to: req.selection.to,
-        text: req.text,
-      })
-      flashInsertedRange(range)
-      return
-    }
-    if (req.insertLeadingBlankLine) {
-      const range = insertPlainTextAsParagraphsAtWithLeadingBlankLine(editor, { pos: req.selection.to, text: req.text })
-      flashInsertedRange(range)
-      return
-    }
-    const range = insertPlainTextAsParagraphsAt(editor, { pos: req.selection.to, text: req.text })
-    flashInsertedRange(range)
-  }, [consumeSelectionApply, editor, flashInsertedRange, pendingSelectionApply])
   useEffect(() => {
     if (!editor) return
     if (!pendingScroll) return
@@ -166,7 +140,7 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
   }, [activeProjectId, projects])
 
   const saveLabel = useMemo(() => {
-    if (saveStatus === 'saving') return 'Saving…'
+    if (saveStatus === 'saving') return 'Saving...'
     if (saveStatus === 'error') return 'Save failed'
     if (!lastSavedAt) return 'Not saved yet'
     const time = new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -185,6 +159,7 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
           isPreview={isPreview}
           onSave={() => void flushNow()}
           onTogglePreview={() => setIsPreview((value) => !value)}
+          onOpenSearch={() => setShowSearch(true)}
         />
       }
       className="flex h-full min-h-0 flex-col"
@@ -218,17 +193,18 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
               }}
             />
           )}
-            {showMenu && (
-              <div className="absolute left-3 top-3 z-10 grid gap-2 rounded-xl border border-chrome-border/70 bg-surface-base/95 p-3 shadow-xl">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted">
-                  <Sparkles className="size-4 text-amber-300" />
-                  Quick Commands
-                </div>
-                <WriterSlashCommands editor={editor} onQuickPrompt={onQuickPrompt} onClose={() => setShowMenu(false)} />
+          {showMenu && (
+            <div className="absolute left-3 top-3 z-10 grid gap-2 rounded-xl border border-chrome-border/70 bg-surface-base/95 p-3 shadow-xl">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted">
+                <Sparkles className="size-4 text-amber-300" />
+                Quick Commands
               </div>
-            )}
+              <WriterSlashCommands editor={editor} onQuickPrompt={onQuickPrompt} onClose={() => setShowMenu(false)} />
+            </div>
+          )}
         </div>
       </div>
+      <WriterSearchModal open={showSearch} onClose={() => setShowSearch(false)} editor={editor} />
     </Card>
   )
 }
