@@ -35,6 +35,8 @@ const WriterDesktopLayout = ({
   onChatCollapsedChange,
   sidebarWidthPx,
   onSidebarWidthPxChange,
+  isPreview,
+  onIsPreviewChange,
 }: Props) => {
   const splitRatio = useWriterLayoutStore((s) => s.splitRatio)
   const setSplitRatio = useWriterLayoutStore((s) => s.setSplitRatio)
@@ -103,7 +105,7 @@ const WriterDesktopLayout = ({
       {showNav && (
         <>
           <div className="min-h-0 shrink-0" style={{ width: sidebarWidthPx }}>
-            <WriterSidebar />
+            <WriterSidebar isPreview={isPreview} />
           </div>
           {!layoutAdjusting ? (
             <VerticalDivider label="Sidebar divider" />
@@ -122,7 +124,7 @@ const WriterDesktopLayout = ({
         <div style={chatCollapsed ? undefined : editorFlex} className="min-h-0 min-w-[520px] flex-1">
           <div className={`flex h-full min-h-0 flex-col ${gapClass}`}>
             <div className="min-h-0 flex-[65_1_0%]">
-              <EditorPane onQuickPrompt={onSetQuickPrompt} />
+              <EditorPane onQuickPrompt={onSetQuickPrompt} isPreview={isPreview} onIsPreviewChange={onIsPreviewChange} />
             </div>
             <div className="min-h-0 flex-[35_1_0%]">
               <WriterContextCard />

@@ -2,6 +2,11 @@
 
 ## Unreleased
 - Docs: update phone scope (Writer-first, Reader/Library disabled with hint, chat overlay trigger, compact Settings entry; tablet deferred).
+- Docs: add planned Library enhancements (pop-out drawer + Recent reads summary, tags/folders/status, metadata extraction, Mark as Done action).
+- Docs: add Reader/Writer chat visual parity requirement (consistent bubble styling across views).
+- Writer: global search modal (Task 18.20) functional with known issues—filter UI shows (0) when all filters off (should show grey counts); References/Studio jump broken (2026-01-07).
+- Writer: outline click-to-jump works in Edit mode; disabled in Preview mode (Task 18.16, 2026-01-07).
+- Writer: reference preview expand/collapse working (Task 18.16, 2026-01-07).
 - Reader: add bookmark creation, list, edit title, and removal (per book).
 - Reader: preserve position when switching Paged/Continuous; TOC jumps no longer force mode switches.
 - Reader: paged navigation supports arrow keys and wheel-to-next/prev at edges; continuous prev/next controls now scroll to anchors.

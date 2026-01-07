@@ -6,9 +6,10 @@ import useWriterEditorCommandStore from '../stores/writerEditorCommandStore'
 
 type Props = {
   noTopMargin?: boolean
+  isPreview?: boolean
 }
 
-const WriterOutlinePanel = ({ noTopMargin }: Props) => {
+const WriterOutlinePanel = ({ noTopMargin, isPreview }: Props) => {
   const activeProjectId = useWriterProjectStore((s) => s.activeProjectId)
   const { items, hydrate } = useWriterOutlineStore()
   const requestScrollToOutline = useWriterEditorCommandStore((s) => s.requestScrollToOutline)
@@ -45,24 +46,29 @@ const WriterOutlinePanel = ({ noTopMargin }: Props) => {
       {items.length === 0 ? (
         <p className="text-xs text-ink-muted">Add markdown headings (e.g. `## Chapter`) to build an outline.</p>
       ) : (
-        <div className="max-h-56 overflow-auto rounded-lg border border-chrome-border/60">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => requestScrollToOutline(item)}
-              className={`flex w-full items-center border-b border-chrome-border/60 px-2 py-2 text-left text-sm text-ink-primary hover:bg-surface-raised/70 last:border-b-0 ${padClassForLevel(
-                item.level,
-              )}`}
-              title={item.needle}
-            >
-              <span className="mr-2 shrink-0 rounded border border-chrome-border/60 bg-surface-base/30 px-1 py-0.5 text-[10px] text-ink-muted">
-                H{item.level}
-              </span>
-              <span className="min-w-0 flex-1 truncate">{item.title}</span>
-            </button>
-          ))}
-        </div>
+        <>
+          {isPreview && (
+            <p className="mb-2 text-xs text-ink-muted">Preview is read-only, but outline jumps still work.</p>
+          )}
+          <div className="max-h-56 overflow-auto rounded-lg border border-chrome-border/60">
+            {items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => requestScrollToOutline(item)}
+                className={`flex w-full items-center border-b border-chrome-border/60 px-2 py-2 text-left text-sm text-ink-primary hover:bg-surface-raised/70 last:border-b-0 ${padClassForLevel(
+                  item.level,
+                )}`}
+                title={item.needle}
+              >
+                <span className="mr-2 shrink-0 rounded border border-chrome-border/60 bg-surface-base/30 px-1 py-0.5 text-[10px] text-ink-muted">
+                  H{item.level}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{item.title}</span>
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

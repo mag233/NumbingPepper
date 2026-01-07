@@ -47,6 +47,22 @@
   - Show and sort by **recently opened** (backed by `books.last_opened_at`).
   - Safe cleanup: **Trash** (soft delete) + **Restore**; optional **Delete app copy** (desktop only, double confirm).
   - Organization (P2/backlog): tags/collections for grouping and filtering PDFs (not Alpha-critical).
+- **PRD-LIB-UX-001 (P2): Library pop-out + Recent reads summary**
+  - Desktop left sidebar should display a compact "Recent Reads" card (3 most recent items) rather than the full library list.
+  - Full library access via a pop-out drawer/modal (triggered by "View All" or similar action).
+  - Pop-out supports filtering, search, and full library operations (import, trash, delete).
+  - State (open/closed) persists locally; responsive behavior on mobile deferred.
+- **PRD-LIB-ORGANIZE-001 (P2): Folders, tags, and reading status**
+  - Support organizing PDFs via tags/folders (e.g., "To Read", "Finished", custom categories).
+  - Users can assign multiple tags per book and filter library by tag.
+  - Support a reading status field (`in-progress`, `done`, `to-read`) with quick toggles.
+  - Desktop Reader provides a "Mark as Done" action (e.g., in bookmarks area or Reader toolbar).
+  - Schema: add `library_tags` table (book_id, tag, created_at) and `books.status` field.
+- **PRD-LIB-METADATA-001 (P2): Auto-extract article titles**
+  - On import, attempt to extract real article title from PDF metadata (title field, first-page heuristics).
+  - Fall back to filename if extraction fails or metadata is empty.
+  - Allow manual title editing in library UI.
+  - Best-effort only; no external API calls; avoid blocking import on slow parsing.
 
 ### App Shell & Layout (P1)
 - **PRD-SHELL-LAYOUT-001 (P1): Desktop three-panel workspace**
@@ -148,6 +164,10 @@
   - Follow-up UX polish (low priority): inline match highlight with next/prev navigation, keyboard shortcuts (e.g., Ctrl+K, Enter, Esc), and a scope toggle (current project vs all projects).
 - **PRD-CHAT-UX-001 (P1): Chat role visual distinction**
   - In both Reader and Writer chat, user and assistant/suggestion messages must be visually distinguishable (theme-aware), improving scanability.
+- **PRD-CHAT-UX-002 (P2): Reader/Writer chat visual consistency**
+  - Reader chat and Writer chat must use the same bubble styling, theme tokens, and layout infrastructure.
+  - Both chats share the same store/API infrastructure; only prompt templates differ.
+  - Ensure theme changes apply uniformly to both views.
 - **PRD-WTR-LAYOUT-001 (P1): Writer Editor↔Chat adjustable split**
   - Desktop Writer view supports resizing the boundary between Editor and Writer AI.
   - Default ratio (Editor/Chat) is 65/35 (ratio applies to Editor+Chat only; left sidebar excluded).
