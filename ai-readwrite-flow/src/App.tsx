@@ -181,7 +181,14 @@ const App = () => {
                   <ReaderPane onAction={handleReaderAction} />
                 </PanelErrorBoundary>
               )}
-              {activeTab === 'editor' && <EditorPane onQuickPrompt={setQuickPrompt} />}
+              {activeTab === 'editor' && (
+                <EditorPane
+                  onQuickPrompt={setQuickPrompt}
+                  isPreview={false}
+                  onIsPreviewChange={() => {}}
+                  onEditorChange={() => {}}
+                />
+              )}
               {activeTab === 'chat' && (
                 <PanelErrorBoundary title="Chat">
                   <ChatSidebar quickPrompt={quickPrompt} onConsumeQuickPrompt={consumeQuickPrompt} />

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Sparkles } from 'lucide-react'
@@ -29,9 +29,11 @@ type Props = {
   onQuickPrompt: (prompt: { text: string; autoSend: boolean; meta?: unknown }) => void
   isPreview: boolean
   onIsPreviewChange: (isPreview: boolean) => void
+  onEditorChange?: (state: { editor: Editor | null; flushNow: () => Promise<boolean> }) => void
 }
 
-const EditorPane = ({ onQuickPrompt, isPreview, onIsPreviewChange }: Props) => {
+const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
+  function EditorPane({ onQuickPrompt, isPreview, onIsPreviewChange, onEditorChange }, ref) {
   const [showMenu, setShowMenu] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -82,6 +84,13 @@ const EditorPane = ({ onQuickPrompt, isPreview, onIsPreviewChange }: Props) => {
   const { status: saveStatus, lastSavedAt, flushNow } = useDraftPersistence({ editor, draftId })
   const { flash: flashInsertedRange } = useWriterInsertFlash({ editor })
   useWriterSelectionApplyEffect({ editor, onApplied: flashInsertedRange })
+
+
+  useImperativeHandle(ref, () => ({ editor, flushNow }), [editor, flushNow])
+
+  useEffect(() => {
+    onEditorChange?.({ editor, flushNow })
+  }, [editor, flushNow, onEditorChange])
 
   useEffect(() => {
     editor?.setEditable(!isPreview)
@@ -246,6 +255,8 @@ const EditorPane = ({ onQuickPrompt, isPreview, onIsPreviewChange }: Props) => {
       <WriterSearchModal open={showSearch} onClose={() => setShowSearch(false)} editor={editor} />
     </Card>
   )
-}
+
+  }
+)
 
 export default EditorPane
