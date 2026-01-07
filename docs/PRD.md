@@ -4,11 +4,11 @@
 
 ## 1. Vision & Principles
 - Local-first, privacy-friendly workspace bridging Reading (input) and Writing (output) with AI.
-- Platforms: Desktop-first (Windows/macOS) on Tauri v2; touch-friendly/mobile-ready (375px baseline) to keep future iOS/Android viable.
+- Platforms: Desktop-first (Windows/macOS) on Tauri v2; phone-first mobile scope (375px baseline) to keep future iOS/Android viable; tablet view deferred.
 - Discipline: logic before pixels; strict typing (no `any`); Zod for external data; files <250 lines, functions <30 lines, max 3 nesting levels.
 
 ## 2. Scope & Priority
-- **Alpha (must ship):** Settings save/test; library import with persistence; open PDFs; last-read restore; floating menu actions (summarize/explain/chat); buffered chat with retry + latency/tokens; highlight save + overlay; drafts/chats persisted; theme selection (light + presets); mobile tabs + desktop split; basic error boundaries; library path hygiene.
+- **Alpha (must ship):** Settings save/test; library import with persistence; open PDFs; last-read restore; floating menu actions (summarize/explain/chat); buffered chat with retry + latency/tokens; highlight save + overlay; drafts/chats persisted; theme selection (light + presets); desktop split; **phone UI: Writer-first with Reader/Library disabled + chat overlay + compact Settings entry**; basic error boundaries; library path hygiene.
 - **Alpha-can-slip (P1 targets):** RAG “Ask the book” (global search) — not a blocker; highlight-to-note sidebar; gestures; advanced editor insertions; streaming chat; Flomo; OCR.
 - **Backlog (P2+):** Streaming, OCR, Flomo export, advanced block commands, EPUB, theme polish beyond presets, desktop keyboard gesture equivalents if desired, highlight UI polish (floating menu spacing/visibility/touch targets).
 
@@ -55,8 +55,11 @@
 - **PRD-SHELL-LAYOUT-002 (P1): Bottom PDF toolbar**
   - Common PDF actions (page jump, find, zoom, fit modes) are available in a compact bottom toolbar (desktop), always visible.
   - Sidebar focuses on structure/navigation (TOC/bookmarks/highlights) rather than duplicating page tools.
-- **PRD-SHELL-LAYOUT-003 (P1): Mobile unaffected**
-  - Mobile keeps the tab-based layout; desktop-only layout density changes must not break mobile behavior.
+- **PRD-SHELL-LAYOUT-003 (P1): Phone scope (Writer-first)**
+  - Phone keeps the tab-based layout shell but **Reader/Library tabs are disabled** with a clear hint (not removed).
+  - Phone chat is accessed via a compact action button that opens an overlay/drawer (not a full tab).
+  - Phone Settings panel is **not** the large panel; use a compact top-right icon entry.
+  - Desktop-only layout density changes must not break phone behavior.
 
 ### Reader Core (P0)
 
@@ -193,7 +196,7 @@
 See `docs/writer-srs.md` for testable details and acceptance criteria.
 
 ### Gestures & Theme (P1)
-- Mobile gestures: swipe left delete in Library; swipe right back in Reader (low priority). Desktop equivalents may be keyboard shortcuts later; otherwise mobile-only.
+- Mobile gestures: swipe left delete in Library; swipe right back in Reader (low priority). Desktop equivalents may be keyboard shortcuts later; otherwise mobile-only. (Phone Reader is disabled for now; keep gestures scoped for future enablement.)
 - Theme persisted in settings; default light; presets `light|ocean|forest|sand`. Respect OS preference only on first run if unset; user override sticks.
 
 ### Extraction & Indexing (P1)
@@ -218,7 +221,7 @@ See `docs/writer-srs.md` for testable details and acceptance criteria.
 - System prompt defines assistant role/safety. Selection-based: `Explain this text: "<quote>"`. Global query: plain question. When RAG active, append cited chunks with `[p{page}]` tags and require citations; if none, state lack of context.
 
 ## 7. Testing Plan
-- **Manual P0 smoke (run by you):** first-run settings save/test; import PDF; reopen restores last page; select text → floating menu actions; chat success + retry; highlight save + overlay on reopen; theme persists; mobile tabs at 375px render correctly.
+- **Manual P0 smoke (run by you):** first-run settings save/test; import PDF; reopen restores last page; select text → floating menu actions; chat success + retry; highlight save + overlay on reopen; theme persists; **phone UI at 375px: Writer usable, Reader/Library disabled with hint, Settings icon present, chat overlay opens.**
 - **Automated (dev-owned):** unit for stores (settings/library/reader/chat/drafts/highlights), apiClient fetch behaviors (mocked), selection → normalized rect helpers, Rust command tests for import/copy. Mock Tauri plugins; no real file/network in unit tests.
 
 ## 8. Performance Targets
@@ -235,7 +238,8 @@ See `docs/writer-srs.md` for testable details and acceptance criteria.
 - Settings persist; connectivity test passes with valid key.
 - Import persists book; reopen shows last position and highlights overlaid.
 - Chat buffered with retry and metrics; floating menu actions round-trip successfully.
-- Theme and layout adapt between desktop split and mobile tabs without UI breakage.
+- Theme and layout adapt between desktop split and phone layout without UI breakage.
+- Phone scope: Writer is usable; Reader/Library are disabled with a clear hint; Settings icon and chat overlay are discoverable.
 
 ## Current Progress (Brief)
 - Desktop: imports persist to app data with hash/mtime/size and render in Reader; last_read_position (page + scroll) saves/restores.

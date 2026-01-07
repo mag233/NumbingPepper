@@ -3,6 +3,7 @@
 ## Status
 - Phase: Deferred (implement after Reader completion: `docs/TASKS.md` Task 29).
 - Reason: Writer needs a cohesive workflow spec and stable data model before building UI.
+- Phone scope note: Writer remains available on phone; Reader/Library are disabled; chat is opened via an overlay action; Settings uses a compact icon entry.
 
 ## Core UX Model (agreed)
 Writer is organized around a Writing Project, with a workspace split into:

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Docs: update phone scope (Writer-first, Reader/Library disabled with hint, chat overlay trigger, compact Settings entry; tablet deferred).
 - Reader: add bookmark creation, list, edit title, and removal (per book).
 - Reader: preserve position when switching Paged/Continuous; TOC jumps no longer force mode switches.
 - Reader: paged navigation supports arrow keys and wheel-to-next/prev at edges; continuous prev/next controls now scroll to anchors.

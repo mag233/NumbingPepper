@@ -170,7 +170,7 @@
 | 36-QA-003 | Nav toggle icon placement | Desktop: locate nav toggle icon (no text “Hide navigation” button); toggle on/off | Toggle works; control is discoverable; no duplicate toggle | Pass | Verified by user. |
 | 36-QA-004 | Mobile unaffected | Narrow to mobile width | No resizer handle; no layout break | Pass | Verified by user. |
 
-## 2026-01-01 — Global Layout toggle (Task 37)
+## 2026-01-01 – Global Layout toggle (Task 37)
 
 | ID | Scenario | Steps | Expected | Result | Notes |
 | -- | -------- | ----- | -------- | ------ | ----- |
@@ -180,6 +180,14 @@
 | 37-QA-004 | Mobile unaffected | Narrow to mobile width | No Layout controls; no splitters; layout unchanged | Deferred | Mobile optimization postponed; verify later. |
 | 37-QA-005 | Reader density presets (Reader-only) | Desktop: Reader view → Layout (Adjust) → toggle Comfortable/Compact → refresh/restart; then switch to Writer and confirm unchanged | Reader spacing tightens/loosens; persists; Writer not affected | Pass | Verified by user. |
 | 37-QA-006 | Divider clarity + consistent gutters | Desktop: exit Layout mode (Done) → hover dividers; enter Layout mode (Layout) and compare sidebar divider vs Reader↔Chat divider gutters | Locked mode divider never looks draggable; Adjust mode split gutters match width/visuals | Pass | Verified by user. |
+
+## 2026-01-05 – Phone scope (Task 42)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 42-QA-001 | Reader/Library disabled on phone | Set viewport to phone width (~375px); open nav tabs; try Reader and Library | Reader/Library tabs are disabled with a clear hint; Writer remains accessible | Pending | Phone scope update. |
+| 42-QA-002 | Phone Settings entry | On phone width, locate Settings entry (icon in header) | Settings panel is not the large panel; compact icon opens Settings access | Pending | Use theme primary color for icon. |
+| 42-QA-003 | Phone chat overlay | On phone width, tap the Chat action button | Chat opens as an overlay/drawer (not a dedicated tab) and is dismissible | Pending | Keep Writer usable behind or after close. |
 
 ## 2026-01-02 — Flomo export core (Task 23)
 

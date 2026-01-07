@@ -1,7 +1,7 @@
 # Project Tasks / Plan / Progress
 
 ## Current Focus
-- Deliver Alpha must-haves per PRD: settings save/test; persistent library import; open PDFs with last-read restore; floating menu actions; buffered chat with retry/metrics; highlight persistence/overlay; drafts/chats persisted; theme presets; mobile tabs + desktop split; error boundaries.
+- Deliver Alpha must-haves per PRD: settings save/test; persistent library import; open PDFs with last-read restore; floating menu actions; buffered chat with retry/metrics; highlight persistence/overlay; drafts/chats persisted; theme presets; desktop split; phone UI (Writer-first, Reader/Library disabled, chat overlay, compact Settings); error boundaries.
 
 ## Task Board (numbered; status / priority / risk)
 | #  | Status      | Priority | Task                                                                                                         | Risk / Notes |
@@ -47,6 +47,7 @@
 | 39 | Done        | P2       | Writer: flash-highlight newly inserted text (suggestion apply) | Low - purely visual; must be theme-aware and non-persistent. |
 | 40 | In Progress | P1       | Writer: global search across Content/Context/References/Chat/Studio (modal + jump) | Medium - needs UX validation; keep mobile safe. |
 | 41 | Backlog     | P2       | Writer: search UX enhancements (inline highlight + next/prev, keyboard shortcuts, scope toggle) | Low - polish; define scope for cross-project search. |
+| 42 | Todo        | P1       | Phone scope adjustments | Disable Reader/Library tabs on phone with a clear hint; replace mobile Settings panel with compact icon; provide a chat overlay trigger instead of a full chat tab | Medium - impacts mobile navigation expectations. |
 
 ## Progress Notes
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
