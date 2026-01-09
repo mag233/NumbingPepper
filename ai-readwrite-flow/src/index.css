@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes search-highlight-flash {
+  0% { background-color: rgb(59 130 246 / 0.3); }
+  100% { background-color: transparent; }
+}
+.search-highlight-flash {
+  animation: search-highlight-flash 2.5s ease-out;
+}
+
 :root {
   --surface-base: 11 18 33;
   --surface-raised: 17 24 42;

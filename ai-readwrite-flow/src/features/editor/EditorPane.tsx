@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Sparkles } from 'lucide-react'
@@ -27,12 +27,16 @@ import WriterSearchModal from './components/WriterSearchModal'
 
 type Props = {
   onQuickPrompt: (prompt: { text: string; autoSend: boolean; meta?: unknown }) => void
+  isPreview: boolean
+  onIsPreviewChange: (isPreview: boolean) => void
+  onEditorChange?: (state: { editor: Editor | null; flushNow: () => Promise<boolean> }) => void
 }
 
-const EditorPane = ({ onQuickPrompt }: Props) => {
+const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
+  function EditorPane({ onQuickPrompt, isPreview, onIsPreviewChange, onEditorChange }, ref) {
   const [showMenu, setShowMenu] = useState(false)
-  const [isPreview, setIsPreview] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const previewRef = useRef<HTMLDivElement>(null)
   const { hydrate, activeProjectId } = useWriterProjectStore()
   const projects = useWriterProjectStore((s) => s.projects)
   const setProjectTags = useWriterProjectStore((s) => s.setProjectTags)
@@ -81,6 +85,13 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
   const { flash: flashInsertedRange } = useWriterInsertFlash({ editor })
   useWriterSelectionApplyEffect({ editor, onApplied: flashInsertedRange })
 
+
+  useImperativeHandle(ref, () => ({ editor, flushNow }), [editor, flushNow])
+
+  useEffect(() => {
+    onEditorChange?.({ editor, flushNow })
+  }, [editor, flushNow, onEditorChange])
+
   useEffect(() => {
     editor?.setEditable(!isPreview)
   }, [editor, isPreview])
@@ -92,13 +103,48 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
     consumeInsert()
   }, [consumeInsert, editor, pendingInsert])
 
+  const scrollPreviewToHeading = useCallback(
+    (req: { needle: string; title: string }) => {
+      const host = previewRef.current
+      if (!host) return false
+      const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase()
+      const candidates = [req.title, req.needle, req.title.replace(/^#+\s*/, ''), req.needle.replace(/^#+\s*/, '')]
+        .map((value) => normalize(value || ''))
+        .filter(Boolean)
+      if (!candidates.length) return false
+      const headings = host.querySelectorAll<HTMLHeadingElement>('h1, h2, h3, h4, h5, h6')
+      for (const heading of headings) {
+        const text = normalize(heading.textContent ?? '')
+        if (!text) continue
+        if (candidates.includes(text)) {
+          heading.scrollIntoView({ block: 'center', behavior: 'smooth' })
+          heading.classList.add('search-highlight-flash')
+          if (typeof window !== 'undefined') {
+            window.setTimeout(() => heading.classList.remove('search-highlight-flash'), 2500)
+          }
+          return true
+        }
+      }
+      return false
+    },
+    [],
+  )
+
   useEffect(() => {
-    if (!editor) return
     if (!pendingScroll) return
     const req = consumeScrollRequest()
     if (!req) return
-    scrollEditorToNeedle(editor, req)
-  }, [consumeScrollRequest, editor, pendingScroll])
+    if (isPreview) {
+      const handled = scrollPreviewToHeading(req)
+      if (!handled && editor) {
+        scrollEditorToNeedle(editor, req)
+      }
+      return
+    }
+    if (editor) {
+      scrollEditorToNeedle(editor, req)
+    }
+  }, [consumeScrollRequest, editor, isPreview, pendingScroll, scrollPreviewToHeading])
 
   useEffect(() => {
     if (!editor) return
@@ -158,7 +204,7 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
           lastSavedAt={lastSavedAt ?? null}
           isPreview={isPreview}
           onSave={() => void flushNow()}
-          onTogglePreview={() => setIsPreview((value) => !value)}
+          onTogglePreview={() => onIsPreviewChange(!isPreview)}
           onOpenSearch={() => setShowSearch(true)}
         />
       }
@@ -167,7 +213,9 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
       <div className="relative flex min-h-0 flex-1 flex-col rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3">
         <div className="min-h-0 flex-1 overflow-auto pr-1">
           {isPreview ? (
-            <WriterMarkdownPreview source={previewSource} />
+            <div ref={previewRef} className="h-full">
+              <WriterMarkdownPreview source={previewSource} />
+            </div>
           ) : (
             <>
               {editor && (
@@ -207,6 +255,8 @@ const EditorPane = ({ onQuickPrompt }: Props) => {
       <WriterSearchModal open={showSearch} onClose={() => setShowSearch(false)} editor={editor} />
     </Card>
   )
-}
+
+  }
+)
 
 export default EditorPane

@@ -91,3 +91,13 @@ export const writingArtifactSchema = z.object({
   updatedAt: z.number().int().nonnegative(),
 })
 export type WritingArtifact = z.infer<typeof writingArtifactSchema>
+
+export const writingSnapshotSchema = z.object({
+  id: z.string().min(1),
+  projectId: z.string().min(1),
+  title: z.string().min(1),
+  note: z.string().optional(),
+  contentMarkdown: z.string(),
+  createdAt: z.number().int().nonnegative(),
+})
+export type WritingSnapshot = z.infer<typeof writingSnapshotSchema>

@@ -1,7 +1,12 @@
-import { Plus } from 'lucide-react'
+import { Plus, HistoryIcon, Camera } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import useWriterProjectStore from '../stores/writerProjectStore'
 import WriterProjectPickerMenu from './WriterProjectPickerMenu'
+
+type OnSnapshot = {
+  onSaveSnapshot: () => void
+  onShowHistory: () => void
+}
 
 const btn =
   'inline-flex items-center justify-center rounded-lg border border-chrome-border/70 bg-surface-raised/70 px-2 py-1 text-xs text-ink-primary hover:border-accent'
@@ -9,11 +14,12 @@ const btn =
 type Props = {
   className?: string
   variant?: 'toolbar' | 'sidebar'
+  onSnapshotActions?: OnSnapshot
 }
 
 type OpenMode = 'default' | 'create'
 
-const WriterProjectPicker = ({ className, variant = 'toolbar' }: Props) => {
+const WriterProjectPicker = ({ className, variant = 'toolbar', onSnapshotActions }: Props) => {
   const projects = useWriterProjectStore((s) => s.projects)
   const activeProjectId = useWriterProjectStore((s) => s.activeProjectId)
 
@@ -86,6 +92,26 @@ const WriterProjectPicker = ({ className, variant = 'toolbar' }: Props) => {
           >
             <Plus className="size-4" />
           </button>
+          {onSnapshotActions && (
+            <>
+              <button
+                className={`${btn} border-accent/60 text-ink-primary hover:border-accent`}
+                onClick={onSnapshotActions.onSaveSnapshot}
+                aria-label="Save snapshot"
+                title="Save snapshot"
+              >
+                <Camera className="size-4" />
+              </button>
+              <button
+                className={btn}
+                onClick={onSnapshotActions.onShowHistory}
+                aria-label="Snapshot history"
+                title="Snapshot history"
+              >
+                <HistoryIcon className="size-4" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 

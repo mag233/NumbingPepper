@@ -27,6 +27,8 @@ type Props = {
   onSetQuickPrompt: (prompt: QuickPrompt) => void
   writerChatCollapsed: boolean
   onWriterChatCollapsedChange: (collapsed: boolean) => void
+  writerIsPreview: boolean
+  onWriterIsPreviewChange: (isPreview: boolean) => void
   readerSidebarWidthPx: number
   onReaderSidebarWidthPxChange: (nextPx: number) => void
   writerSidebarWidthPx: number
@@ -46,6 +48,8 @@ const DesktopWorkspace = ({
   onSetQuickPrompt,
   writerChatCollapsed,
   onWriterChatCollapsedChange,
+  writerIsPreview,
+  onWriterIsPreviewChange,
   readerSidebarWidthPx,
   onReaderSidebarWidthPxChange,
   writerSidebarWidthPx,
@@ -188,6 +192,8 @@ const DesktopWorkspace = ({
             onChatCollapsedChange={onWriterChatCollapsedChange}
             sidebarWidthPx={writerSidebarWidthPx}
             onSidebarWidthPxChange={(nextPx) => onWriterSidebarWidthPxChange(clamp(nextPx, sidebarMinPx, sidebarMaxPx))}
+            isPreview={writerIsPreview}
+            onIsPreviewChange={onWriterIsPreviewChange}
           />
         )}
       </div>

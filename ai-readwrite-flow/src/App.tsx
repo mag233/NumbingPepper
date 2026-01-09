@@ -42,6 +42,7 @@ const App = () => {
   const [showNav, setShowNav] = useState(true)
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
   const [writerChatCollapsed, setWriterChatCollapsed] = useState(false)
+  const [writerIsPreview, setWriterIsPreview] = useState(false)
   const readerSidebarWidthPx = useShellLayoutStore((s) => s.readerSidebarWidthPx)
   const writerSidebarWidthPx = useShellLayoutStore((s) => s.writerSidebarWidthPx)
   const readerMainSplitRatio = useShellLayoutStore((s) => s.readerMainSplitRatio)
@@ -180,7 +181,14 @@ const App = () => {
                   <ReaderPane onAction={handleReaderAction} />
                 </PanelErrorBoundary>
               )}
-              {activeTab === 'editor' && <EditorPane onQuickPrompt={setQuickPrompt} />}
+              {activeTab === 'editor' && (
+                <EditorPane
+                  onQuickPrompt={setQuickPrompt}
+                  isPreview={false}
+                  onIsPreviewChange={() => {}}
+                  onEditorChange={() => {}}
+                />
+              )}
               {activeTab === 'chat' && (
                 <PanelErrorBoundary title="Chat">
                   <ChatSidebar quickPrompt={quickPrompt} onConsumeQuickPrompt={consumeQuickPrompt} />
@@ -200,6 +208,8 @@ const App = () => {
             onSetQuickPrompt={(prompt) => setQuickPrompt(prompt)}
             writerChatCollapsed={writerChatCollapsed}
             onWriterChatCollapsedChange={setWriterChatCollapsed}
+            writerIsPreview={writerIsPreview}
+            onWriterIsPreviewChange={setWriterIsPreview}
             readerSidebarWidthPx={readerSidebarWidthPx}
             onReaderSidebarWidthPxChange={setReaderSidebarWidthPx}
             writerSidebarWidthPx={writerSidebarWidthPx}

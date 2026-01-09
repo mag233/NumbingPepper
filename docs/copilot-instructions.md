@@ -64,9 +64,14 @@ Senior Full Stack Systems Engineer specializing in Tauri v2 (Rust), React (TypeS
 ### Documentation hygiene
 - After meaningful changes, update:
   - `docs/TASKS.md` (status/priority/risk)
-  - `docs/CHANGELOG.md` (what changed)
+  - `docs/CHANGELOG.md` (what changed **with date in YYYY-MM-DD format**)
   - `docs/PRD.md` and relevant SRS files if requirements changed
-  - `docs/QA.md` (manual test steps + outcomes for changed flows)
+  - `docs/QA.md` (manual test steps + outcomes for changed flows **with test date**)
+- **All changes must include dates** (YYYY-MM-DD format) for progress tracking:
+  - CHANGELOG entries must show completion date
+  - QA test results must show execution date
+  - TASKS status changes should reference completion date in notes
+  - Milestone documents must include dated feature completion records
 - Always provide QA navigation steps (where to go and what to test) in the final response after coding.
 
 ### Shortcut actions (Reader/Writer)

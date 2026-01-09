@@ -6,6 +6,7 @@ import useWriterLayoutStore from '../../../stores/writerLayoutStore'
 import useShellLayoutModeStore from '../../../stores/shellLayoutModeStore'
 import WriterSidebar from '../WriterSidebar'
 import EditorPane from '../EditorPane'
+import type { Editor } from '@tiptap/react'
 import WriterChatSidebar from '../WriterChatSidebar'
 import WriterStudioPanel from './WriterStudioPanel'
 import WriterContextCard from './WriterContextCard'
@@ -21,6 +22,8 @@ type Props = {
   onChatCollapsedChange: (collapsed: boolean) => void
   sidebarWidthPx: number
   onSidebarWidthPxChange: (nextPx: number) => void
+  isPreview?: boolean
+  onIsPreviewChange?: (isPreview: boolean) => void
 }
 
 const MIN_EDITOR_PX = 520
@@ -35,6 +38,8 @@ const WriterDesktopLayout = ({
   onChatCollapsedChange,
   sidebarWidthPx,
   onSidebarWidthPxChange,
+  isPreview,
+  onIsPreviewChange,
 }: Props) => {
   const splitRatio = useWriterLayoutStore((s) => s.splitRatio)
   const setSplitRatio = useWriterLayoutStore((s) => s.setSplitRatio)
@@ -42,6 +47,10 @@ const WriterDesktopLayout = ({
   const layoutAdjusting = useShellLayoutModeStore((s) => s.adjusting)
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const [editorState, setEditorState] = useState<{ editor: Editor | null; flushNow: () => Promise<boolean> }>(() => ({
+    editor: null,
+    flushNow: async () => false,
+  }))
   const [dragging, setDragging] = useState(false)
 
   const gapClass = density === 'compact' ? 'gap-[var(--app-gap,0.75rem)]' : 'gap-[var(--app-gap,1rem)]'
@@ -103,7 +112,11 @@ const WriterDesktopLayout = ({
       {showNav && (
         <>
           <div className="min-h-0 shrink-0" style={{ width: sidebarWidthPx }}>
-            <WriterSidebar />
+            <WriterSidebar
+              isPreview={isPreview}
+              editor={editorState.editor ?? undefined}
+              flushNow={editorState.flushNow}
+            />
           </div>
           {!layoutAdjusting ? (
             <VerticalDivider label="Sidebar divider" />
@@ -122,7 +135,12 @@ const WriterDesktopLayout = ({
         <div style={chatCollapsed ? undefined : editorFlex} className="min-h-0 min-w-[520px] flex-1">
           <div className={`flex h-full min-h-0 flex-col ${gapClass}`}>
             <div className="min-h-0 flex-[65_1_0%]">
-              <EditorPane onQuickPrompt={onSetQuickPrompt} />
+              <EditorPane
+                onQuickPrompt={onSetQuickPrompt}
+                isPreview={isPreview ?? false}
+                onIsPreviewChange={onIsPreviewChange ?? (() => {})}
+                onEditorChange={setEditorState}
+              />
             </div>
             <div className="min-h-0 flex-[35_1_0%]">
               <WriterContextCard />
