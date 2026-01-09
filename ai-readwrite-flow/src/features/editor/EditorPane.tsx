@@ -54,7 +54,9 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
   useEffect(() => {
     void hydrateReferences(activeProjectId)
   }, [activeProjectId, hydrateReferences])
-  const draftId = useMemo(() => draftIdForProject(activeProjectId), [activeProjectId])
+  const activeProject = useMemo(() => projects.find((p) => p.id === activeProjectId) ?? null, [activeProjectId, projects])
+  const effectiveProjectId = activeProject?.id ?? null
+  const draftId = useMemo(() => draftIdForProject(effectiveProjectId), [effectiveProjectId])
   const editor = useEditor(
     {
       extensions: [
@@ -81,7 +83,7 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
     [draftId],
   )
 
-  const { status: saveStatus, lastSavedAt, flushNow } = useDraftPersistence({ editor, draftId })
+  const { status: saveStatus, lastSavedAt, flushNow, justSaved } = useDraftPersistence({ editor, draftId })
   const { flash: flashInsertedRange } = useWriterInsertFlash({ editor })
   useWriterSelectionApplyEffect({ editor, onApplied: flashInsertedRange })
 
@@ -180,10 +182,7 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
 
   const previewSource = isPreview && editor ? tipTapDocToMarkdownSource(editor.getJSON()) : ''
 
-  const activeTitle = useMemo(() => {
-    const active = projects.find((p) => p.id === activeProjectId)
-    return active?.title ?? 'No project'
-  }, [activeProjectId, projects])
+  const activeTitle = activeProject?.title ?? 'No project'
 
   const saveLabel = useMemo(() => {
     if (saveStatus === 'saving') return 'Saving...'
@@ -202,6 +201,7 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
           saveLabel={saveLabel}
           saveStatus={saveStatus}
           lastSavedAt={lastSavedAt ?? null}
+          justSaved={justSaved}
           isPreview={isPreview}
           onSave={() => void flushNow()}
           onTogglePreview={() => onIsPreviewChange(!isPreview)}

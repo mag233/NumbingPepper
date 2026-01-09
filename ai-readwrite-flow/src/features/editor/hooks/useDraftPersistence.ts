@@ -16,6 +16,7 @@ type Result = {
   status: DraftSaveStatus
   lastSavedAt: number | null
   flushNow: () => Promise<boolean>
+  justSaved: boolean
 }
 
 const DEBOUNCE_MS = 500
@@ -50,7 +51,8 @@ const projectIdFromDraftId = (draftId: string): string | null => {
   const trimmed = draftId.trim()
   if (!trimmed.startsWith('project:')) return null
   const projectId = trimmed.slice('project:'.length)
-  return projectId.length ? projectId : null
+  if (!projectId.length || projectId === 'global') return null
+  return projectId
 }
 
 export const useDraftPersistence = ({ editor, draftId }: Args) => {
@@ -61,6 +63,15 @@ export const useDraftPersistence = ({ editor, draftId }: Args) => {
   const isHydratingRef = useRef(false)
   const [status, setStatus] = useState<DraftSaveStatus>('idle')
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
+  const [justSaved, setJustSaved] = useState(false)
+  const justSavedTimerRef = useRef<number | null>(null)
+
+  const clearJustSaved = () => {
+    if (justSavedTimerRef.current !== null) {
+      window.clearTimeout(justSavedTimerRef.current)
+      justSavedTimerRef.current = null
+    }
+  }
 
   const projectId = useMemo(() => projectIdFromDraftId(draftId), [draftId])
 
@@ -76,14 +87,18 @@ export const useDraftPersistence = ({ editor, draftId }: Args) => {
 
       const editorDoc = contentText && !hasAnyTextNode(rawDoc) ? markdownSourceToTipTapDoc(contentText) : rawDoc
 
-      const results: boolean[] = []
-      results.push(await saveDraft({ id: draftId, editorDoc, updatedAt }))
-      if (projectId) results.push(await upsertWritingContent(projectId, contentText, updatedAt))
+      const draftOk = await saveDraft({ id: draftId, editorDoc, updatedAt })
+      let contentOk = true
+      if (projectId) contentOk = await upsertWritingContent(projectId, contentText, updatedAt)
 
-      const ok = results.every(Boolean)
-      setStatus(ok ? 'saved' : 'error')
-      if (ok) setLastSavedAt(updatedAt)
-      return ok
+      setStatus(draftOk ? 'saved' : 'error')
+      if (draftOk) setLastSavedAt(updatedAt)
+      if (draftOk) {
+        setJustSaved(true)
+        clearJustSaved()
+        justSavedTimerRef.current = window.setTimeout(() => setJustSaved(false), 1500)
+      }
+      return draftOk && contentOk
     },
     [draftId, projectId],
   )
@@ -202,5 +217,11 @@ export const useDraftPersistence = ({ editor, draftId }: Args) => {
     return performSave(updatedAt, lastSnapshotRef.current ?? snapshotFromEditor(editor))
   }, [draftId, editor, performSave])
 
-  return { status, lastSavedAt, flushNow } satisfies Result
+  useEffect(() => {
+    return () => {
+      clearJustSaved()
+    }
+  }, [])
+
+  return { status, lastSavedAt, flushNow, justSaved } satisfies Result
 }
