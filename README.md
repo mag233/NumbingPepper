@@ -16,20 +16,18 @@ Local-first workspace for reading PDFs and turning highlights into writing with 
 ![Writer workspace](docs/screenshots/writer.png)
 ![Highlights and chat](docs/screenshots/highlights-chat.png)
 
-Screenshots live in `docs/screenshots/`. Replace the files above with your own.
-
-## Requirements
+## Getting Started
+Requirements:
 - Node.js 20+
-- Rust toolchain (stable, via rustup)
-- Tauri CLI (`cargo install tauri-cli` or use `npm run tauri:dev`)
+- Rust toolchain (for Tauri desktop builds)
 
-## Install
+Install dependencies:
 ```bash
 cd ai-readwrite-flow
 npm install
 ```
 
-## Run (Dev)
+Run the web app:
 ```bash
 npm run dev
 ```
@@ -37,16 +35,6 @@ npm run dev
 Run the desktop app:
 ```bash
 npm run tauri:dev
-```
-
-## Build
-```bash
-npm run build
-```
-
-Build desktop installers:
-```bash
-npm run tauri:build
 ```
 
 ## Configuration
@@ -59,30 +47,8 @@ copy .env.example .env
 Notes:
 - `OPENAI_API_KEY` is required for AI features.
 - `VITE_` variables are embedded in client bundles; avoid putting secrets there for web builds.
-- Default API base is an example; configure your own endpoint.
-
-## Privacy
-Data is stored locally (SQLite, localStorage). The app does not upload your content by default.
-External calls only happen when you configure API keys for AI or Flomo.
 
 ## Docs
 - Product and specs: `docs/PRD.md`, `docs/SRS.md`, `docs/writer-srs.md`
 - QA and tasks: `docs/QA.md`, `docs/TASKS.md`, `docs/Backlogs.md`
 - Maintenance: `docs/MAINTENANCE.md`
-- Contributing: `CONTRIBUTING.md`
-- Security: `SECURITY.md`
-- Privacy: `docs/PRIVACY.md`
-- Support: `docs/SUPPORT.md`
-- Third-party licenses: `docs/THIRD_PARTY_LICENSES.md`
-- Open source checklist: `docs/OPEN_SOURCE_CHECKLIST.md`
-
-## Contributing
-See `CONTRIBUTING.md` for the workflow, branch naming, and test commands.
-
-## Release
-- Bump version and update `docs/CHANGELOG.md`.
-- Tag the release and attach installers plus SHA256 checksums.
-- Use GitHub Releases for notes.
-
-## License
-MIT
