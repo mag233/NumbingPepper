@@ -51,7 +51,8 @@ const projectIdFromDraftId = (draftId: string): string | null => {
   const trimmed = draftId.trim()
   if (!trimmed.startsWith('project:')) return null
   const projectId = trimmed.slice('project:'.length)
-  return projectId.length ? projectId : null
+  if (!projectId.length || projectId === 'global') return null
+  return projectId
 }
 
 export const useDraftPersistence = ({ editor, draftId }: Args) => {
