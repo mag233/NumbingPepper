@@ -38,7 +38,7 @@ const WriterSidebar = ({ isPreview, editor, flushNow }: Props) => {
   const handleSaveSnapshot = async (title: string, note?: string) => {
     if (!editor) return
     const contentMarkdown = tipTapDocToMarkdownSource(editor.getJSON())
-    await createSnapshot(activeProjectId, contentMarkdown, title, note)
+    await createSnapshot(activeProjectId ?? '', contentMarkdown, title, note)
     setShowSaveDialog(false)
   }
 

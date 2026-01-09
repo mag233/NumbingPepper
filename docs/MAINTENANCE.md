@@ -35,13 +35,14 @@ Goal: avoid `src-tauri/target` growing indefinitely on a dev machine.
 
 1) Pick a schedule (example: weekly at 3:00 AM).
 2) Create a task:
-- Open **Task Scheduler** → **Create Task…**
-- **Triggers**: Weekly
-- **Actions** → **Start a program**
+- Open Task Scheduler and create a task.
+- Triggers: Weekly
+- Actions: Start a program
   - Program/script: `powershell.exe`
   - Arguments:
-    - `-NoProfile -ExecutionPolicy Bypass -File "D:\Projects\NumbingPepper\ai-readwrite-flow\scripts\cleanup-dev.ps1"`
+    - `-NoProfile -ExecutionPolicy Bypass -File "<repo-root>\ai-readwrite-flow\scripts\cleanup-dev.ps1"`
   - Start in:
-    - `D:\Projects\NumbingPepper\ai-readwrite-flow`
+    - `<repo-root>\ai-readwrite-flow`
 
 Tip: only enable `clean:all` if you explicitly want to delete `node_modules`.
+

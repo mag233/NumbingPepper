@@ -52,12 +52,12 @@ export const writerSnapshotsRepo = {
       const { invoke } = await import('@tauri-apps/api/core')
       await invoke('plugin:sqlite|insert_writing_snapshot', {
         id: snapshot.id,
-        projectId: snapshot.projectId,
+        project_id: snapshot.projectId,
         title: snapshot.title,
         note: snapshot.note ?? null,
-        contentMarkdown: snapshot.contentMarkdown,
-        createdAt: snapshot.createdAt,
-        snapshotJson: JSON.stringify(snapshot),
+        content_markdown: snapshot.contentMarkdown,
+        created_at: snapshot.createdAt,
+        snapshot_json: JSON.stringify(snapshot),
       })
     } catch {
       // Silently fail and rely on localStorage fallback

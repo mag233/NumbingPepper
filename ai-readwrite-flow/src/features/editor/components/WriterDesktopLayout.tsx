@@ -22,6 +22,8 @@ type Props = {
   onChatCollapsedChange: (collapsed: boolean) => void
   sidebarWidthPx: number
   onSidebarWidthPxChange: (nextPx: number) => void
+  isPreview?: boolean
+  onIsPreviewChange?: (isPreview: boolean) => void
 }
 
 const MIN_EDITOR_PX = 520
@@ -135,8 +137,8 @@ const WriterDesktopLayout = ({
             <div className="min-h-0 flex-[65_1_0%]">
               <EditorPane
                 onQuickPrompt={onSetQuickPrompt}
-                isPreview={isPreview}
-                onIsPreviewChange={onIsPreviewChange}
+                isPreview={isPreview ?? false}
+                onIsPreviewChange={onIsPreviewChange ?? (() => {})}
                 onEditorChange={setEditorState}
               />
             </div>

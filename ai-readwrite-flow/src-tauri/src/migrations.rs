@@ -227,5 +227,21 @@ pub fn migrations() -> Vec<Migration> {
       ",
       kind: MigrationKind::Up,
     },
+    Migration {
+      version: 17,
+      description: "create writing_snapshots table",
+      sql: "
+        CREATE TABLE IF NOT EXISTS writing_snapshots (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          note TEXT,
+          content_markdown TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          snapshot_json TEXT NOT NULL
+        );
+      ",
+      kind: MigrationKind::Up,
+    },
   ]
 }
