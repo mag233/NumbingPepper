@@ -162,6 +162,15 @@
 | 35-QA-009 | Artifacts list density | Generate several artifacts; observe list; expand/collapse Preview for one item | Each artifact is a compact single-line item; Preview expands per item without dominating layout | Pass |  |
 | 35-QA-010 | Hide chat reclaims space | Click `Hide` in Writer AI; observe editor width; find and click the show handle | Hide removes the chat column entirely and editor expands immediately; show handle is discoverable and restores chat | Pass |  |
 
+## 2026-01-09 — Phone scope (Task 42)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 42-QA-001 | Mobile compact settings entry | Set viewport to ~375px → open header gear icon → open/close Settings drawer | Gear icon visible on mobile; opens SettingsDrawer; closes via X/backdrop; settings editable | Pass | Implemented in App header; SettingsPanel no longer auto-renders on mobile view. |
+| 42-QA-002 | Chat UI readability (mobile) | Phone width ~375px, open Chat tab with existing conversation (see attached screenshot) | Chat surface remains readable and scannable on mobile | Issue | Current layout (ChatSidebar) stacks multiple borders/rounded containers and keeps desktop padding/max-height, causing cramped, visually noisy presentation and double scrollbars. See src/features/ai/ChatSidebar.tsx: card max-height clamp and nested grid + Card styling create dense, hard-to-scan UI on small widths. Suggested fixes: provide a dedicated mobile chat layout (full-height sheet/overlay), reduce nested borders/shadows, simplify the header helper text, increase line-height and padding for bubbles, and remove the desktop max-height clamp in mobile to allow a single scroll area. |
+| 42-QA-003 | Chat overlay sheet behavior | Mobile ~375px: tap Chat button → overlay opens; scroll history; type and send; scroll to older messages then receive new message | Single scroll area (no double scroll); input anchored at bottom; auto-scroll pauses when user scrolls up; “Jump to latest” (or equivalent) appears; close returns to Writer state intact | Pending | To run after 42.3 implementation (sheet layout). |
+| 42-QA-004 | Visual density & readability | Mobile ~375px: inspect chat header/helper, bubbles, padding/line-height | Header minimal; helper text concise; bubbles have comfortable padding/line-height; no nested heavy borders/shadows; no max-height clamp | Pending | To validate redesigned mobile chat styling. |
+
 ## 2025-12-30 — Desktop sidebar resizing + nav toggle ergonomics (Task 36)
 
 | ID | Scenario | Steps | Expected | Result | Notes |

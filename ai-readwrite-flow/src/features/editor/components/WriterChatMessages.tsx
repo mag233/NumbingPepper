@@ -38,17 +38,17 @@ const WriterChatMessages = ({ messages }: Props) => {
   return (
     <div
       ref={messagesRef}
-      className="grid min-h-48 flex-1 gap-3 overflow-y-auto rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3"
+      className="grid min-h-48 flex-1 content-start gap-3 overflow-y-auto rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3"
     >
       {messages.length === 0 && <p className="text-sm text-ink-muted">No messages yet.</p>}
       {messages.map((msg) => (
         <div
           key={msg.id}
           id={`writer-chat-${msg.id}`}
-          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          className={`flex items-start ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`${bubbleBase} max-w-[85%] ${
+            className={`${bubbleBase} ${msg.role === 'user' ? 'w-full max-w-[80%]' : 'max-w-[85%]'} ${
               msg.role === 'user'
                 ? 'border border-accent/70 bg-accent/10'
                 : suggestionIds.has(msg.id)

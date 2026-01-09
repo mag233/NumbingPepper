@@ -76,6 +76,12 @@
   - Phone chat is accessed via a compact action button that opens an overlay/drawer (not a full tab).
   - Phone Settings panel is **not** the large panel; use a compact top-right icon entry.
   - Desktop-only layout density changes must not break phone behavior.
+- **PRD-SHELL-CHAT-OVERLAY-001 (P1): Mobile chat overlay**
+  - On phone width (~375px), Chat opens as a full-height (or near full-height) sheet/drawer with a single scroll area.
+  - Header is minimal: title + model/context hint + close; Clear stays secondary.
+  - Remove desktop-style nested borders/shadows/max-height clamps; favor readable padding/line-height and single scroll.
+  - Chat input sticks to the bottom, grows up to ~3 lines, respects safe area; template picker is a lightweight sheet, not persistent inline.
+  - Long messages may fold with “Show more”; auto-scroll pauses when user scrolls up, with a “Jump to latest” affordance.
 
 ### Reader Core (P0)
 

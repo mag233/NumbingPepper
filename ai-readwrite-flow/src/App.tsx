@@ -1,6 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Bot, LayoutPanelTop, Settings, Smartphone, Sparkles } from 'lucide-react'
-import SettingsPanel from './features/settings/SettingsPanel'
 import LibraryPanel from './features/library/LibraryPanel'
 import ReaderPane from './features/reader/ReaderPane'
 import EditorPane from './features/editor/EditorPane'
@@ -43,6 +42,7 @@ const App = () => {
   const [desktopView, setDesktopView] = useState<'reader' | 'writer'>('reader')
   const [writerChatCollapsed, setWriterChatCollapsed] = useState(false)
   const [writerIsPreview, setWriterIsPreview] = useState(false)
+  const [mobileChatOpen, setMobileChatOpen] = useState(false)
   const readerSidebarWidthPx = useShellLayoutStore((s) => s.readerSidebarWidthPx)
   const writerSidebarWidthPx = useShellLayoutStore((s) => s.writerSidebarWidthPx)
   const readerMainSplitRatio = useShellLayoutStore((s) => s.readerMainSplitRatio)
@@ -67,6 +67,17 @@ const App = () => {
     void hydrate()
     void hydrateLibrary()
   }, [hydrate, hydrateLibrary])
+
+  // Lock background scroll when mobile chat overlay is open
+  useEffect(() => {
+    if (!isMobile) return
+    if (!mobileChatOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isMobile, mobileChatOpen])
 
   useEffect(() => {
     document.documentElement.dataset.theme = normalizeThemePreset(themePreset)
@@ -137,26 +148,42 @@ const App = () => {
                 }}
               />
             )}
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/50 px-3 py-1 text-xs text-ink-primary hover:border-accent"
-              title="Settings"
-              aria-label="Settings"
-            >
-              <Settings className="size-4" />
-              <span className="hidden md:inline">Settings</span>
-            </button>
+            {/* Mobile: compact settings icon */}
+            {isMobile && (
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+                className="inline-flex items-center justify-center rounded-full border border-chrome-border/70 bg-surface-raised/70 p-2 text-ink-primary hover:border-accent"
+                title="Settings"
+                aria-label="Settings"
+              >
+                <Settings className="size-5 text-accent" />
+              </button>
+            )}
+            {/* Desktop: full settings button */}
+            {!isMobile && (
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 bg-surface-raised/50 px-3 py-1 text-xs text-ink-primary hover:border-accent"
+                title="Settings"
+                aria-label="Settings"
+              >
+                <Settings className="size-4" />
+                <span className="hidden md:inline">Settings</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       <main
-        className={`mx-auto flex w-full max-w-screen-3xl flex-1 flex-col gap-[var(--app-gap,1rem)] px-[var(--app-pad-x,1.5rem)] py-[var(--app-pad-y,1.5rem)] min-h-0 ${isMobile ? '' : 'overflow-x-hidden overflow-y-visible'}`}
+        className={`mx-auto flex w-full max-w-screen-3xl flex-1 flex-col gap-[var(--app-gap,1rem)] px-[var(--app-pad-x,1.5rem)] py-[var(--app-pad-y,1.5rem)] min-h-0 ${
+          isMobile ? (activeTab === 'chat' ? 'pb-6' : 'pb-24') : 'overflow-x-hidden overflow-y-visible'
+        }`}
       >
         {isMobile ? (
           <section className="flex flex-col gap-3">
-            <SettingsPanel />
             <nav className="grid grid-cols-4 gap-2 rounded-xl border border-chrome-border/70 bg-surface-raised/60 p-1">
               {NAV_TABS.map((tab) => (
                 <button
@@ -172,7 +199,13 @@ const App = () => {
                 </button>
               ))}
             </nav>
-            <div className="rounded-2xl border border-chrome-border/70 bg-surface-raised/50 p-3">
+            <div
+              className={
+                activeTab === 'chat'
+                  ? 'rounded-2xl border border-transparent bg-transparent p-0 h-[70vh] overflow-hidden'
+                  : 'rounded-2xl border border-chrome-border/70 bg-surface-raised/50 p-3'
+              }
+            >
               {activeTab === 'library' && (
                 <LibraryPanel compact onOpen={() => setActiveTab('reader')} />
               )}
@@ -191,10 +224,25 @@ const App = () => {
               )}
               {activeTab === 'chat' && (
                 <PanelErrorBoundary title="Chat">
-                  <ChatSidebar quickPrompt={quickPrompt} onConsumeQuickPrompt={consumeQuickPrompt} />
+                  <ChatSidebar
+                    variant="mobileOverlay"
+                    quickPrompt={quickPrompt}
+                    onConsumeQuickPrompt={consumeQuickPrompt}
+                  />
                 </PanelErrorBoundary>
               )}
             </div>
+            {activeTab === 'editor' && (
+              <button
+                type="button"
+                onClick={() => setMobileChatOpen(true)}
+                className="fixed bottom-20 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/40"
+                aria-label="Open chat"
+              >
+                <Bot className="size-4" />
+                Chat
+              </button>
+            )}
           </section>
         ) : (
           <DesktopWorkspace
@@ -239,6 +287,18 @@ const App = () => {
         </div>
       </footer>
       {settingsOpen && <SettingsDrawer onClose={() => setSettingsOpen(false)} />}
+      {isMobile && mobileChatOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60">
+          <div className="absolute inset-x-0 bottom-0 top-10 overflow-hidden rounded-t-2xl bg-surface-base/95 shadow-2xl">
+            <ChatSidebar
+              variant="mobileOverlay"
+              quickPrompt={quickPrompt}
+              onConsumeQuickPrompt={consumeQuickPrompt}
+              onClose={() => setMobileChatOpen(false)}
+            />
+          </div>
+        </div>
+      )}
       {flomoDraft && <FlomoComposer draft={flomoDraft} onClose={closeFlomoComposer} />}
     </div>
   )
