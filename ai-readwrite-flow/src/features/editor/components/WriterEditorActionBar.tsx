@@ -6,6 +6,7 @@ type Props = {
   saveLabel: string
   saveStatus: 'idle' | 'saving' | 'saved' | 'error'
   lastSavedAt: number | null
+  justSaved: boolean
   isPreview: boolean
   onSave: () => void
   onTogglePreview: () => void
@@ -17,6 +18,7 @@ const WriterEditorActionBar = ({
   saveLabel,
   saveStatus,
   lastSavedAt,
+  justSaved,
   isPreview,
   onSave,
   onTogglePreview,
@@ -35,6 +37,11 @@ const WriterEditorActionBar = ({
       title={lastSavedAt ? new Date(lastSavedAt).toISOString() : undefined}
     >
       {saveLabel}
+      {justSaved && (
+        <span className="ml-2 text-emerald-400" aria-live="polite">
+          Saved
+        </span>
+      )}
     </span>
     <button
       type="button"
