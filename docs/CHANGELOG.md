@@ -99,3 +99,8 @@
 - Writer: if the user types before hydration finishes, cancel hydration and save to reduce data loss on slow loads.
 - Fix: avoid a Writer crash in dev during draft hydration (invalidate in-flight hydration via sequence bump rather than adding a new hook).
 - Writer: add explicit `Save` button + “Saved/Saving/Failed” status in the Writer header; harden SQLite init (fail-closed to local fallback) and persist content to `writing_contents` as a second-layer restore path.
+
+## 0.1.1 - 2026-01-09
+- Writer: save status uses draft persistence as the source of truth; avoid reporting failure when project content write-through fails.
+- Writer: add manual snapshots/history persistence in SQLite with local fallback (create/restore/duplicate/delete).
+- Docs: add contribution, security, support, and privacy files; refresh README release guidance.
