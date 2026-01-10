@@ -10,6 +10,7 @@
 - 2026-01-10: Added dev-only scope assertions for Reader vs Writer chat sidebars.
 - 2026-01-10: Added action hover tokens and replaced FloatingMenu hard-coded hover colors.
 - 2026-01-10: Added highlight color tokens and replaced highlight popover/overlay hard-coded highlight colors.
+- 2026-01-10: Softened ocean/forest theme surfaces, borders, and accents for a lighter feel.
 - 2026-01-09: Centralized chat textarea sizing constants for mobile/desktop.
 - 2026-01-09: Centralized chat form layout and submit controls to keep Reader/Writer consistent.
 - 2026-01-09: Added a shared chat template selection hook to unify dropdown state.
