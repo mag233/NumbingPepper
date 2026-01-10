@@ -31,14 +31,14 @@ const WriterEditorActionBar = ({
     <span
       className={`rounded-lg border px-2 py-1 ${
         saveStatus === 'error'
-          ? 'border-red-500/40 bg-red-500/10 text-red-200'
+          ? 'border-status-danger/40 bg-status-danger/10 text-status-danger'
           : 'border-chrome-border/70 bg-surface-raised/40 text-ink-muted'
       }`}
       title={lastSavedAt ? new Date(lastSavedAt).toISOString() : undefined}
     >
       {saveLabel}
       {justSaved && (
-        <span className="ml-2 text-emerald-400" aria-live="polite">
+        <span className="ml-2 text-status-success" aria-live="polite">
           Saved
         </span>
       )}

@@ -60,7 +60,7 @@ const ReaderPdfContent = ({
         onLoadSuccess={onLoadSuccess}
         loading={<p className="text-sm text-ink-muted">Loading PDF...</p>}
         error={
-          <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-100">
+          <div className="rounded-lg border border-status-warning/50 bg-status-warning/10 p-3 text-sm text-status-warning">
             Failed to load PDF file.
           </div>
         }
@@ -93,7 +93,7 @@ const ReaderPdfContent = ({
           : 'Paged mode: mouse wheel flips pages; select text to open the floating menu.'}
       </p>
       {loadError && (
-        <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+        <p className="rounded-lg border border-status-warning/40 bg-status-warning/10 p-3 text-xs text-status-warning">
           {loadError}
         </p>
       )}

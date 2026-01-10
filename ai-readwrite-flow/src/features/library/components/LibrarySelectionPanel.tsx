@@ -74,8 +74,8 @@ const LibrarySelectionPanel = ({
             type="button"
             className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1 ${
               pendingDelete?.kind === 'remove' && pendingDelete.id === selectedItem.id
-                ? 'border-red-500 bg-red-500/10 text-red-300'
-                : 'border-chrome-border/80 text-ink-primary hover:border-red-500 hover:text-red-300'
+                ? 'border-status-danger bg-status-danger/10 text-status-danger'
+                : 'border-chrome-border/80 text-ink-primary hover:border-status-danger/70 hover:text-status-danger'
             }`}
             onClick={() => {
               if (pendingDelete?.kind === 'remove' && pendingDelete.id === selectedItem.id) {
@@ -95,8 +95,8 @@ const LibrarySelectionPanel = ({
             type="button"
             className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1 ${
               pendingDelete?.kind === 'delete' && pendingDelete.id === selectedItem.id
-                ? 'border-red-500 bg-red-500/10 text-red-300'
-                : 'border-chrome-border/80 text-ink-primary hover:border-red-500 hover:text-red-300'
+                ? 'border-status-danger bg-status-danger/10 text-status-danger'
+                : 'border-chrome-border/80 text-ink-primary hover:border-status-danger/70 hover:text-status-danger'
             }`}
             onClick={() => {
               if (pendingDelete?.kind === 'delete' && pendingDelete.id === selectedItem.id) {

@@ -36,7 +36,7 @@ const WriterContextPanel = ({ fill, noTopMargin, embedded }: Props) => {
               {contextText.length} chars | ~{approxTokens} tokens
             </span>
             {overSoftLimit && (
-              <span className="rounded-md border border-amber-500/50 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-200">
+              <span className="rounded-md border border-status-warning/50 bg-status-warning/10 px-2 py-0.5 text-[11px] text-status-warning">
                 Long context (soft limit ~{contextSoftTokenLimit})
               </span>
             )}

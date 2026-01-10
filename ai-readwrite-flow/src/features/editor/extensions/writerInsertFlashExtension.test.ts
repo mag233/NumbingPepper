@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import type { Node as PMNode } from 'prosemirror-model'
@@ -21,8 +21,15 @@ const findTextRange = (doc: PMNode, needle: string): { from: number; to: number 
 }
 
 describe('writerInsertFlashExtension', () => {
+  let editor: Editor | null = null
+
+  afterEach(() => {
+    editor?.destroy()
+    editor = null
+  })
+
   it('sets and clears decorations via commands', () => {
-    const editor = new Editor({
+    editor = new Editor({
       extensions: [StarterKit, writerInsertFlashExtension],
       content: '<p>Hello world</p>',
     })
@@ -38,4 +45,3 @@ describe('writerInsertFlashExtension', () => {
     expect(cleared?.find().length ?? 0).toBe(0)
   })
 })
-

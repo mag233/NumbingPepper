@@ -46,7 +46,7 @@ const ChatPromptTemplatesSection = () => {
             <button
               type="button"
               onClick={() => removeTemplate(tpl.id)}
-              className="rounded-lg border border-transparent p-2 text-ink-muted hover:border-red-500 hover:text-red-300"
+              className="rounded-lg border border-transparent p-2 text-ink-muted hover:border-status-danger/70 hover:text-status-danger"
               aria-label="Remove template"
               title="Delete"
             >
@@ -106,4 +106,3 @@ const ChatPromptTemplatesSection = () => {
 }
 
 export default ChatPromptTemplatesSection
-

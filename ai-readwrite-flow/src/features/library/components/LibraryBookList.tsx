@@ -12,7 +12,7 @@ type Props = {
 
 const getRowClassName = (selected: boolean, active: boolean) => {
   if (active) return 'border-accent/70 bg-surface-raised/70'
-  if (selected) return 'border-amber-500/60 bg-surface-raised/60'
+  if (selected) return 'border-accent/60 bg-surface-raised/60'
   return 'border-chrome-border/70 bg-surface-raised/40'
 }
 
@@ -40,7 +40,7 @@ const LibraryBookList = ({ items, selectedId, activeId, onSelect, onOpen }: Prop
                 aria-label={selected ? 'Selected' : 'Select'}
                 title={selected ? 'Selected' : 'Select'}
               >
-                {selected ? <Dot className="size-5 text-amber-300" /> : <Circle className="size-5 text-ink-muted" />}
+                {selected ? <Dot className="size-5 text-accent" /> : <Circle className="size-5 text-ink-muted" />}
               </button>
               <button
                 type="button"

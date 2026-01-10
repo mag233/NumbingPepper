@@ -127,7 +127,7 @@ const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
           {hits[activeHitIdx]!.snippet}
         </p>
       )}
-      {searchError && <p className="text-xs text-amber-200">{searchError}</p>}
+      {searchError && <p className="text-xs text-status-warning">{searchError}</p>}
       <p className="text-xs text-ink-muted">Tip: Find runs in paged scroll for stability.</p>
     </div>
   )

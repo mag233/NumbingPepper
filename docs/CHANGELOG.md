@@ -1,6 +1,34 @@
 # Changelog
 
 ## Unreleased
+- 2026-01-10: Matched mobile chat header button heights for Clear and Close.
+- 2026-01-10: Split App shell UI into header/main/footer/overlay components to keep App.tsx under the size limit.
+- 2026-01-10: Footer copy now reflects mobile chat overlay instead of a mobile chat tab.
+- 2026-01-10: Moved App shell state/effects into `useAppShellState` for clearer logic/UIView separation.
+- 2026-01-10: Centralized shell UI state (settings/nav/view/chat collapse/preview) in `uiStore` to reduce local state drift.
+- 2026-01-10: Added status color tokens (warning/success/danger) and replaced hard-coded amber/red/emerald classes in UI status surfaces.
+- 2026-01-10: Added dev-only scope assertions for Reader vs Writer chat sidebars.
+- 2026-01-10: Added action hover tokens and replaced FloatingMenu hard-coded hover colors.
+- 2026-01-10: Added highlight color tokens and replaced highlight popover/overlay hard-coded highlight colors.
+- 2026-01-09: Centralized chat textarea sizing constants for mobile/desktop.
+- 2026-01-09: Centralized chat form layout and submit controls to keep Reader/Writer consistent.
+- 2026-01-09: Added a shared chat template selection hook to unify dropdown state.
+- 2026-01-09: Centralized the mobile overlay shell for consistent layout and styling.
+- 2026-01-09: Clarified chat template select behavior (Reader auto-applies; Writer selects only).
+- 2026-01-09: Shared the chat context toggle control for consistent styling.
+- 2026-01-09: Centralized chat template lookup for consistent dropdown behavior.
+- 2026-01-09: Consolidated chat template lookup logic to avoid duplication.
+- 2026-01-09: Shared chat template draft insertion logic between Reader and Writer.
+- 2026-01-09: Cleaned up TipTap editor tests to avoid ProseMirror teardown errors.
+- 2026-01-09: Shared chat panel body layout across Reader/Writer to reduce layout drift.
+- 2026-01-09: Shared quick-prompt handling logic between Reader and Writer chat.
+- 2026-01-09: Added explicit reader/writer chat scope props to avoid accidental store mixing.
+- 2026-01-09: Standardized chat bubble class ordering via a shared helper to reduce role-style overrides.
+- 2026-01-09: Consolidated chat error banner rendering across Reader/Writer chat panels.
+- 2026-01-09: Consolidated chat message auto-scroll into a shared scroll container.
+- 2026-01-09: Centralized the mobile breakpoint query into shared constants for consistent mobile detection.
+- 2026-01-09: Mobile chat close button uses a consistent icon size in the overlay header.
+- 2026-01-09: Mobile chat uses overlay-only entry on phone (chat tab removed); quick prompts open the overlay and it closes on desktop resize.
 - Docs: update phone scope (Writer-first, Reader/Library disabled with hint, chat overlay trigger, compact Settings entry; tablet deferred).
 - Docs: add planned Library enhancements (pop-out drawer + Recent reads summary, tags/folders/status, metadata extraction, Mark as Done action).
 - Docs: add Reader/Writer chat visual parity requirement (consistent bubble styling across views).

@@ -11,9 +11,9 @@ type Props = {
 }
 
 const highlightClass = (color: Highlight['color']) => {
-  if (color === 'red') return 'bg-red-400/30 ring-1 ring-inset ring-red-300/40'
+  if (color === 'red') return 'bg-highlight-red/30 ring-1 ring-inset ring-highlight-red/40'
   if (color === 'blue') return 'bg-sky-400/25 ring-1 ring-inset ring-sky-300/35'
-  return 'bg-amber-300/30 ring-1 ring-inset ring-amber-200/40'
+  return 'bg-highlight-yellow/30 ring-1 ring-inset ring-highlight-yellow/40'
 }
 
 const isBogusSelectionRect = (rect: HighlightRect) => {

@@ -146,7 +146,7 @@ const WriterSnapshotModal = ({ open, onClose, snapshots, onRestore, onDuplicate,
                     <button
                       type="button"
                       onClick={handleDelete}
-                      className="w-full rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:border-red-500/60 flex items-center justify-center gap-1"
+                      className="flex w-full items-center justify-center gap-1 rounded-lg border border-status-danger/40 bg-status-danger/10 px-3 py-2 text-xs text-status-danger hover:border-status-danger/60"
                     >
                       <Trash2 className="size-3" />
                       Delete

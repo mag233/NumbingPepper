@@ -181,7 +181,7 @@ const WriterProjectPickerMenu = ({ variant, startCreate, onClose }: Props) => {
                 )}
 
                 <button
-                  className={`${btn} ${deleting ? 'border-amber-500/60 text-amber-100 hover:border-amber-400' : ''}`}
+                  className={`${btn} ${deleting ? 'border-status-warning/60 text-status-warning hover:border-status-warning/80' : ''}`}
                   onClick={() => {
                     if (!deleting) {
                       setConfirmDeleteId(project.id)

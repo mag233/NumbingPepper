@@ -110,7 +110,7 @@ const IntegrationsSettingsSection = () => {
         </button>
         {message && (
           <span className="flex items-center gap-2 text-sm text-ink-primary">
-            <CheckCircle2 className={`size-4 ${message.includes('ok') ? 'text-emerald-400' : 'text-amber-300'}`} />
+            <CheckCircle2 className={`size-4 ${message.includes('ok') ? 'text-status-success' : 'text-status-warning'}`} />
             {message}
           </span>
         )}

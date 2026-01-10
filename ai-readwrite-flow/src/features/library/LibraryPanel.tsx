@@ -147,7 +147,7 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
         className="flex flex-col gap-3 rounded-xl border border-dashed border-chrome-border/80 bg-surface-raised/40 p-4"
       >
         {error && (
-          <div className="rounded-lg border border-amber-500/70 bg-amber-500/10 p-2 text-xs text-amber-100">
+          <div className="rounded-lg border border-status-warning/70 bg-status-warning/10 p-2 text-xs text-status-warning">
             {error}
           </div>
         )}
@@ -163,7 +163,7 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
           </div>
         )}
         {!isDesktop && items.length === 0 && (
-          <p className="text-xs text-amber-200">
+          <p className="text-xs text-status-warning">
             Files imported on desktop are hidden here; re-import in web to view.
           </p>
         )}

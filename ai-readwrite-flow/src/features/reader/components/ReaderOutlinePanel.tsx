@@ -97,7 +97,7 @@ const ReaderOutlinePanel = ({ onJump }: Props) => {
           Loading outline...
         </p>
       ) : outlineStatus === 'error' ? (
-        <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-100">
+        <p className="rounded-lg border border-status-warning/40 bg-status-warning/10 p-2 text-xs text-status-warning">
           Outline error: {outlineError || 'unknown'}
         </p>
       ) : tocLines.length ? (

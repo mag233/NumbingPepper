@@ -31,27 +31,35 @@ const findTextRange = (editor: Editor, needle: string): { from: number; to: numb
 describe('editorCommands', () => {
   it('replace is a single undo step', () => {
     const editor = createEditor()
-    const original = editor.getHTML()
-    const range = findTextRange(editor, 'world')
+    try {
+      const original = editor.getHTML()
+      const range = findTextRange(editor, 'world')
 
-    replaceRangeWithPlainTextAsParagraphs(editor, { from: range.from, to: range.to, text: 'planet' })
-    editor.commands.undo()
+      replaceRangeWithPlainTextAsParagraphs(editor, { from: range.from, to: range.to, text: 'planet' })
+      editor.commands.undo()
 
-    expect(editor.getHTML()).toBe(original)
+      expect(editor.getHTML()).toBe(original)
+    } finally {
+      editor.destroy()
+    }
   })
 
   it('insert below adds a blank paragraph and is a single undo step', () => {
     const editor = createEditor()
-    const original = editor.getHTML()
-    const range = findTextRange(editor, 'world')
+    try {
+      const original = editor.getHTML()
+      const range = findTextRange(editor, 'world')
 
-    insertPlainTextAsParagraphsAtWithLeadingBlankLine(editor, { pos: range.to, text: 'Inserted' })
+      insertPlainTextAsParagraphsAtWithLeadingBlankLine(editor, { pos: range.to, text: 'Inserted' })
 
-    const doc = editor.getJSON()
-    expect(doc.content?.[1]?.type).toBe('paragraph')
-    expect(doc.content?.[1]?.content ?? []).toHaveLength(0)
+      const doc = editor.getJSON()
+      expect(doc.content?.[1]?.type).toBe('paragraph')
+      expect(doc.content?.[1]?.content ?? []).toHaveLength(0)
 
-    editor.commands.undo()
-    expect(editor.getHTML()).toBe(original)
+      editor.commands.undo()
+      expect(editor.getHTML()).toBe(original)
+    } finally {
+      editor.destroy()
+    }
   })
 })

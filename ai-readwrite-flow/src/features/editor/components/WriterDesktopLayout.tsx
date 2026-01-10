@@ -12,6 +12,7 @@ import WriterStudioPanel from './WriterStudioPanel'
 import WriterContextCard from './WriterContextCard'
 import VerticalSplitter from '../../../shared/components/VerticalSplitter'
 import VerticalDivider from '../../../shared/components/VerticalDivider'
+import { WRITER_CHAT_SCOPE } from '../../../shared/chatScope'
 
 type Props = {
   showNav: boolean
@@ -190,6 +191,7 @@ const WriterDesktopLayout = ({
                     onConsumeQuickPrompt={onConsumeQuickPrompt}
                     collapsed={chatCollapsed}
                     onCollapsedChange={onChatCollapsedChange}
+                    scope={WRITER_CHAT_SCOPE}
                   />
                 </PanelErrorBoundary>
               </div>

@@ -22,9 +22,9 @@ type Props = {
 }
 
 const colorOptions: { id: HighlightColor; label: string; className: string }[] = [
-  { id: 'yellow', label: 'Yellow', className: 'bg-amber-400' },
-  { id: 'red', label: 'Red', className: 'bg-red-400' },
-  { id: 'blue', label: 'Blue', className: 'bg-sky-400' },
+  { id: 'yellow', label: 'Yellow', className: 'bg-highlight-yellow' },
+  { id: 'red', label: 'Red', className: 'bg-highlight-red' },
+  { id: 'blue', label: 'Blue', className: 'bg-highlight-blue' },
 ]
 
 const HighlightPopover = ({
@@ -55,7 +55,7 @@ const HighlightPopover = ({
     >
       <div className="flex items-center justify-between">
         <div className="inline-flex items-center gap-2 text-xs text-ink-muted">
-          <Paintbrush className="size-4 text-amber-300" />
+          <Paintbrush className="size-4 text-status-warning" />
           Highlight
         </div>
         <button
@@ -112,7 +112,7 @@ const HighlightPopover = ({
         </button>
         <button
           onClick={onAddToWritingContext}
-          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-emerald-500 hover:text-emerald-300"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-status-success/70 hover:text-status-success"
           title="Append this highlight to the active writing project context"
         >
           <FolderPlus className="size-3" />
@@ -120,7 +120,7 @@ const HighlightPopover = ({
         </button>
         <button
           onClick={onAddAsWritingReference}
-          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-emerald-500 hover:text-emerald-300"
+          className="inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-chrome-border/80 px-2 py-1 text-[11px] text-ink-primary hover:border-status-success/70 hover:text-status-success"
           title="Save as a reference in the active writing project"
         >
           <FolderPlus className="size-3" />
@@ -138,8 +138,8 @@ const HighlightPopover = ({
             }}
             className={`inline-flex w-full items-center justify-center gap-1 rounded-lg border px-2 py-1 text-[11px] whitespace-nowrap ${
               deleteArmed
-                ? 'border-red-500 bg-red-500/10 text-red-300'
-                : 'border-chrome-border/80 text-ink-primary hover:border-red-500 hover:text-red-300'
+                ? 'border-status-danger bg-status-danger/10 text-status-danger'
+                : 'border-chrome-border/80 text-ink-primary hover:border-status-danger/70 hover:text-status-danger'
             }`}
           >
             <Trash2 className="size-3" />
@@ -177,10 +177,10 @@ const HighlightPopover = ({
         />
         <div className="mt-2 flex items-center justify-end gap-2">
           {saveStatus === 'saved' && (
-            <span className="mr-auto text-[11px] text-emerald-200">Saved</span>
+            <span className="mr-auto text-[11px] text-status-success">Saved</span>
           )}
           {saveStatus === 'error' && (
-            <span className="mr-auto text-[11px] text-amber-200">Save failed</span>
+            <span className="mr-auto text-[11px] text-status-warning">Save failed</span>
           )}
           <button
             onClick={() => {

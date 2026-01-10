@@ -10,6 +10,7 @@ import VerticalSplitter from '../../shared/components/VerticalSplitter'
 import VerticalDivider from '../../shared/components/VerticalDivider'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import useShellLayoutModeStore from '../../stores/shellLayoutModeStore'
+import { READER_CHAT_SCOPE } from '../../shared/chatScope'
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
@@ -175,7 +176,7 @@ const DesktopWorkspace = ({
               )}
               <div className="h-full min-h-0" style={{ flex: `${1 - readerMainSplitRatio} 1 0%`, minWidth: MIN_READER_CHAT_PX }}>
                 <PanelErrorBoundary title="Chat">
-                  <ChatSidebar quickPrompt={quickPrompt} onConsumeQuickPrompt={onConsumeQuickPrompt} />
+                  <ChatSidebar quickPrompt={quickPrompt} onConsumeQuickPrompt={onConsumeQuickPrompt} scope={READER_CHAT_SCOPE} />
                 </PanelErrorBoundary>
               </div>
             </div>

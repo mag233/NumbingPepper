@@ -53,9 +53,12 @@
 |------|--------|----------|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
 | 42.1 | Todo   | P1       | Disable Reader/Library tabs on phone | On mobile width (≤375px), Reader and Library tabs are disabled in the main navigation bar, with a clear hint (tooltip or overlay). Prevent direct access via route/URL. | Switch to mobile width: tabs are disabled and show hint; cannot access via route/URL.           |
 | 42.2 | Done   | P1       | Compact Settings entry  | On mobile, show a compact settings icon (e.g., gear) in the top navigation bar. Clicking opens a modal/drawer for settings. No large panel.            | Mobile: settings icon visible, opens modal/drawer; settings editable and persist.                |
-| 42.3 | In Progress | P1       | Chat overlay on Writer  | Mobile (~375px) shows a floating Chat button; Chat opens as a full/near-full height sheet with single scroll, minimal header, and bottom input. No desktop max-height clamps/nested borders; preserves Writer state when closed. | Mobile: Chat button visible; sheet opens/closes; single scroll; input anchored; Writer state intact. |
+| 42.3 | Done   | P1       | Chat overlay on Writer  | Mobile (~375px) shows a floating Chat button; Chat opens as a full/near-full height sheet with single scroll, minimal header, and bottom input. No desktop max-height clamps/nested borders; preserves Writer state when closed. | Mobile: Chat button visible; sheet opens/closes; single scroll; input anchored; Writer state intact. |
 | 42.4 | Todo   | P1       | Route guard for phone   | On mobile, block direct navigation to Reader/Library via URL or route. Show a not-available message or redirect to Writer.                            | Attempt direct access: user is blocked or redirected; message shown.                             |
 | 42.5 | Todo   | P2       | Responsive state sync   | All above behaviors respond to window resize; switching between mobile/desktop updates UI state accordingly.                                           | Resize window: UI state updates correctly; no stale/incorrect state after switching.             |
+
+Notes:
+- 2026-01-09: Mobile chat entry is overlay-only on phone (chat tab removed); overlay closes when switching to desktop width.
 
 | 43 | Todo        | P2       | Library pop-out + Recent reads summary + Mark as Done | Display 3 recent reads in sidebar; full library via pop-out drawer; add "Mark as Done" action in Reader | Medium - changes Library IA; needs drawer state persistence. |
 | 44 | Todo        | P2       | Library metadata extraction (auto-title from PDF) | Extract real article title from PDF metadata on import; fall back to filename; allow manual editing | Low - best-effort only; no blocking on slow parse. |
@@ -66,6 +69,12 @@
 - Library import persists to app data via Tauri (hash/mtime/size); web imports store data URLs to survive refresh; web hides desktop-only entries.
 - Reader saves/restores `last_read_position` (page + scroll + zoom + fit mode); app/web PDF loading paths are separated.
 - Task 13: chat history persists per book; draft persistence exists (Writer UX intentionally deferred).
+- 2026-01-10: App shell UI split into header/main/footer/overlay components to keep App.tsx under size limits; no behavior changes intended.
+- 2026-01-10: App shell logic consolidated into `useAppShellState` for clearer state/effect separation.
+- 2026-01-10: Shell UI state moved into `uiStore` (settings/nav/view/chat collapse/preview) to reduce local state drift.
+- 2026-01-10: Added status color tokens and replaced hard-coded warning/success/danger classes to make theme updates safer.
+- 2026-01-10: Added action hover tokens and replaced FloatingMenu hover colors to prepare for theme updates.
+- 2026-01-10: Added highlight color tokens to keep highlight palette stable while enabling theme updates.
 
 ## Task 12 Breakdown (Highlights) - Specification & Verifiable
 | ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) | Tracking |

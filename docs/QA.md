@@ -167,9 +167,17 @@
 | ID | Scenario | Steps | Expected | Result | Notes |
 | -- | -------- | ----- | -------- | ------ | ----- |
 | 42-QA-001 | Mobile compact settings entry | Set viewport to ~375px → open header gear icon → open/close Settings drawer | Gear icon visible on mobile; opens SettingsDrawer; closes via X/backdrop; settings editable | Pass | Implemented in App header; SettingsPanel no longer auto-renders on mobile view. |
-| 42-QA-002 | Chat UI readability (mobile) | Phone width ~375px, open Chat tab with existing conversation (see attached screenshot) | Chat surface remains readable and scannable on mobile | Issue | Current layout (ChatSidebar) stacks multiple borders/rounded containers and keeps desktop padding/max-height, causing cramped, visually noisy presentation and double scrollbars. See src/features/ai/ChatSidebar.tsx: card max-height clamp and nested grid + Card styling create dense, hard-to-scan UI on small widths. Suggested fixes: provide a dedicated mobile chat layout (full-height sheet/overlay), reduce nested borders/shadows, simplify the header helper text, increase line-height and padding for bubbles, and remove the desktop max-height clamp in mobile to allow a single scroll area. |
-| 42-QA-003 | Chat overlay sheet behavior | Mobile ~375px: tap Chat button → overlay opens; scroll history; type and send; scroll to older messages then receive new message | Single scroll area (no double scroll); input anchored at bottom; auto-scroll pauses when user scrolls up; “Jump to latest” (or equivalent) appears; close returns to Writer state intact | Pending | To run after 42.3 implementation (sheet layout). |
-| 42-QA-004 | Visual density & readability | Mobile ~375px: inspect chat header/helper, bubbles, padding/line-height | Header minimal; helper text concise; bubbles have comfortable padding/line-height; no nested heavy borders/shadows; no max-height clamp | Pending | To validate redesigned mobile chat styling. |
+| 42-QA-002 | Chat UI readability (mobile) | Phone width ~375px, open Chat with an existing conversation | Chat surface remains readable and scannable on mobile | Pass | Mobile chat uses a simplified layout (single scroll history + input pinned at bottom), reduced nested borders/shadows, and clear user/assistant bubble styling. |
+| 42-QA-003 | Chat overlay sheet behavior | Mobile ~375px: in Writer, tap Chat button → overlay opens; scroll history; type and send; close | Single scroll area (no double scroll); input anchored at bottom; close returns to Writer state intact | Pass | Overlay locks background scroll; sheet content uses a single scroll container; input stays visible. |
+| 42-QA-004 | Visual density & readability | Mobile ~375px: inspect chat header/helper, bubbles, padding/line-height | Header minimal; helper text concise; bubbles have comfortable padding/line-height; no nested heavy borders/shadows; no max-height clamp | Pass | Bubble widths are constrained (~80%) with left/right alignment and distinct backgrounds for user vs assistant. |
+| 42-QA-005 | Mobile chat entry + resize sync | Mobile ~375px: confirm no Chat tab; open chat via floating button; resize to desktop width; return to mobile width | Chat is opened via overlay only; resizing to desktop closes the overlay; returning to mobile stays closed until reopened | Pending (2026-01-09) | Needs manual verification after removing the chat tab and adding resize close behavior. |
+| 42-QA-006 | Mobile chat close button size | Mobile ~375px: open chat overlay; inspect close button size and tap target | Close button is icon-sized and consistent with header controls; tap target feels balanced | Pass (2026-01-10) | Matched Clear and Close button heights in the mobile chat header. |
+
+## 2026-01-10 — App shell refactor
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| APP-QA-001 | App shell smoke | Desktop: launch app; toggle Layout; open Settings; switch Reader/Writer. Mobile: resize to ~375px; switch tabs; open chat overlay; close; resize back | All views render; controls work; no blank panels; overlay opens/closes; footer copy matches mobile behavior | Pass (2026-01-10) | Verified after App shell hook extraction. |
 
 ## 2025-12-30 — Desktop sidebar resizing + nav toggle ergonomics (Task 36)
 
@@ -190,14 +198,6 @@
 | 37-QA-004 | Mobile unaffected | Narrow to mobile width | No Layout controls; no splitters; layout unchanged | Deferred | Mobile optimization postponed; verify later. |
 | 37-QA-005 | Reader density presets (Reader-only) | Desktop: Reader view → Layout (Adjust) → toggle Comfortable/Compact → refresh/restart; then switch to Writer and confirm unchanged | Reader spacing tightens/loosens; persists; Writer not affected | Pass | Verified by user. |
 | 37-QA-006 | Divider clarity + consistent gutters | Desktop: exit Layout mode (Done) → hover dividers; enter Layout mode (Layout) and compare sidebar divider vs Reader↔Chat divider gutters | Locked mode divider never looks draggable; Adjust mode split gutters match width/visuals | Pass | Verified by user. |
-
-## 2026-01-05 – Phone scope (Task 42)
-
-| ID | Scenario | Steps | Expected | Result | Notes |
-| -- | -------- | ----- | -------- | ------ | ----- |
-| 42-QA-001 | Reader/Library disabled on phone | Set viewport to phone width (~375px); open nav tabs; try Reader and Library | Reader/Library tabs are disabled with a clear hint; Writer remains accessible | Pending | Phone scope update. |
-| 42-QA-002 | Phone Settings entry | On phone width, locate Settings entry (icon in header) | Settings panel is not the large panel; compact icon opens Settings access | Pending | Use theme primary color for icon. |
-| 42-QA-003 | Phone chat overlay | On phone width, tap the Chat action button | Chat opens as an overlay/drawer (not a dedicated tab) and is dismissible | Pending | Keep Writer usable behind or after close. |
 
 ## 2026-01-02 — Flomo export core (Task 23)
 

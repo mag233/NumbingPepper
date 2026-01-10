@@ -120,7 +120,7 @@ const WriterReferencesPanel = ({ noTopMargin, listClassName }: Props) => {
                         {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                       </button>
                       <button
-                        className={`${btn} ${confirm ? 'border-amber-500/60 text-amber-100 hover:border-amber-400' : ''}`}
+                        className={`${btn} ${confirm ? 'border-status-warning/60 text-status-warning hover:border-status-warning/80' : ''}`}
                         onClick={() => {
                           if (!confirm) {
                             setConfirmDeleteId(r.id)

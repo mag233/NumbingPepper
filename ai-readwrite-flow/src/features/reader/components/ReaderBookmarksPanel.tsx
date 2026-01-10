@@ -108,7 +108,7 @@ const ReaderBookmarksPanel = ({ activeBookId, currentPage, pageLabels }: Props) 
                   </button>
                   <button
                     type="button"
-                    className="rounded p-1 text-ink-muted hover:text-red-200"
+                    className="rounded p-1 text-ink-muted hover:text-status-danger"
                     onClick={() => void remove(bookmark.id, bookmark.bookId)}
                     title="Remove bookmark"
                   >

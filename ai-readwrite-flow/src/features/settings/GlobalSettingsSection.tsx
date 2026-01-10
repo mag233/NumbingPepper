@@ -134,7 +134,7 @@ const GlobalSettingsSection = () => {
         </button>
         {message && (
           <span className="flex items-center gap-2 text-sm text-ink-primary">
-            <ShieldCheck className="size-4 text-emerald-400" />
+            <ShieldCheck className="size-4 text-status-success" />
             {message}
           </span>
         )}
@@ -144,4 +144,3 @@ const GlobalSettingsSection = () => {
 }
 
 export default GlobalSettingsSection
-

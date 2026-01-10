@@ -4,6 +4,8 @@ import useWriterSelectionSuggestionStore from '../stores/writerSelectionSuggesti
 import useWriterSelectionApplyStore from '../stores/writerSelectionApplyStore'
 import { copyTextToClipboard } from '../../../lib/clipboard'
 import useWriterContextStore from '../stores/writerContextStore'
+import ChatScrollContainer from '../../../shared/components/ChatScrollContainer'
+import { buildChatBubbleClass } from '../../../shared/components/chatBubble'
 
 const bubbleBase = 'rounded-xl px-3 py-2 text-sm shadow-sm'
 
@@ -12,15 +14,10 @@ type Props = {
 }
 
 const WriterChatMessages = ({ messages }: Props) => {
-  const messagesRef = useRef<HTMLDivElement>(null)
   const suggestionsByMessageId = useWriterSelectionSuggestionStore((s) => s.byMessageId)
   const requestApply = useWriterSelectionApplyStore((s) => s.requestApply)
   const appendToContext = useWriterContextStore((s) => s.appendToContext)
   const [copiedId, setCopiedId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (messagesRef.current) messagesRef.current.scrollTop = messagesRef.current.scrollHeight
-  }, [messages.length])
 
   const copiedResetTimerRef = useRef<number | null>(null)
   useEffect(() => {
@@ -36,8 +33,8 @@ const WriterChatMessages = ({ messages }: Props) => {
   const suggestionIds = useMemo(() => new Set(Object.keys(suggestionsByMessageId)), [suggestionsByMessageId])
 
   return (
-    <div
-      ref={messagesRef}
+    <ChatScrollContainer
+      scrollKey={messages.length}
       className="grid min-h-48 flex-1 content-start gap-3 overflow-y-auto rounded-xl border border-chrome-border/70 bg-surface-raised/40 p-3"
     >
       {messages.length === 0 && <p className="text-sm text-ink-muted">No messages yet.</p>}
@@ -48,13 +45,14 @@ const WriterChatMessages = ({ messages }: Props) => {
           className={`flex items-start ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`${bubbleBase} ${msg.role === 'user' ? 'w-full max-w-[80%]' : 'max-w-[85%]'} ${
+            className={buildChatBubbleClass(
+              bubbleBase,
               msg.role === 'user'
-                ? 'border border-accent/70 bg-accent/10'
+                ? 'w-full max-w-[80%] border border-accent/70 bg-accent/10'
                 : suggestionIds.has(msg.id)
-                  ? 'border border-emerald-500/50 bg-emerald-500/10'
-                  : 'border border-chrome-border/70 bg-surface-raised/70'
-            }`}
+                  ? 'max-w-[85%] border border-status-success/50 bg-status-success/10'
+                  : 'max-w-[85%] border border-chrome-border/70 bg-surface-raised/70',
+            )}
           >
             <p className="text-xs uppercase text-ink-muted">
               {msg.role === 'user' ? 'You' : suggestionIds.has(msg.id) ? 'Suggestion' : 'AI'}
@@ -117,7 +115,7 @@ const WriterChatMessages = ({ messages }: Props) => {
           </div>
         </div>
       ))}
-    </div>
+    </ChatScrollContainer>
   )
 }
 

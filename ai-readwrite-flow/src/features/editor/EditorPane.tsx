@@ -244,7 +244,7 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
           {showMenu && (
             <div className="absolute left-3 top-3 z-10 grid gap-2 rounded-xl border border-chrome-border/70 bg-surface-base/95 p-3 shadow-xl">
               <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted">
-                <Sparkles className="size-4 text-amber-300" />
+                <Sparkles className="size-4 text-status-warning" />
                 Quick Commands
               </div>
               <WriterSlashCommands editor={editor} onQuickPrompt={onQuickPrompt} onClose={() => setShowMenu(false)} />

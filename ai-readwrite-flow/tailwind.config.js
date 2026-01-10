@@ -22,6 +22,20 @@ export default {
         accent: {
           DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
         },
+        status: {
+          warning: 'rgb(var(--status-warning) / <alpha-value>)',
+          success: 'rgb(var(--status-success) / <alpha-value>)',
+          danger: 'rgb(var(--status-danger) / <alpha-value>)',
+        },
+        action: {
+          attention: 'rgb(var(--action-attention) / <alpha-value>)',
+          positive: 'rgb(var(--action-positive) / <alpha-value>)',
+        },
+        highlight: {
+          yellow: 'rgb(var(--highlight-yellow) / <alpha-value>)',
+          red: 'rgb(var(--highlight-red) / <alpha-value>)',
+          blue: 'rgb(var(--highlight-blue) / <alpha-value>)',
+        },
         writer: {
           insert: {
             flash: 'rgb(var(--writer-insert-flash) / <alpha-value>)',

@@ -57,13 +57,13 @@ const ReaderShortcutTemplatesSection = () => {
             resetAll()
             setDraft(getEffectiveTemplate(activeId).instruction)
           }}
-          className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-2 text-xs text-ink-primary hover:border-amber-400 hover:text-amber-200"
+          className="inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-2 text-xs text-ink-primary hover:border-status-warning/70 hover:text-status-warning"
         >
           <RefreshCcw className="size-4" />
           Reset all
         </button>
         {useDefaults && (
-          <span className="ml-auto inline-flex items-center gap-2 text-xs text-amber-100">
+          <span className="ml-auto inline-flex items-center gap-2 text-xs text-status-warning">
             <AlertTriangle className="size-4" />
             Defaults are active; overrides are ignored until you turn this off.
           </span>
@@ -103,7 +103,7 @@ const ReaderShortcutTemplatesSection = () => {
                 resetTemplate(activeId)
                 setDraft(getEffectiveTemplate(activeId).instruction)
               }}
-              className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-2 text-xs text-ink-primary hover:border-amber-400 hover:text-amber-200"
+              className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-chrome-border/70 px-3 py-2 text-xs text-ink-primary hover:border-status-warning/70 hover:text-status-warning"
             >
               <RefreshCcw className="size-4" />
               Reset

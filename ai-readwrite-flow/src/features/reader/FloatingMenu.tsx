@@ -109,21 +109,21 @@ const FloatingMenu = ({ x, y, text, page, rects, activeBookId, copyStatus = 'idl
       </button>
       <button
         onClick={() => onAction('highlight')}
-        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-amber-500/20"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-action-attention/20"
       >
         <Highlighter className="size-4" />
         Highlight
       </button>
       <button
         onClick={() => onAction('note')}
-        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-amber-500/20"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-action-attention/20"
       >
         <NotebookPen className="size-4" />
         Note
       </button>
       <button
         onClick={() => void addToWritingContext()}
-        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-emerald-500/20"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-action-positive/20"
         disabled={!tempHighlight}
         title="Append to active writing project context"
       >
@@ -132,7 +132,7 @@ const FloatingMenu = ({ x, y, text, page, rects, activeBookId, copyStatus = 'idl
       </button>
       <button
         onClick={() => void addAsWritingReference()}
-        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-emerald-500/20"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface-raised/80 px-2 py-1 hover:bg-action-positive/20"
         disabled={!tempHighlight}
         title="Save as writing project reference"
       >

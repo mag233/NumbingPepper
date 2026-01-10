@@ -54,15 +54,15 @@ export default class PanelErrorBoundary extends Component<Props, State> {
       )
     }
     return (
-      <section className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
+      <section className="rounded-2xl border border-status-warning/40 bg-status-warning/10 p-4">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="mt-0.5 size-5 text-amber-300" />
+          <AlertTriangle className="mt-0.5 size-5 text-status-warning" />
           <div className="flex-1 space-y-2">
-            <p className="text-sm font-semibold text-amber-100">{this.props.title} crashed</p>
-            <p className="text-xs text-amber-100/90">{this.state.errorMessage}</p>
+            <p className="text-sm font-semibold text-status-warning">{this.props.title} crashed</p>
+            <p className="text-xs text-status-warning/90">{this.state.errorMessage}</p>
             <button
               onClick={this.reset}
-              className="inline-flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-50 hover:border-amber-300/70"
+              className="inline-flex items-center gap-2 rounded-lg border border-status-warning/40 bg-status-warning/10 px-3 py-2 text-xs font-semibold text-status-warning hover:border-status-warning/70"
             >
               <RefreshCw className="size-4" />
               Reload panel

@@ -43,7 +43,7 @@ const PromptTemplatesModal = ({ onClose }: Props) => {
               </div>
               <button
                 onClick={() => removeTemplate(tpl.id)}
-                className="rounded border border-transparent p-1 text-ink-muted hover:border-red-500 hover:text-red-300"
+                className="rounded border border-transparent p-1 text-ink-muted hover:border-status-danger/70 hover:text-status-danger"
                 aria-label="Remove template"
               >
                 <Trash2 className="size-4" />
@@ -86,4 +86,3 @@ const PromptTemplatesModal = ({ onClose }: Props) => {
 }
 
 export default PromptTemplatesModal
-

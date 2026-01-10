@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Loader2, Send, X } from 'lucide-react'
 import { z } from 'zod'
 import { useMediaQuery } from '../../../../lib/hooks/useMediaQuery'
+import { MOBILE_MEDIA_QUERY } from '../../../../lib/constants'
 import useSettingsStore from '../../../../stores/settingsStore'
 import useHighlightStore from '../../../../stores/highlightStore'
 import { postToFlomo } from '../flomoClient'
@@ -33,7 +34,7 @@ const tagLinesToArray = (raw: string) =>
     .filter(Boolean)
 
 const FlomoComposer = ({ draft, onClose }: Props) => {
-  const isMobile = useMediaQuery('(max-width: 767px)')
+  const isMobile = useMediaQuery(MOBILE_MEDIA_QUERY)
   const flomoWebhookUrl = useSettingsStore((s) => s.flomoWebhookUrl)
   const envDefaultUrl = (import.meta.env.VITE_FLOMO_API ?? '').trim()
   const effectiveWebhookUrl = flomoWebhookUrl.trim() || envDefaultUrl
@@ -208,7 +209,11 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
             />
           </div>
 
-          {error && <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-100">{error}</p>}
+          {error && (
+            <p className="rounded-lg border border-status-warning/40 bg-status-warning/10 p-2 text-xs text-status-warning">
+              {error}
+            </p>
+          )}
 
           <div className="flex items-center justify-end gap-2">
             <button

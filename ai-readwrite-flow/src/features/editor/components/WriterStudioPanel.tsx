@@ -77,7 +77,7 @@ const WriterStudioPanel = () => {
       action={
         <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-ink-muted">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-amber-300" />
+            <Sparkles className="size-4 text-status-warning" />
             <span>{activeProjectId ? 'Project-scoped' : 'No active project'}</span>
           </div>
           <button
@@ -94,17 +94,17 @@ const WriterStudioPanel = () => {
       {collapsed ? null : (
         <>
           {toast && pending?.kind === 'artifact' && (
-            <div className="flex items-center gap-2 rounded-lg border border-amber-500/50 bg-amber-500/10 p-2 text-xs text-amber-100">
+            <div className="flex items-center gap-2 rounded-lg border border-status-warning/50 bg-status-warning/10 p-2 text-xs text-status-warning">
               <span className="flex-1">{toast.message}</span>
               <button
                 onClick={() => void confirmCreate()}
-                className="rounded border border-amber-400 px-2 py-1 text-amber-50 hover:border-amber-300"
+                className="rounded border border-status-warning/60 px-2 py-1 text-status-warning hover:border-status-warning/80"
               >
                 Create
               </button>
               <button
                 onClick={cancelPending}
-                className="rounded border border-amber-400/40 px-2 py-1 text-amber-50/90 hover:border-amber-300/70"
+                className="rounded border border-status-warning/40 px-2 py-1 text-status-warning/90 hover:border-status-warning/70"
               >
                 Cancel
               </button>
@@ -134,7 +134,7 @@ const WriterStudioPanel = () => {
             ))}
           </div>
 
-          <p className={`text-xs ${error ? 'text-amber-100' : 'text-ink-muted'}`}>{helperText}</p>
+          <p className={`text-xs ${error ? 'text-status-warning' : 'text-ink-muted'}`}>{helperText}</p>
 
           {!hasArtifacts && <p className="text-sm text-ink-muted">No artifacts yet.</p>}
           {hasArtifacts && (
@@ -210,7 +210,7 @@ const WriterStudioPanel = () => {
                         </button>
                         <button
                           type="button"
-                          className="rounded-lg border border-chrome-border/70 p-2 text-ink-muted hover:border-red-500 hover:text-red-200"
+                          className="rounded-lg border border-chrome-border/70 p-2 text-ink-muted hover:border-status-danger/70 hover:text-status-danger"
                           title="Delete artifact"
                           onClick={() => void deleteArtifact(artifact.id)}
                         >
