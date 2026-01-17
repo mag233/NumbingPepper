@@ -10,7 +10,7 @@ export const loadWritingReferences = async (projectId: string): Promise<WritingR
   try {
     const rows =
       (await db.select<ReferenceRow[]>(
-        'SELECT id, project_id, source_type, book_id, page_index, rects_json, title, author, snippet_text, created_at FROM writing_references WHERE project_id = ? ORDER BY created_at ASC',
+        'SELECT id, project_id, source_type, book_id, page_index, page_label, rects_json, title, author, source_title, source_author, source_year, source_file_hash, tags_json, snippet_text, created_at FROM writing_references WHERE project_id = ? ORDER BY created_at ASC',
         [projectId],
       )) ?? []
     return rows.map(mapReferenceRow).filter((v): v is WritingReference => Boolean(v))
@@ -32,8 +32,9 @@ export const upsertWritingReference = async (reference: WritingReference) => {
     await db.execute(
       `
       INSERT OR REPLACE INTO writing_references (
-        id, project_id, source_type, book_id, page_index, rects_json, title, author, snippet_text, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, project_id, source_type, book_id, page_index, page_label, rects_json, title, author,
+        source_title, source_author, source_year, source_file_hash, tags_json, snippet_text, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       [
         parsed.data.id,
@@ -41,9 +42,15 @@ export const upsertWritingReference = async (reference: WritingReference) => {
         parsed.data.sourceType,
         parsed.data.bookId ?? null,
         parsed.data.pageIndex ?? null,
+        parsed.data.pageLabel ?? null,
         parsed.data.rects ? JSON.stringify(parsed.data.rects) : null,
         parsed.data.title ?? null,
         parsed.data.author ?? null,
+        parsed.data.sourceTitle ?? null,
+        parsed.data.sourceAuthor ?? null,
+        parsed.data.sourceYear ?? null,
+        parsed.data.sourceFileHash ?? null,
+        parsed.data.tags ? JSON.stringify(parsed.data.tags) : null,
         parsed.data.snippetText,
         parsed.data.createdAt,
       ],
@@ -74,4 +81,3 @@ export const deleteWritingReference = async (projectId: string, referenceId: str
     return false
   }
 }
-

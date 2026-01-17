@@ -63,8 +63,178 @@ Notes:
 | 43 | Todo        | P2       | Library pop-out + Recent reads summary + Mark as Done | Display 3 recent reads in sidebar; full library via pop-out drawer; add "Mark as Done" action in Reader | Medium - changes Library IA; needs drawer state persistence. |
 | 44 | Todo        | P2       | Library metadata extraction (auto-title from PDF) | Extract real article title from PDF metadata on import; fall back to filename; allow manual editing | Low - best-effort only; no blocking on slow parse. |
 | 45 | Todo        | P2       | Reader/Writer chat visual parity | Align Reader chat bubble styling with Writer chat (same theme tokens, layout) | Low - polish; both already share infrastructure. |
+| 46 | In Progress | P1       | Writer references: provenance metadata + APA citations + update action | Capture/import metadata, store reference snapshots, format APA 7 citations, allow manual refresh | High - metadata gaps, migration, citation correctness. Impl done 2026-01-15; QA pending. |
+| 47 | Planned     | P1       | Chat multimodal (image input) | Support image parts in chat when model supports; graceful fallback when unsupported | Medium - API compatibility + local storage. |
+| 48 | Planned     | P1       | Context image DnD + local OCR | Drop image into Context, run local OCR, then choose Append or Insert at cursor | Medium - OCR perf + UX flow. |
+| 49 | In Progress | P1       | Writer chat include references + tag UX | Included references auto-append to Writer chat; tags are multi-line + Source Info separate | Medium - prompt length, UX clarity. |
+| 50 | In Progress | P1       | Writer chat history sanitization + tag namespace | Strip stale Context/References from historical chat; system tags use `ai_reader/...` and are hidden; Flomo tags prefixed | Medium - history integrity + tag migration. Started 2026-01-15. |
+| 51 | In Progress | P1       | Reader To Ref auto-highlight | "To Ref" from selection should create a Highlight before saving the Writer reference | Medium - highlight merge/overlap rules. Started 2026-01-15. |
+| 52 | In Progress | P1       | Reference tag UX polish | System tag display simplification, tag filter, and To Ref tag prompt | Medium - UX clarity and selection flow. Started 2026-01-15. |
+| 53 | Done        | P1       | GPT-5 Responses API settings + safe switch | Add GPT-5 response controls (reasoning/verbosity/max_output_tokens) and Responses API toggle | Medium - API compatibility and validation. Done 2026-01-16. |
+| 54 | In Progress | P1       | Explicit tags + Flomo defaults + full export | Add explicit project/book tags, default Flomo tags, and full Writer export | Medium - data model, UX clarity, and tag consistency. Started 2026-01-16. |
+| 55 | Done        | P1       | Reader restore + tag popover layout + references stability | Restore reader position on return, clamp tag edit popovers, and prevent reference list loss on tab switch | Medium - restore timing + store hydration. Done 2026-01-17. |
+| 56 | In Progress | P1       | Project-Library data model + rules | Define project_books join table, multi-project membership, and remove vs delete semantics. | High - schema and invariants. |
+| 57 | In Progress | P1       | Active project selector + scope indicator | Global current-project control (or None) drives Reader/Writer/Library scope with a clear hint. | High - scope confusion risk. |
+| 58 | In Progress | P1       | Project book assignment UX | Add/remove books to projects with membership visibility in Library and Reader. | Medium - UX complexity. |
+| 59 | Planned     | P2       | Library IA refresh (density + layout) | Fixed-height list + compact detail panel; reduce nested cards; scale for large libraries. | Medium - layout churn. |
+| 60 | Planned     | P1       | Search scope + filters | Library search is global; project search is scoped; scope hint + tag filters. | Medium - scope clarity. |
+| 61 | Planned     | P1       | Library hub tab + IA | Add top-level Library tab with Books/Projects/Tags pages; move management controls out of Reader/Writer. | High - IA change. |
+| 62 | Planned     | P1       | Library Projects page | Create/edit projects, show membership, assign/remove books, show counts. | High - workflow centralization. |
+| 63 | Planned     | P1       | Library Tags page | Tag management + multi-filter views (AND/OR include, exclude). | Medium - UX complexity. |
+| 64 | Planned     | P1       | Reader sidebar scope-only | Reader sidebar shows project books + reader nav; no global Library mgmt. | Medium - expectation change. |
+
+## Task 46 Breakdown (Reference provenance + citations)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 46.1 | Done | P1 | Import metadata capture | On import, read PDF metadata (title/author/year/keywords) and persist on book record when available. | Import PDFs with/without metadata; verify stored fields or UI display. |
+| 46.2 | Done | P1 | Reference metadata snapshot | References store a snapshot (title/author/year, file_hash, page_number/label) at creation for stable citations. | Create reference; edit book title; reference shows original snapshot. |
+| 46.3 | Done | P1 | Manual update action | Add "Update metadata" to refresh snapshot from current book metadata without changing selection text or anchors. | Update book metadata; click update; snapshot updates only metadata fields. |
+| 46.4 | Done | P1 | APA 7 formatting | Format citations with system-inserted page labels; fallback rules for missing author/year; dedupe references list. | Generate output and verify format + fallbacks; no fabricated page numbers. |
+| 46.5 | Done | P1 | Reference tags + defaults | Add user-editable tags and system default tags (book/author/year) with configurable defaults. | Create reference; edit tags; verify default tags and search behavior. |
+| 46.6 | Todo | P1 | QA | Add QA rows and execute when implemented. | `docs/QA.md` updated; execute after manual validation. |
+
+## Task 47 Breakdown (Chat multimodal image input)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 47.1 | Todo | P1 | Message content parts | Chat messages support text + image parts; unsupported models show a clear error. | Send image with supported model; then force unsupported model and confirm error. |
+| 47.2 | Todo | P1 | Local image storage | Store images locally and persist across reloads. | Refresh and verify image still renders. |
+| 47.3 | Todo | P1 | QA | Add QA rows and execute when implemented. | `docs/QA.md` updated. |
+
+## Task 48 Breakdown (Context image DnD + local OCR)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 48.1 | Todo | P1 | DnD capture | Drop image into Context shows a thumbnail + OCR status. | Drop image; see card. |
+| 48.2 | Todo | P1 | Local OCR + cache | OCR runs locally; cache by image hash; errors are recoverable. | OCR returns text; repeat uses cache; failures allow retry. |
+| 48.3 | Todo | P1 | Post-OCR choice | After OCR, prompt Append vs Insert at cursor. | Choose Append and Insert; content lands correctly. |
+| 48.4 | Todo | P1 | QA | Add QA rows and execute when implemented. | `docs/QA.md` updated. |
+
+## Task 49 Breakdown (Writer chat refs + tag UX)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 49.1 | Done | P1 | Chat include references | Include in-context references in Writer chat by default with a toggle. | Send chat with included refs; references appear in prompt; toggle off hides them. |
+| 49.2 | Done | P1 | Tag multi-line + Source Info | Tags editor is multi-line; show Source Info separately from user tags. | Long tags wrap; Source Info is readable and not in tags. |
+| 49.3 | Todo | P1 | QA | Add QA rows and execute when implemented. | `docs/QA.md` updated. |
+
+## Task 50 Breakdown (Writer chat sanitization + tag namespace)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 50.1 | Done | P1 | Chat history sanitization | Strip prior Context/References blocks from historical user messages (Done 2026-01-15). | Clear Context; new chat should not respond to old Context/References. |
+| 50.2 | Done | P1 | System tag namespace + hidden UI | System tags use `ai_reader/title|author|year` format and are not shown in the tag editor input (Done 2026-01-15). | Tags editor shows only user tags; system tags still used in search. |
+| 50.3 | Done | P1 | Tag display | System tags display as `title/author/year` lines (no `ai_reader` prefix); user tags keep `#` (Done 2026-01-15). | System lines are readable; user chips show `#user-tag`. |
+| 50.4 | Done | P1 | Flomo tag prefixing | When reference export to Flomo exists, user tags should be prefixed with `#ai_reader/` (Done 2026-01-16). | Export reference to Flomo shows `#ai_reader/...` for user tags. |
+| 50.5 | Todo | P1 | QA | Add QA rows and execute when implemented. | `docs/QA.md` updated. |
+
+## Task 51 Breakdown (Reader To Ref auto-highlight)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 51.1 | Done | P1 | Auto-highlight on To Ref | From Reader selection, To Ref creates a Highlight before saving the Writer reference (Done 2026-01-15). | Use To Ref on a selection; highlight appears and reference is created. |
+| 51.2 | Todo | P1 | QA | Add QA rows and execute when implemented. | `docs/QA.md` updated. |
+
+## Task 52 Breakdown (Reference tag UX polish)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 52.1 | Done | P1 | System tag display | Show system tags as `title/author/year` (no prefix, no colon) with ellipsis when long (Done 2026-01-16). | System tags render as single-line entries with truncation. |
+| 52.2 | Done | P1 | Tag filter | References panel supports tag filter (multi-select) with a system-tag toggle (Done 2026-01-16). | Filter by user/system tags updates the reference list. |
+| 52.3 | Done | P1 | To Ref tag prompt | Reader To Ref prompts for optional tags (selection + highlight popover) (Done 2026-01-16). | Prompt appears and applies tags or skips. |
+| 52.4 | Todo | P1 | QA | Add QA rows and execute when implemented. | `docs/QA.md` updated. |
+
+## Task 53 Breakdown (GPT-5 Responses API controls)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 53.1 | Done | P1 | Settings data contract | Add persisted settings for chat api mode + GPT-5 response params (reasoning, verbosity, max output tokens) (Done 2026-01-16). | Settings persist after restart. |
+| 53.2 | Done | P1 | Responses API client | Add Responses API request path with safe parsing + output_text handling; Chat Completions remains default (Done 2026-01-16). | Real API call returns content; fallback works. |
+| 53.3 | Done | P1 | Settings UI | Add Chat settings section with Responses API toggle + controls; disabled when not GPT-5 (Done 2026-01-16). | UI renders; values save and reload. |
+| 53.4 | Done | P1 | QA | Add QA rows and execute when implemented (Done 2026-01-16). | `docs/QA.md` updated. |
+
+## Task 54 Breakdown (Explicit tags + Flomo defaults + full export)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 54.1 | Done | P1 | Explicit tags data model | Add tags to writing projects + books with persistence (Done 2026-01-16). | Tags survive reload; no schema errors. |
+| 54.2 | Done | P1 | Tags UI placement | Project tags in Writer settings panel; Book tags in Library side panel (Done 2026-01-16). | Tags editable and saved. |
+| 54.3 | Done | P1 | Flomo defaults + save-back | Flomo composer pre-fills default tags and offers “Save as default tags” (Done 2026-01-16). | Defaults update only when checkbox is enabled. |
+| 54.4 | Done | P1 | Writer full export | Add full Content+Context Flomo export from Writer action bar (Done 2026-01-16). | Flomo note includes Content/Context/Tags. |
+| 54.5 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+| 54.6 | Done | P1 | Tag display popovers | Project/Book tags show chips and open a popover editor on Edit (Done 2026-01-16). | Chips display; editor only in popover. |
+| 54.7 | Done | P1 | Reference include fix | References checkbox should toggle reliably even if store projectId drifts (Done 2026-01-16). | Include state updates and persists. |
+
+## Task 56 Breakdown (Project-Library data model + rules)
+Reason (2026-01-17): Projects are classifiers, books can belong to multiple projects, Reader/Writer share active project scope, and reading position remains per book.
+
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 56.1 | Done | P1 | Data model | Add `project_books` join table with `project_id`, `book_id`, `created_at` + indexes (Done 2026-01-17). | Create membership; remove membership; book remains in Library. |
+| 56.2 | Done | P1 | Migration/backfill | Add migration; default: no project membership unless assigned; preserve existing library (Done 2026-01-17). | Run migration; books still appear in Library; no project assignment created. |
+| 56.3 | Done | P1 | Invariants | Removing from project does not delete book; deleting project removes memberships; deleting book removes memberships (Done 2026-01-17). | Remove project/book and confirm only memberships removed. |
+| 56.4 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 57 Breakdown (Active project selector + scope indicator)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 57.1 | Done | P1 | Current project control | Provide a global selector with a "Global (no project)" option that affects Reader/Writer/Library (Done 2026-01-17). | Switch projects; scope updates; Global shows all books. |
+| 57.2 | Done | P1 | Scope indicator | Visible hint shows current scope (Project: X or Global) in Reader/Writer (Done 2026-01-17). | Indicator visible and accurate across tabs. |
+| 57.3 | Done | P1 | Persist selection | Persist last active project or Global selection across restart (Done 2026-01-17). | Relaunch retains selection. |
+| 57.4 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 58 Breakdown (Project book assignment UX)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 58.1 | Done | P1 | Assignment entry points | Library and Reader show project membership and allow add/remove (multi-select UI) (Done 2026-01-17). | Add/remove membership from both locations; membership consistent. |
+| 58.2 | Done | P1 | Remove vs delete clarity | UI distinguishes "Remove from project" vs "Delete from Library" and keeps them in separate sections (Done 2026-01-17). | Actions are clearly labeled; no accidental delete. |
+| 58.3 | Todo | P1 | Bulk assignment | Allow multi-select books in Library to assign to a project. | Select multiple books; assign; membership updates. |
+| 58.4 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 59 Breakdown (Library IA refresh - density + layout)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 59.1 | Todo | P2 | Layout model | Replace nested cards with a fixed-height list and a compact detail panel; prioritize title + tags in the list. | List scrolls independently; no extra nesting. |
+| 59.2 | Todo | P2 | Large library scaling | Optimize list density for 50+ books (compact rows, stable selection). | 50+ entries remain usable; selection remains clear. |
+| 59.3 | Todo | P2 | Metadata display | Prefer PDF metadata (title/author/year) for card title; fallback to filename. | Titles render from metadata when available. |
+| 59.4 | Todo | P2 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 60 Breakdown (Search scope + filters)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 60.1 | Todo | P1 | Scope rules | Library search is global; project views search only within current project. | Searches respect scope and show results count. |
+| 60.2 | Todo | P1 | Scope hint | Show an explicit scope hint near search inputs. | Hint updates when project changes. |
+| 60.3 | Todo | P1 | Tag filters | Tag filters support user tags and (optional) system tags with clear toggle. | Filters work and show active state. |
+| 60.4 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 61 Breakdown (Library hub tab + IA)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 61.1 | Todo | P1 | Top-level tab | Add Library tab alongside Reader/Writer. | Tab visible; navigation works. |
+| 61.2 | Todo | P1 | Page tabs | Library contains Books / Projects / Tags pages. | Tabs switch; state persists per session. |
+| 61.3 | Todo | P1 | Move management | Reader/Writer remove global library management controls. | Reader sidebar no longer shows global management. |
+| 61.4 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 62 Breakdown (Library Projects page)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 62.1 | Todo | P1 | Project CRUD | Create/rename/delete projects in Library. | Projects list updates; persists after restart. |
+| 62.2 | Todo | P1 | Membership editor | Add/remove books for a project; show book count. | Membership changes update project scopes. |
+| 62.3 | Todo | P1 | Entry points | Provide entry from Books list to assign projects. | Assignments sync both pages. |
+| 62.4 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 63 Breakdown (Library Tags page)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 63.1 | Todo | P1 | Tag management | Create/rename/delete/merge tags. | Tag list updates and persists. |
+| 63.2 | Todo | P1 | Multi-filter view | AND/OR include + exclude filters with clear UI. | Filters produce expected book lists. |
+| 63.3 | Todo | P1 | Saved views | Optional saved filters for reuse. | Saved views persist; reapply correctly. |
+| 63.4 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
+
+## Task 64 Breakdown (Reader sidebar scope-only)
+| ID | Status | Priority | Sub-task | Spec (summary) | Verify (manual) |
+| -- | ------ | -------- | -------- | -------------- | --------------- |
+| 64.1 | Todo | P1 | Sidebar scope | Reader sidebar shows project books only; no global management controls. | Scope matches active project. |
+| 64.2 | Todo | P1 | Empty states | Project with zero books shows a project-scoped empty state. | No global import hint. |
+| 64.3 | Todo | P1 | QA | Add QA rows and execute. | `docs/QA.md` updated. |
 
 ## Progress Notes
+- 2026-01-17: Added project_books join table + membership store, global project scope selector, and project assignment UI in Library/Reader.
+- 2026-01-16: Reference tags show title/author/year labels (no prefix), References panel supports tag filtering with a system-tag toggle, and Reader To Ref prompts for optional tags.
+- 2026-01-16: Writer Context Clear now prompts for context-only vs context+chat; system tags use accent chips to differentiate from Source Info; tag prompt uses a clear placeholder.
+- 2026-01-16: Chat settings now include GPT-5 Responses API controls (reasoning/verbosity/max output tokens) with a safe toggle; chat calls can route to Responses API.
 - Core scaffolding and UI flows are in place; build succeeds (`npm run build`).
 - Library import persists to app data via Tauri (hash/mtime/size); web imports store data URLs to survive refresh; web hides desktop-only entries.
 - Reader saves/restores `last_read_position` (page + scroll + zoom + fit mode); app/web PDF loading paths are separated.

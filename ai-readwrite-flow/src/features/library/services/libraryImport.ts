@@ -1,6 +1,8 @@
 import { invoke } from '@tauri-apps/api/core'
 import { sha256Hex } from '../../../lib/sha256'
 import { findBookByHash, persistBook, restoreBook, type BookRecord } from '../../../lib/db'
+import { isTauri } from '../../../lib/isTauri'
+import { extractPdfMetadataFromArrayBuffer, extractPdfMetadataFromDataUrl } from './pdfMetadata'
 
 export type ImportSummary = { imported: number; deduped: number }
 export type LibraryItem = BookRecord & { url?: string }
@@ -38,6 +40,25 @@ const mapImportToRecord = (entry: TauriImportResult): BookRecord => ({
   processedForSearch: false,
 })
 
+const withMetadata = (record: BookRecord, metadata: { title?: string; author?: string; year?: number; keywords?: string[] }): BookRecord => ({
+  ...record,
+  metadataTitle: metadata.title,
+  metadataAuthor: metadata.author,
+  metadataYear: metadata.year,
+  metadataKeywords: metadata.keywords,
+})
+
+const extractMetadataForPath = async (filePath: string): Promise<{ title?: string; author?: string; year?: number; keywords?: string[] }> => {
+  if (!isTauri()) return {}
+  try {
+    const data = await invoke<string>('read_file_base64', { path: filePath })
+    const dataUrl = `data:application/pdf;base64,${data}`
+    return await extractPdfMetadataFromDataUrl(dataUrl)
+  } catch {
+    return {}
+  }
+}
+
 const base64FromBytes = (bytes: Uint8Array) => {
   let binary = ''
   const chunk = 0x8000
@@ -54,6 +75,7 @@ export const importFilesWeb = async (files: File[]): Promise<{ imported: Library
 
   for (const file of files) {
     const buffer = await file.arrayBuffer()
+    const metadata = await extractPdfMetadataFromArrayBuffer(buffer)
     const fileHash = await sha256Hex(buffer)
     const existing = await findBookByHash(fileHash)
     if (existing) {
@@ -73,8 +95,9 @@ export const importFilesWeb = async (files: File[]): Promise<{ imported: Library
       addedAt: now,
       url: dataUrl,
     }
-    imported.push(record)
-    void persistBook(record)
+    const withMeta = withMetadata(record, metadata)
+    imported.push(withMeta)
+    void persistBook(withMeta)
   }
 
   return { imported, summary: { imported: imported.length - deduped, deduped } }
@@ -141,8 +164,10 @@ const buildPayload = async (files: File[], imported: LibraryItem[], seen: Set<st
 const persistResults = async (results: TauriImportResult[], imported: LibraryItem[]) => {
   for (const entry of results) {
     const record = mapImportToRecord(entry)
-    await persistBook(record)
-    imported.push(record)
+    const metadata = entry.format === 'pdf' ? await extractMetadataForPath(entry.file_path) : {}
+    const withMeta = withMetadata(record, metadata)
+    await persistBook(withMeta)
+    imported.push(withMeta)
   }
 }
 

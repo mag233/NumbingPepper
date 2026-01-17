@@ -20,6 +20,12 @@ export const buildReferenceFromHighlight = (args: {
   highlight: Highlight
   now: number
   referenceId: string
+  sourceTitle?: string
+  sourceAuthor?: string
+  sourceYear?: number
+  sourceFileHash?: string
+  pageLabel?: string
+  tags?: string[]
 }): WritingReference => {
   const { projectId, highlight, now, referenceId } = args
   return {
@@ -28,8 +34,14 @@ export const buildReferenceFromHighlight = (args: {
     sourceType: 'highlight',
     bookId: highlight.bookId,
     pageIndex: highlight.contextRange.page,
+    pageLabel: args.pageLabel,
     rects: highlight.contextRange.rects.map((r) => ({ x: r.x, y: r.y, w: r.width, h: r.height })),
     title: referenceTitleFromSnippet(highlight.content),
+    sourceTitle: args.sourceTitle,
+    sourceAuthor: args.sourceAuthor,
+    sourceYear: args.sourceYear,
+    sourceFileHash: args.sourceFileHash,
+    tags: args.tags,
     snippetText: highlight.content,
     createdAt: now,
   }

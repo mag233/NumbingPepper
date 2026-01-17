@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { sendChatCompletion } from '../../../lib/apiClient'
+import { sendChatRequest } from '../../../lib/apiClient'
 import useSettingsStore from '../../../stores/settingsStore'
 import useMetricsStore from '../../../stores/metricsStore'
 import { draftIdForProject } from '../services/draftIds'
@@ -94,11 +94,11 @@ const useWriterArtifactsStore = create<State>((set, get) => ({
         citationRequired: true,
       })
 
-      const { model, apiKey, baseUrl } = useSettingsStore.getState()
-      const response = await sendChatCompletion(baseUrl, apiKey, model, [
+      const { model, apiKey, baseUrl, chatResponseSettings } = useSettingsStore.getState()
+      const response = await sendChatRequest(baseUrl, apiKey, model, [
         { role: 'system', content: system },
         { role: 'user', content: user },
-      ])
+      ], chatResponseSettings)
 
       useMetricsStore.getState().setMetrics({
         tokens: response.usage?.totalTokens,
@@ -125,9 +125,15 @@ const useWriterArtifactsStore = create<State>((set, get) => ({
           references: references.map((r) => ({
             id: r.id,
             title: r.title,
+            sourceTitle: r.sourceTitle,
+            sourceAuthor: r.sourceAuthor,
+            sourceYear: r.sourceYear,
+            sourceFileHash: r.sourceFileHash,
             snippetText: r.snippetText,
             bookId: r.bookId,
             pageIndex: r.pageIndex,
+            pageLabel: r.pageLabel,
+            tags: r.tags,
           })),
         },
         createdAt: now,
@@ -182,4 +188,3 @@ const useWriterArtifactsStore = create<State>((set, get) => ({
 }))
 
 export default useWriterArtifactsStore
-

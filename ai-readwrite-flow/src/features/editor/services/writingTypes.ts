@@ -14,6 +14,7 @@ export type Rect = z.infer<typeof rectSchema>
 export const writingProjectSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
+  tags: z.array(z.string()).optional(),
   createdAt: z.number().int().nonnegative(),
   updatedAt: z.number().int().nonnegative(),
 })
@@ -39,9 +40,15 @@ export const writingReferenceSchema = z.object({
   sourceType: writingSourceTypeSchema,
   bookId: z.string().min(1).optional(),
   pageIndex: z.number().int().positive().optional(),
+  pageLabel: z.string().min(1).optional(),
   rects: z.array(rectSchema).optional(),
   title: z.string().optional(),
   author: z.string().optional(),
+  sourceTitle: z.string().optional(),
+  sourceAuthor: z.string().optional(),
+  sourceYear: z.number().int().nonnegative().optional(),
+  sourceFileHash: z.string().optional(),
+  tags: z.array(z.string().min(1)).optional(),
   snippetText: z.string().min(1),
   createdAt: z.number().int().nonnegative(),
 })
@@ -71,9 +78,15 @@ export const writingArtifactInputSnapshotSchema = z.object({
     z.object({
       id: z.string().min(1),
       title: z.string().optional(),
+      sourceTitle: z.string().optional(),
+      sourceAuthor: z.string().optional(),
+      sourceYear: z.number().int().nonnegative().optional(),
+      sourceFileHash: z.string().optional(),
       snippetText: z.string().min(1),
       bookId: z.string().optional(),
       pageIndex: z.number().int().positive().optional(),
+      pageLabel: z.string().min(1).optional(),
+      tags: z.array(z.string().min(1)).optional(),
     }),
   ),
 })

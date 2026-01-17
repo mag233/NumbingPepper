@@ -243,5 +243,49 @@ pub fn migrations() -> Vec<Migration> {
       ",
       kind: MigrationKind::Up,
     },
+    Migration {
+      version: 18,
+      description: "add book metadata + writing reference snapshots",
+      sql: "
+        ALTER TABLE books ADD COLUMN metadata_title TEXT;
+        ALTER TABLE books ADD COLUMN metadata_author TEXT;
+        ALTER TABLE books ADD COLUMN metadata_year INTEGER;
+        ALTER TABLE books ADD COLUMN metadata_keywords TEXT;
+
+        ALTER TABLE writing_references ADD COLUMN source_title TEXT;
+        ALTER TABLE writing_references ADD COLUMN source_author TEXT;
+        ALTER TABLE writing_references ADD COLUMN source_year INTEGER;
+        ALTER TABLE writing_references ADD COLUMN source_file_hash TEXT;
+        ALTER TABLE writing_references ADD COLUMN page_label TEXT;
+        ALTER TABLE writing_references ADD COLUMN tags_json TEXT;
+      ",
+      kind: MigrationKind::Up,
+    },
+    Migration {
+      version: 19,
+      description: "add explicit tags for books and writing projects",
+      sql: "
+        ALTER TABLE books ADD COLUMN tags_json TEXT;
+        ALTER TABLE writing_projects ADD COLUMN tags_json TEXT;
+      ",
+      kind: MigrationKind::Up,
+    },
+    Migration {
+      version: 20,
+      description: "create project_books table",
+      sql: "
+        CREATE TABLE IF NOT EXISTS project_books (
+          project_id TEXT NOT NULL,
+          book_id TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          PRIMARY KEY(project_id, book_id),
+          FOREIGN KEY(project_id) REFERENCES writing_projects(id) ON DELETE CASCADE,
+          FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_project_books_project_id ON project_books(project_id);
+        CREATE INDEX IF NOT EXISTS idx_project_books_book_id ON project_books(book_id);
+      ",
+      kind: MigrationKind::Up,
+    },
   ]
 }

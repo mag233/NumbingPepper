@@ -37,7 +37,7 @@ const AppMainMobile = ({ activeTab, onSetActiveTab, onReaderAction, onQuickPromp
       ))}
     </nav>
     <div className="rounded-2xl border border-chrome-border/70 bg-surface-raised/50 p-3">
-      {activeTab === 'library' && <LibraryPanel compact onOpen={() => onSetActiveTab('reader')} />}
+      {activeTab === 'library' && <LibraryPanel compact scope="global" onOpen={() => onSetActiveTab('reader')} />}
       {activeTab === 'reader' && (
         <PanelErrorBoundary title="Reader">
           <ReaderPane onAction={onReaderAction} />

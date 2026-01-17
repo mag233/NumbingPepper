@@ -1,6 +1,6 @@
-# AI-ReadWrite-Flow — Product Requirements
-**Version:** 3.2 (Alpha-bound)  
-**Status:** Active Development — explicit Alpha must-have vs can-slip
+# AI-ReadWrite-Flow �?Product Requirements
+**Version:** 3.3 (Alpha-bound)  
+**Status:** Active Development �?explicit Alpha must-have vs can-slip
 
 ## 1. Vision & Principles
 - Local-first, privacy-friendly workspace bridging Reading (input) and Writing (output) with AI.
@@ -9,11 +9,11 @@
 
 ## 2. Scope & Priority
 - **Alpha (must ship):** Settings save/test; library import with persistence; open PDFs; last-read restore; floating menu actions (summarize/explain/chat); buffered chat with retry + latency/tokens; highlight save + overlay; drafts/chats persisted; theme selection (light + presets); desktop split; **phone UI: Writer-first with Reader/Library disabled + chat overlay + compact Settings entry**; basic error boundaries; library path hygiene.
-- **Alpha-can-slip (P1 targets):** RAG “Ask the book” (global search) — not a blocker; highlight-to-note sidebar; gestures; advanced editor insertions; streaming chat; Flomo; OCR.
+- **Alpha-can-slip (P1 targets):** RAG “Ask the book�?(global search) �?not a blocker; highlight-to-note sidebar; gestures; advanced editor insertions; streaming chat; Flomo; OCR.
 - **Backlog (P2+):** Streaming, OCR, Flomo export, advanced block commands, EPUB, theme polish beyond presets, desktop keyboard gesture equivalents if desired, highlight UI polish (floating menu spacing/visibility/touch targets).
 
 **Backlog (New Proposals):**
-1. Context-aware LLM function — automatically take context from the reader.
+1. Context-aware LLM function �?automatically take context from the reader.
 2. Multi-round chat / chat history.
 3. Support for screenshots/figures/pictures.
 4. Chat UI improvements (e.g., markdown rendering, code blocks, auto size).
@@ -21,15 +21,16 @@
 ## 3. Data Model (SQLite + store/localStorage fallback)
 - **settings (P0):** api_key, base_url, model, theme (`light`|`ocean`|`forest`|`sand`), updated_at.
 - **books (P0):** id (UUID), title, author, cover_path, file_path, format ('pdf'|'epub'), file_hash (sha256), file_size, mtime, last_read_position JSON `{ page: number; scroll_y?: number; zoom?: number }`, processed_for_search (bool), added_at.
-- **highlights (P0):** id, book_id FK, content, context_range JSON `{ page: number; rects: { x: number; y: number; width: number; height: number; normalized: true }[] }` (normalized 0–1), color ('yellow'|'red'|'blue'), note (nullable), created_at. Overlaps allowed.
+- **highlights (P0):** id, book_id FK, content, context_range JSON `{ page: number; rects: { x: number; y: number; width: number; height: number; normalized: true }[] }` (normalized 0�?), color ('yellow'|'red'|'blue'), note (nullable), created_at. Overlaps allowed.
 - **chats (P0):** id, session_id, role ('user'|'assistant'), content, reference_highlight_id (nullable), created_at.
 - **drafts (P1):** id, editor_doc JSON, updated_at.
-- **book_text_index (FTS5, P1/backlog for Alpha):** book_id, chunk, chunk_id, page, created_at. Fallback: skip RAG when empty/offline and state “No document context available.”
+- **book_text_index (FTS5, P1/backlog for Alpha):** book_id, chunk, chunk_id, page, created_at. Fallback: skip RAG when empty/offline and state “No document context available.�?
+- **project_books (P1):** join table for project �?book assignment (`project_id`, `book_id`, `created_at`). A book can belong to multiple projects; removing a book from a project does **not** delete it from the global library.
 
 ## 4. Storage Paths & Cache
 - Library root: `%APPDATA%/AI-ReadWrite-Flow/library/{bookId}/original.pdf` (Win) | `~/Library/Application Support/AI-ReadWrite-Flow/library/{bookId}/` (macOS) | `$XDG_DATA_HOME/AI-ReadWrite-Flow/library/{bookId}/` (Linux). Normalize separators.
 - Cache: `$APPDATA/.../cache/` for temp thumbnails/text chunks; soft cap 512MB with LRU eviction; never critical data.
-- Collision & dupes: scope files by `bookId`; preserve original filename inside folder. Store hash/size/mtime; if hash matches existing, surface “already imported” and reuse record (best-effort).
+- Collision & dupes: scope files by `bookId`; preserve original filename inside folder. Store hash/size/mtime; if hash matches existing, surface “already imported�?and reuse record (best-effort).
 
 ## 5. Functional Requirements
 ### Settings & Connectivity (P0)
@@ -46,6 +47,26 @@
 - Library management (P1+):
   - Show and sort by **recently opened** (backed by `books.last_opened_at`).
   - Safe cleanup: **Trash** (soft delete) + **Restore**; optional **Delete app copy** (desktop only, double confirm).
+  - **Project assignment (P1):** allow assigning a book to one or more projects (multi-select). "Remove from project" only removes the relationship.
+  - Organization (P2/backlog): tags/collections for grouping and filtering PDFs (not Alpha-critical).
+- **PRD-LIB-HUB-001 (P1): Library management hub**
+  - Add a top-level **Library** tab alongside Reader/Writer.
+  - Library contains page tabs: **Books / Projects / Tags**.
+  - All file/project/tag management happens in Library; Reader/Writer do not show global management controls.
+- **PRD-LIB-BOOKS-UI-001 (P1): Book list density + priorities**
+  - Book list prioritizes **metadata title** and **tags** as primary information.
+  - File size/year/path are secondary (detail panel or hover), not primary list lines.
+- **PRD-LIB-PROJECTS-001 (P1): Projects page**
+  - Central place to create/edit/delete projects.
+  - Show counts and membership; allow assigning/removing books from projects here.
+- **PRD-LIB-TAGS-001 (P1): Tags page**
+  - Central tag management (create/rename/delete/merge).
+  - Multi-filter views (AND/OR include, exclude) with optional saved views.
+- Drag/drop or picker. Copy file to library root; write `books` row. On partial copy failure, clean folder and show inline error. Permissions prompts surfaced. Hydrate list on launch. Goal: quickly reopen recent readings; dedupe via hash.
+- Library management (P1+):
+  - Show and sort by **recently opened** (backed by `books.last_opened_at`).
+  - Safe cleanup: **Trash** (soft delete) + **Restore**; optional **Delete app copy** (desktop only, double confirm).
+  - **Project assignment (P1):** allow assigning a book to one or more projects (multi-select). “Remove from project�?only removes the relationship.
   - Organization (P2/backlog): tags/collections for grouping and filtering PDFs (not Alpha-critical).
 - **PRD-LIB-UX-001 (P2): Library pop-out + Recent reads summary**
   - Desktop left sidebar should display a compact "Recent Reads" card (3 most recent items) rather than the full library list.
@@ -81,19 +102,43 @@
   - Header is minimal: title + model/context hint + close; Clear stays secondary.
   - Remove desktop-style nested borders/shadows/max-height clamps; favor readable padding/line-height and single scroll.
   - Chat input sticks to the bottom, grows up to ~3 lines, respects safe area; template picker is a lightweight sheet, not persistent inline.
-  - Long messages may fold with “Show more”; auto-scroll pauses when user scrolls up, with a “Jump to latest” affordance.
+  - Long messages may fold with “Show more�? auto-scroll pauses when user scrolls up, with a “Jump to latest�?affordance.
+
+### Project Scope (P1)
+- **PRD-PROJ-SCOPE-001 (P1): Project-driven workspace**
+  - Projects are global and shared between Reader and Writer.
+  - A book can belong to multiple projects via `project_books`.
+  - The active project filters Reader's visible book list and scopes Writer content/context/references.
+  - Search scope must be explicit: **Library search = global**; **Project search = current project**.
+  - Flomo default tags use the **current project** when multiple project memberships exist.
+  - Reading position remains **per book** (not per project); users can manage project-specific navigation via bookmarks.
+- **PRD-PROJ-SCOPE-002 (P1): Reader sidebar scope-only**
+  - Reader sidebar shows only the current project's books + reader navigation.
+  - Global Library management moves to the Library tab.
+- **PRD-PROJ-SCOPE-001 (P1): Project-driven workspace**
+  - Projects are global and shared between Reader and Writer.
+  - A book can belong to multiple projects via `project_books`.
+  - The active project filters Reader's visible book list and scopes Writer content/context/references.
+  - Search scope must be explicit: **Library search = global**; **Project search = current project**.
+  - Flomo default tags use the **current project** when multiple project memberships exist.
+  - Reading position remains **per book** (not per project); users can manage project-specific navigation via bookmarks.
+
+**Scope rationale (2026-01-17):**
+- Projects are a **classifier**, not a container; do not move books between projects.
+- Reduce destructive errors by separating "Remove from project" vs "Delete from Library".
+- Keep Reader/Writer in sync under a single active project while preserving simple, book-level reading progress.
 
 ### Reader Core (P0)
 
 - **PRD-RDR-AI-001 (P1): Reader "Questions" shortcut (active recall)**
   - From Reader selection menu and persisted highlight popover, provide `Questions` (Generate Questions).
-  - Output contract (default): generate **3–5** `Q:`/`A:` pairs grounded only in the provided context, covering **terminology**, **logic flow**, and **insight/implications** (tags allowed). If context is insufficient, ask clarifying questions instead of guessing.
+  - Output contract (default): generate **3�?** `Q:`/`A:` pairs grounded only in the provided context, covering **terminology**, **logic flow**, and **insight/implications** (tags allowed). If context is insufficient, ask clarifying questions instead of guessing.
 - **PRD-RDR-AI-002 (P1): Shared Reader shortcut templates**
   - Reader actions `Ask AI` / `Summarize` / `Explain` / `Questions` must use a shared template registry so prompts and behaviors stay consistent across selection menu and highlight popover.
 - **PRD-RDR-AI-003 (P1): End-user editable templates with safe defaults**
   - Provide Settings UI to edit the Reader shortcut templates (instruction text) locally.
   - Must include a fail-safe recovery: `Use defaults` + per-template reset + reset all overrides.
-- Render PDF via react-pdf; page nav + continuous scroll toggle; wheel scoped. Restore `last_read_position`. Floating menu on selection: Summarize/Explain/Chat/Save Highlight. Selection bounding uses normalized page coords (0–1); store zoom when available to aid re-projection.
+- Render PDF via react-pdf; page nav + continuous scroll toggle; wheel scoped. Restore `last_read_position`. Floating menu on selection: Summarize/Explain/Chat/Save Highlight. Selection bounding uses normalized page coords (0�?); store zoom when available to aid re-projection.
 - **PRD-RDR-NAV-001 (P1): Bookmarks add UX**
   - Provide an explicit "Add bookmark" action in Reader.
   - Bookmarks persist per book and appear in the Bookmarks list with page labels.
@@ -121,36 +166,36 @@
 - Overlap handling/render:
   - Must support multi-rect highlights (one rect per line fragment).
   - Must clip rects to page bounds and prevent line-to-line overlap (vertical clamp).
-  - Repeated highlights should either merge (recommended) or cap alpha to avoid “dark stacking”.
+  - Repeated highlights should either merge (recommended) or cap alpha to avoid “dark stacking�?
 - Interactions:
   - Click to select an existing highlight (single select).
   - Popover actions: change color, delete, add/edit note, ask AI about highlight.
   - One highlight can link to many chat messages (via `chats.reference_highlight_id`).
 
 ### AI Pipeline (P0 base, P1 extras)
-- Alpha uses buffered responses; streaming is backlog. Retry with capped exponential backoff (3 tries, max 2s backoff). Latency target p95 < 8s. Editor auto-insert sequence (opt-in): send → receive → append to cursor. Respect stored base/model/key; block empty key.
+- Alpha uses buffered responses; streaming is backlog. Retry with capped exponential backoff (3 tries, max 2s backoff). Latency target p95 < 8s. Editor auto-insert sequence (opt-in): send �?receive �?append to cursor. Respect stored base/model/key; block empty key.
 
-### RAG / “Ask the Book” (Backlog, not Alpha-blocking)
-- Chunk ~800–1200 chars, 10–15% overlap; top-K = 3–5. Prompt template: system preamble + user question + cited chunks (`[p{page}] excerpt`). If FTS empty/offline, fall back to normal chat and state no context. Not an Alpha blocker.
+### RAG / “Ask the Book�?(Backlog, not Alpha-blocking)
+- Chunk ~800�?200 chars, 10�?5% overlap; top-K = 3�?. Prompt template: system preamble + user question + cited chunks (`[p{page}] excerpt`). If FTS empty/offline, fall back to normal chat and state no context. Not an Alpha blocker.
 
 ### Writer / Editor (P1)
 **Status note:** Writer UX is **deferred until Reader completion** (`docs/TASKS.md` Task 29). Alpha only guarantees local draft persistence to prevent data loss.
 
-**P0 (usable writing) — requirements**
+**P0 (usable writing) �?requirements**
 - Large editing area suitable for long-form writing.
 - Persist last edit locally; restore after refresh/restart/crash.
-- Saved entries (“documents”) with:
+- Saved entries (“documents�? with:
   - Default title: first line is the title.
   - In-editor tags: auto-detect `#tag` and `#tag/subtag`.
 
-**P1 (AI-assisted writing) — requirements**
+**P1 (AI-assisted writing) �?requirements**
 - **PRD-WTR-AI-001 (P1): Writer selection AI actions (auto-send)**
   - In Writer Content, selecting text shows a compact action menu: `Simplify` / `Concise` / `Rewrite` / `Translate` / `Explain` / `Ask AI`.
   - `Simplify/Concise/Rewrite/Translate/Explain` auto-send and write a result card into Writer chat.
   - After applying a suggestion via `Replace selection` or `Insert below`, the newly inserted text briefly flash-highlights (theme-aware) and clears on next user input or after 7s.
   - `Rewrite` supports a tone submenu: Default / Formal / Friendly / Academic / Bullet.
   - `Translate` default target language is configurable in Settings (initial default: English).
-- **PRD-WTR-AI-002 (P1): Writer “Ask AI” is draft-only**
+- **PRD-WTR-AI-002 (P1): Writer “Ask AI�?is draft-only**
   - `Ask AI` must NOT auto-send; it pre-fills the chat input with `Context:` (selected text) + `Instruction:` and focuses the cursor at the end.
 - **PRD-WTR-AI-003 (P1): Centralized Writer templates with safe defaults**
   - Writer selection actions share a template registry (single source of truth) and are end-user editable.
@@ -164,20 +209,56 @@
 - **PRD-WTR-AI-004 (P1): Non-destructive apply controls**
   - Result cards provide explicit apply actions: `Replace selection` (default primary), `Insert below`, and `Copy`.
   - Apply actions must preserve a clean single-step Undo for replace/insert.
+- **PRD-WTR-CHAT-REF-001 (P1): Writer chat includes references**
+  - When references are included in Context (membership on), Writer chat should include those reference snippets by default.
+  - Provide a per-chat toggle to include/exclude references.
+- **PRD-WTR-CHAT-REF-002 (P1): Writer chat history sanitization**
+  - Historical user messages sent to the API must strip prior `Context:` and `References:` blocks.
+  - Only the user `Instruction:` content should be retained for previous turns to avoid stale context leakage.
+- **PRD-WTR-REF-001 (P1): Reference provenance metadata**
+  - On import, capture PDF metadata when available (title/author/year/keywords) and persist on the book record.
+  - Writer references created from Reader must store a snapshot of source metadata (title/author/year, file_hash, page_number, page_label) so citations remain stable if the book metadata changes.
+  - Provide an explicit "Update metadata" action to refresh the snapshot from the current book metadata without changing selection text or page anchors.
+- **PRD-WTR-REF-002 (P1): Citation formatting (APA 7 default)**
+  - Writer outputs that use references can include citations in APA 7 format by default.
+  - Page numbers/labels must be inserted by the system (no model-generated page values).
+  - Missing fields must follow APA fallback rules (e.g., title in author position, `n.d.` for missing year).
+  - References list is deduped and sorted.
+- **PRD-WTR-REF-003 (P1): Reference tags + system defaults**
+- References support user-editable `tags[]` for filtering and search.
+- System default tags are generated from source metadata using the `ai_reader/<field>/<value>` namespace (e.g., `ai_reader/title/<title>`).
+- Default tag generation is configurable in Settings (which defaults are on/off).
+- Tag search covers tags + source metadata + snippet text.
+- References panel provides a multi-select tag filter with an option to include system tags.
+- System tag display uses `title <value>` / `author <value>` / `year <value>` (no prefix, no colon); user tags render with `#`.
+- System tags are not editable and should not appear in the tag editor UI.
+- Reader `To Ref` prompts for optional user tags (both selection menu and highlight popover).
+- Flomo export prefixes user tags with `#ai_reader/` at send time.
 - **PRD-WTR-SEARCH-001 (P1): Writer global search**
   - Writer provides a global search modal with a query input and filters for Content, Context, References, Chat, and Studio.
   - Clicking a result jumps to the corresponding area (editor selection for Content; focus in Context; scroll to reference/chat/studio cards).
   - Follow-up UX polish (low priority): inline match highlight with next/prev navigation, keyboard shortcuts (e.g., Ctrl+K, Enter, Esc), and a scope toggle (current project vs all projects).
+- **PRD-CHAT-MM-001 (P1): Multimodal chat image input**
+  - Chat messages can include images when the configured model supports image input; otherwise show a clear "unsupported" message.
+  - Images are stored locally (app data for desktop, data URL/IndexedDB for web) and referenced by message content parts.
+- **PRD-CHAT-RESP-001 (P1): GPT-5 Responses API controls**
+  - Chat settings provide a safe toggle between Chat Completions (default) and Responses API.
+  - When Responses API is enabled and the model is GPT-5, pass `reasoning.effort`, `text.verbosity`, and `max_output_tokens` settings.
+  - Non-GPT-5 models ignore these controls and show a clear hint.
 - **PRD-CHAT-UX-001 (P1): Chat role visual distinction**
   - In both Reader and Writer chat, user and assistant/suggestion messages must be visually distinguishable (theme-aware), improving scanability.
 - **PRD-CHAT-UX-002 (P2): Reader/Writer chat visual consistency**
   - Reader chat and Writer chat must use the same bubble styling, theme tokens, and layout infrastructure.
   - Both chats share the same store/API infrastructure; only prompt templates differ.
   - Ensure theme changes apply uniformly to both views.
+- **PRD-WTR-CTX-OCR-001 (P1): Context image drop + local OCR**
+  - Drag/drop images into Context triggers local OCR (no remote upload).
+  - After OCR completes, prompt the user to Append to Context or Insert at cursor.
+  - OCR failures are recoverable; cache OCR results by image hash to avoid repeated work.
 - **PRD-WTR-LAYOUT-001 (P1): Writer Editor↔Chat adjustable split**
   - Desktop Writer view supports resizing the boundary between Editor and Writer AI.
   - Default ratio (Editor/Chat) is 65/35 (ratio applies to Editor+Chat only; left sidebar excluded).
-  - Enforce minimum widths: Editor ≥ 520px; Writer AI ≥ 320px.
+  - Enforce minimum widths: Editor �?520px; Writer AI �?320px.
 - **PRD-WTR-LAYOUT-002 (P1): Layout adjust mode (lock/unlock)**
   - Provide a top-right `Layout` control next to Settings (Writer desktop only).
   - Default is Locked; entering Adjust mode shows draggable splitter and allows changes; Done returns to Locked.
@@ -191,31 +272,35 @@
   - Left sidebar supports a user-adjustable width via a draggable splitter (desktop only).
   - Splitter handles appear only in **Layout Adjust mode** (unlocked via Writer top bar `Layout`); otherwise a simple divider is shown (not draggable).
   - Enforce min/max widths and persist width locally; provide a Reset to default width (via Layout controls).
-  - Replace the text button “Hide navigation” with a compact icon toggle placed consistently (desktop view toolbar/top bar).
+  - Replace the text button “Hide navigation�?with a compact icon toggle placed consistently (desktop view toolbar/top bar).
 - **PRD-SHELL-LAYOUT-004 (P1): Global Layout toggle + per-view scope**
   - Desktop header shows a single `Layout` / `Done` toggle in both Reader and Writer views (mobile unaffected).
   - Layout Adjust mode is **global**, but adjustments are **scoped** to the current view; show an explicit scope hint: `Adjusting: Reader` / `Adjusting: Writer`.
   - Reader supports adjusting the **Reader↔Chat** width split (desktop only), with min widths, persistence, and Reset (Reader-only).
   - Writer supports adjusting the **Editor↔Chat** split and density as before; Reset is Writer-only (does not reset Reader).
 - Right-side AI assistant chat for writing (shortcuts TBD).
-- Writer Studio “Artifacts” (writing-first): Kickoff/Definition/Explanation/Rewrite(style)/Polish produce saved artifacts first (no auto-overwrite); user clicks Insert to apply. Citation constraint is On by default when references are available.
+- Writer Studio “Artifacts�?(writing-first): Kickoff/Definition/Explanation/Rewrite(style)/Polish produce saved artifacts first (no auto-overwrite); user clicks Insert to apply. Citation constraint is On by default when references are available.
 - Markdown support: at minimum import/export; full markdown-native editing optional (define fidelity expectations).
 
-**P2 (integrations & personalization) — requirements**
+**P2 (integrations & personalization) �?requirements**
 - One-click export to Flomo (API), with clear failure handling.
 - Quick synonyms/translation via remote LLM first; local model optional later.
-- “Can my writing be learned?” requires an explicit privacy-first definition; default is **no server-side training**. Consider local-only “style profile” prompts or local retrieval over drafts.
+- “Can my writing be learned?�?requires an explicit privacy-first definition; default is **no server-side training**. Consider local-only “style profile�?prompts or local retrieval over drafts.
 
 **Writer workflow model (spec-only; implementation deferred)**
-- **Projects:** Writer work is organized into “Writing Projects”. A project is the unit of saved work and has its own content/context/references.
+- **Projects:** Writer work is organized into global projects shared with Reader. A project is the unit of saved work and has its own content/context/references.
+- **Project books:** A book can belong to multiple projects; Reader lists only books in the active project unless in global mode.
 - **Workspace layout:** top = **Content** (writing), bottom = **Context** (plain text, editable, supports paste), with an action row between (actions TBD).
 - **Left navigation:** top = project list; bottom = current project’s **References** list.
-- **References (minimum unit):** “reference cards” with `source` (bookId/page/rects), `title`, `snippet`, `createdAt`, optional `author`; can be created from Reader highlights or manually.
-- **Context membership:** each reference has an include/exclude toggle; context displays “items/size” and supports **Clear** and **Undo last append**.
-- **Active project is explicit:** Writer must show the currently active project; Reader “add to writing …” actions must not be allowed to silently write into an unknown project (prompt to choose/create if none).
-- **Reader → Writer actions:** from a Reader highlight:
-  - “Add to writing context” appends snippet to the active project context (toast + undo).
-  - “Add to [project name] (reference)” creates a reference card (default included = false to avoid context bloat).
+- **References (minimum unit):** “reference cards�?with `source` (bookId/page/rects), `title`, `snippet`, `createdAt`, optional `author`; can be created from Reader highlights or manually.
+- **Reader �?Writer (reference + highlight):** When selecting text in Reader and choosing `To Ref`, create a Highlight first, then save the Writer reference so the highlight is visible in Reader.
+- **References (metadata snapshot):** each reference stores a snapshot of source metadata (title/author/year, file_hash, page_label/page_number) for stable citations, with a manual "Update metadata" action to refresh from the current book metadata.
+- **References (tags):** each reference can store user tags; system default tags can be generated from source metadata with user-configurable defaults.
+- **Context membership:** each reference has an include/exclude toggle; context displays “items/size�?and supports **Clear** and **Undo last append**. Clear prompts for context-only vs context+chat.
+- **Active project is explicit:** Writer must show the currently active project; Reader “add to writing …�?actions must not be allowed to silently write into an unknown project (prompt to choose/create if none).
+- **Reader �?Writer actions:** from a Reader highlight:
+  - “Add to writing context�?appends snippet to the active project context (toast + undo).
+  - “Add to [project name] (reference)�?creates a reference card (default included = false to avoid context bloat).
 - **Writer assistant:** right-side **collapsible** multi-round chat, decoupled from Reader’s per-book chat unless user explicitly opts in; supports prompt presets/templates (TBD).
 - **Markdown:** content accepts Markdown syntax. P1 adds an **Edit/Preview** toggle (preview is read-only render; editing remains plain text).
 
@@ -229,7 +314,7 @@ See `docs/writer-srs.md` for testable details and acceptance criteria.
 - Rust background task extracts text on import; UI non-blocking; show progress/error. Insert chunks into `book_text_index`; if fail, mark processed_for_search false and continue core flows.
 
 ### Error Boundaries & Resilience (P0)
-- Wrap Reader, Editor, Chat; show friendly fallback with “Reload panel.” Network failures show inline retry; keep drafts intact. Avoid logging secrets.
+- Wrap Reader, Editor, Chat; show friendly fallback with “Reload panel.�?Network failures show inline retry; keep drafts intact. Avoid logging secrets.
 
 ### Telemetry/Logging (Low priority)
 - Local-only (console or rolling file, 7-day retention) with redaction of secrets; optional disable. Non-core.
@@ -240,15 +325,18 @@ See `docs/writer-srs.md` for testable details and acceptance criteria.
 ### Flomo (P1/backlog)
 - Reader/Writer: export notes to Flomo via webhook (write-only), plain text with tags (one per line) and default tag prefixes (`#books/<book>` / `#写作/<project>`).
 - Reader: selection `Note` flow can save a highlight note and optionally `Save & Send` to Flomo; Writer: export selection (plus Context) to Flomo.
-- UX/Safety: never reveal or copy the webhook URL in UI; show clear success/error feedback; optionally show a local-only “Last sent” timestamp to reduce duplicate sends.
+- Writer References: export a reference card to Flomo; user tags are prefixed with `#ai_reader/` and system tags are preserved.
+- Explicit Project/Book tags (user-managed) are used as default Flomo tags; Flomo composer can optionally save edits back to defaults.
+- Writer: provide a full export to Flomo (Content + Context) from the writer action bar.
+- UX/Safety: never reveal or copy the webhook URL in UI; show clear success/error feedback; optionally show a local-only “Last sent�?timestamp to reduce duplicate sends.
 - Writer UX: provide a local-only `Flomo History` list (outbox) per writing project to review what was sent and support quick resend (Flomo is write-only; no remote history).
 
 ## 6. AI Prompt Contract (Baseline)
 - System prompt defines assistant role/safety. Selection-based: `Explain this text: "<quote>"`. Global query: plain question. When RAG active, append cited chunks with `[p{page}]` tags and require citations; if none, state lack of context.
 
 ## 7. Testing Plan
-- **Manual P0 smoke (run by you):** first-run settings save/test; import PDF; reopen restores last page; select text → floating menu actions; chat success + retry; highlight save + overlay on reopen; theme persists; **phone UI at 375px: Writer usable, Reader/Library disabled with hint, Settings icon present, chat overlay opens.**
-- **Automated (dev-owned):** unit for stores (settings/library/reader/chat/drafts/highlights), apiClient fetch behaviors (mocked), selection → normalized rect helpers, Rust command tests for import/copy. Mock Tauri plugins; no real file/network in unit tests.
+- **Manual P0 smoke (run by you):** first-run settings save/test; import PDF; reopen restores last page; select text �?floating menu actions; chat success + retry; highlight save + overlay on reopen; theme persists; **phone UI at 375px: Writer usable, Reader/Library disabled with hint, Settings icon present, chat overlay opens.**
+- **Automated (dev-owned):** unit for stores (settings/library/reader/chat/drafts/highlights), apiClient fetch behaviors (mocked), selection �?normalized rect helpers, Rust command tests for import/copy. Mock Tauri plugins; no real file/network in unit tests.
 
 ## 8. Performance Targets
 - Import 100MB PDF copy < 20s on baseline laptop; main thread blocks < 100ms at kickoff. Reader render p95 < 200ms per page nav. Virtualize lists when >100 items (library/highlights/chat) to keep scroll smooth.
@@ -271,3 +359,10 @@ See `docs/writer-srs.md` for testable details and acceptance criteria.
 - Desktop: imports persist to app data with hash/mtime/size and render in Reader; last_read_position (page + scroll) saves/restores.
 - Web: web imports are stored as data URLs and survive refresh; desktop-imported files are hidden to avoid broken previews.
 - Highlight persistence exists but geometry/overlap/merge and interactions (select/edit/delete) are still being hardened.
+
+
+
+
+
+
+

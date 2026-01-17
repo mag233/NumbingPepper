@@ -6,10 +6,13 @@ import {
   restoreBook,
   type LastReadPosition,
   softDeleteBook,
+  updateBookTags as updateBookTagsInDb,
   updateLastOpenedAt,
   updateLastReadPosition,
 } from '../lib/db'
+import { normalizeExplicitTags } from '../lib/referenceTags'
 import { isTauri } from '../lib/isTauri'
+import useProjectBooksStore from './projectBooksStore'
 import {
   type ImportSummary,
   type LibraryItem,
@@ -28,6 +31,7 @@ type LibraryState = {
   removeFromLibrary: (bookId: string) => Promise<void>
   restoreFromTrash: (bookId: string) => Promise<void>
   deleteLocalFile: (bookId: string) => Promise<void>
+  updateBookTags: (bookId: string, tags: string[]) => Promise<void>
 }
 
 const mergeUniqueById = (next: LibraryItem[], existing: LibraryItem[]) => {
@@ -133,10 +137,20 @@ const useLibraryStore = create<LibraryState>((set, get) => ({
       activeId: state.activeId === bookId ? state.items.find((b) => b.id !== bookId)?.id : state.activeId,
     }))
     await removeBook(bookId)
+    void useProjectBooksStore.getState().hydrate()
     if (isTauri()) {
       const { invoke } = await import('@tauri-apps/api/core')
       void invoke('remove_path', { path: parentDir })
     }
+  },
+  updateBookTags: async (bookId, tags) => {
+    if (!bookId) return
+    const normalized = normalizeExplicitTags(tags)
+    set((state) => ({
+      items: state.items.map((book) => (book.id === bookId ? { ...book, tags: normalized } : book)),
+      trashItems: state.trashItems.map((book) => (book.id === bookId ? { ...book, tags: normalized } : book)),
+    }))
+    await updateBookTagsInDb(bookId, normalized)
   },
 }))
 

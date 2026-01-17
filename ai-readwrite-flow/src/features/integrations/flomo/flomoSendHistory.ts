@@ -76,3 +76,7 @@ export const makeReaderHighlightSendKey = (bookId: string, highlightId: string) 
 export const makeWriterSelectionSendKey = (projectId: string, selection: string) =>
   `writer:sel:${projectId}:${fnv1a(selection.trim())}`
 
+export const makeWriterReferenceSendKey = (projectId: string, referenceId: string) =>
+  `writer:ref:${projectId}:${referenceId}`
+
+export const makeWriterProjectSendKey = (projectId: string) => `writer:full:${projectId}`

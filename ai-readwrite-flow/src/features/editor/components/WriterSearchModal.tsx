@@ -195,7 +195,16 @@ const WriterSearchModal = ({ open, onClose, editor }: Props) => {
         const snippetMatches = findTextMatches(ref.snippetText ?? '', trimmedQuery, 1)
         const titleMatches = findTextMatches(ref.title ?? '', trimmedQuery, 1)
         const authorMatches = findTextMatches(ref.author ?? '', trimmedQuery, 1)
-        const match = snippetMatches[0] ?? titleMatches[0] ?? authorMatches[0]
+        const sourceTitleMatches = findTextMatches(ref.sourceTitle ?? '', trimmedQuery, 1)
+        const sourceAuthorMatches = findTextMatches(ref.sourceAuthor ?? '', trimmedQuery, 1)
+        const tagsMatches = findTextMatches((ref.tags ?? []).join(' '), trimmedQuery, 1)
+        const match =
+          snippetMatches[0] ??
+          titleMatches[0] ??
+          authorMatches[0] ??
+          sourceTitleMatches[0] ??
+          sourceAuthorMatches[0] ??
+          tagsMatches[0]
         if (!match) continue
         next.push({
           id: `reference-${ref.id}`,
@@ -253,7 +262,17 @@ const WriterSearchModal = ({ open, onClose, editor }: Props) => {
       const snippetMatches = findTextMatches(ref.snippetText ?? '', trimmedQuery, 1)
       const titleMatches = findTextMatches(ref.title ?? '', trimmedQuery, 1)
       const authorMatches = findTextMatches(ref.author ?? '', trimmedQuery, 1)
-      if (snippetMatches.length || titleMatches.length || authorMatches.length) refCount += 1
+      const sourceTitleMatches = findTextMatches(ref.sourceTitle ?? '', trimmedQuery, 1)
+      const sourceAuthorMatches = findTextMatches(ref.sourceAuthor ?? '', trimmedQuery, 1)
+      const tagsMatches = findTextMatches((ref.tags ?? []).join(' '), trimmedQuery, 1)
+      if (
+        snippetMatches.length ||
+        titleMatches.length ||
+        authorMatches.length ||
+        sourceTitleMatches.length ||
+        sourceAuthorMatches.length ||
+        tagsMatches.length
+      ) refCount += 1
     }
     summary.references = refCount
 

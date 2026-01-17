@@ -76,3 +76,51 @@ export const buildWriterFlomoContent = (args: {
 }
 
 export const defaultProjectTag = (projectTitle: string) => tagFromPath('写作', projectTitle) ?? '#写作'
+
+const buildWriterFlomoContentFull = (args: {
+  content: string
+  context: string
+  projectTitle: string
+  tags?: string[]
+}) => {
+  const defaultTag = tagFromPath('写作', args.projectTitle) ?? '#写作'
+  const allTags = [defaultTag, ...(args.tags ?? [])]
+  const tagLines = joinTagLines(allTags)
+  return joinContentLines([
+    'Content:',
+    args.content.trim(),
+    '',
+    'Context:',
+    args.context.trim(),
+    '',
+    'Tags:',
+    tagLines,
+  ])
+}
+
+export const buildReferenceFlomoContent = (args: {
+  snippet: string
+  title?: string
+  author?: string
+  year?: number
+  tags?: string[]
+}) => {
+  const sourceLines: string[] = []
+  if (args.title) sourceLines.push(`Title: ${args.title.trim()}`)
+  if (args.author) sourceLines.push(`Author: ${args.author.trim()}`)
+  if (typeof args.year === 'number') sourceLines.push(`Year: ${args.year}`)
+  if (!sourceLines.length) sourceLines.push('Unknown')
+  const tagLines = joinTagLines(args.tags ?? [])
+  return joinContentLines([
+    'Reference:',
+    args.snippet.trim(),
+    '',
+    'Source:',
+    ...sourceLines,
+    '',
+    'Tags:',
+    tagLines,
+  ])
+}
+
+export { buildWriterFlomoContentFull }

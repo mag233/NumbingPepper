@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildReaderFlomoContent, buildWriterFlomoContent, defaultBookTag, defaultProjectTag } from './flomoNoteBuilder'
+import {
+  buildReaderFlomoContent,
+  buildReferenceFlomoContent,
+  buildWriterFlomoContent,
+  buildWriterFlomoContentFull,
+  defaultBookTag,
+  defaultProjectTag,
+} from './flomoNoteBuilder'
 
 describe('flomoNoteBuilder', () => {
   it('buildReaderFlomoContent uses English headings', () => {
@@ -24,6 +31,34 @@ describe('flomoNoteBuilder', () => {
     expect(content).toContain('Selection:')
     expect(content).toContain('Context:')
     expect(content).toContain('Tags:')
+  })
+
+  it('buildWriterFlomoContentFull uses English headings', () => {
+    const content = buildWriterFlomoContentFull({
+      content: 'content',
+      context: 'context',
+      projectTitle: 'Demo Project',
+      tags: [],
+    })
+    expect(content).toContain('Content:')
+    expect(content).toContain('Context:')
+    expect(content).toContain('Tags:')
+  })
+
+  it('buildReferenceFlomoContent prefixes reference tags', () => {
+    const content = buildReferenceFlomoContent({
+      snippet: 'snippet',
+      title: 'My Paper',
+      author: 'Ada Lovelace',
+      year: 2025,
+      tags: ['#ai_reader/title/My-Paper', '#ai_reader/health'],
+    })
+    const tagSection = content.split('Tags:')[1] ?? ''
+    const lines = tagSection
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+    expect(lines).toEqual(['#ai_reader/title/My-Paper', '#ai_reader/health'])
   })
 
   it('dedupes tags while preserving order', () => {

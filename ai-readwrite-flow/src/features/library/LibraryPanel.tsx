@@ -2,18 +2,27 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { FolderDown, LibraryBig, Trash2 } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useLibraryStore from '../../stores/libraryStore'
+import useWriterProjectStore from '../editor/stores/writerProjectStore'
+import useProjectBooksStore from '../../stores/projectBooksStore'
 import { isTauri } from '../../lib/isTauri'
 import LibraryBookList from './components/LibraryBookList'
 import LibrarySelectionPanel, { type PendingDelete } from './components/LibrarySelectionPanel'
 type Props = {
   compact?: boolean
   onOpen?: () => void
+  scope?: 'global' | 'project'
 }
 
-const LibraryPanel = ({ compact = false, onOpen }: Props) => {
+const LibraryPanel = ({ compact = false, onOpen, scope = 'global' }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { items, trashItems, activeId, importFiles, setActive, removeFromLibrary, restoreFromTrash, deleteLocalFile } =
+  const { items, trashItems, activeId, importFiles, setActive, removeFromLibrary, restoreFromTrash, deleteLocalFile, updateBookTags } =
     useLibraryStore()
+  const activeProjectId = useWriterProjectStore((s) => s.activeProjectId)
+  const projects = useWriterProjectStore((s) => s.projects)
+  const booksByProjectId = useProjectBooksStore((s) => s.booksByProjectId)
+  const projectsByBookId = useProjectBooksStore((s) => s.projectsByBookId)
+  const hydrateProjectBooks = useProjectBooksStore((s) => s.hydrate)
+  const setBookProjects = useProjectBooksStore((s) => s.setBookProjects)
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null)
@@ -21,17 +30,29 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
   const [trashSelectedId, setTrashSelectedId] = useState<string | null>(null)
   const [librarySelectedId, setLibrarySelectedId] = useState<string | null>(activeId ?? null)
   const isDesktop = isTauri()
-  const list = view === 'trash' ? trashItems : items
+  const activeProjectTitle = useMemo(() => {
+    if (!activeProjectId) return 'Global'
+    return projects.find((project) => project.id === activeProjectId)?.title ?? 'Untitled'
+  }, [activeProjectId, projects])
+  useEffect(() => {
+    void hydrateProjectBooks()
+  }, [hydrateProjectBooks])
+
+  const baseList = view === 'trash' ? trashItems : items
+  const scopedList =
+    view === 'library' && scope === 'project' && activeProjectId
+      ? baseList.filter((item) => (booksByProjectId[activeProjectId] ?? []).includes(item.id))
+      : baseList
   const resolvedLibrarySelectedId = useMemo(() => {
     if (view !== 'library') return null
-    const candidate = librarySelectedId ?? activeId ?? items[0]?.id ?? null
+    const candidate = librarySelectedId ?? activeId ?? scopedList[0]?.id ?? null
     if (!candidate) return null
-    if (items.some((item) => item.id === candidate)) return candidate
-    return activeId ?? items[0]?.id ?? null
-  }, [view, librarySelectedId, activeId, items])
+    if (scopedList.some((item) => item.id === candidate)) return candidate
+    return scopedList[0]?.id ?? null
+  }, [view, librarySelectedId, activeId, scopedList])
 
   const selectedId = view === 'trash' ? trashSelectedId : resolvedLibrarySelectedId
-  const activeItem = useMemo(() => list.find((i) => i.id === selectedId), [list, selectedId])
+  const activeItem = useMemo(() => scopedList.find((i) => i.id === selectedId), [scopedList, selectedId])
   const openItemTitle = useMemo(() => items.find((i) => i.id === activeId)?.title, [items, activeId])
 
   useEffect(() => {
@@ -156,10 +177,20 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
             {info}
           </div>
         )}
+        {view === 'library' && scope === 'project' && activeProjectId && (
+          <div className="rounded-lg border border-chrome-border/70 bg-surface-raised/60 p-2 text-xs text-ink-primary">
+            Scope: Project / {activeProjectTitle}
+          </div>
+        )}
         {items.length === 0 && (
           <div className="flex items-center gap-3 text-sm text-ink-muted">
             <LibraryBig className="size-5 text-ink-muted" />
             <p>Drag & drop PDFs or click Import. Files will be stored to the app data library with metadata persisted.</p>
+          </div>
+        )}
+        {view === 'library' && scope === 'project' && activeProjectId && scopedList.length === 0 && items.length > 0 && (
+          <div className="rounded-lg border border-chrome-border/70 bg-surface-raised/60 p-2 text-xs text-ink-muted">
+            No books assigned to this project yet. Switch to Global scope to assign books.
           </div>
         )}
         {!isDesktop && items.length === 0 && (
@@ -167,9 +198,9 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
             Files imported on desktop are hidden here; re-import in web to view.
           </p>
         )}
-        {list.length > 0 && (
+        {scopedList.length > 0 && (
           <LibraryBookList
-            items={list}
+            items={scopedList}
             selectedId={selectedId}
             activeId={activeId ?? null}
             onSelect={(id) => {
@@ -190,8 +221,11 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
         )}
         {activeItem && (
           <LibrarySelectionPanel
+            key={`${activeItem.id}:${(activeItem.tags ?? []).join('|')}`}
             view={view}
             selectedItem={activeItem}
+            projects={projects.map((project) => ({ id: project.id, title: project.title }))}
+            projectIds={projectsByBookId[activeItem.id] ?? []}
             openItemTitle={openItemTitle}
             canOpenSelected={view === 'library' && activeId !== activeItem.id}
             isDesktop={isDesktop}
@@ -201,6 +235,8 @@ const LibraryPanel = ({ compact = false, onOpen }: Props) => {
             onMoveToTrash={(id) => void runRemove(id)}
             onRestore={(id) => void runRestore(id)}
             onDeleteAppCopy={(id) => void runDelete(id)}
+            onUpdateTags={(id, tags) => void updateBookTags(id, tags)}
+            onUpdateProjects={(id, next) => void setBookProjects(id, next)}
           />
         )}
       </div>

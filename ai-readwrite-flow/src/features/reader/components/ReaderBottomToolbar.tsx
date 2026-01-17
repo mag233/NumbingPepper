@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BookmarkPlus, ChevronLeft, ChevronRight, RefreshCw, Search, ZoomIn, ZoomOut } from 'lucide-react'
 import useReaderStore from '../../../stores/readerStore'
-import useLibraryStore from '../../../stores/libraryStore'
+import { useScopedLibrary } from '../../../stores/useScopedLibrary'
 import useBookmarkStore from '../../../stores/bookmarkStore'
 import FindInDocument from './FindInDocument'
 import { formatPageForDisplay, resolveJumpTarget } from '../services/pageLabels'
@@ -24,7 +24,7 @@ const pill =
 const ReaderBottomToolbar = ({ scrollMode, onToggleScrollMode, onRefresh, onJump }: Props) => {
   const { currentPage, pageCount, pageLabels, requestJump, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode } =
     useReaderStore()
-  const activeBookId = useLibraryStore((s) => s.activeId)
+  const { activeId: activeBookId } = useScopedLibrary('project')
   const addBookmarkEntry = useBookmarkStore((s) => s.add)
   const [inputPage, setInputPage] = useState('')
   const [showFind, setShowFind] = useState(false)

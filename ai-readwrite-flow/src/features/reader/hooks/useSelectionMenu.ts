@@ -4,8 +4,9 @@ import { type Highlight, type HighlightRect } from '../types'
 import { copyTextToClipboard } from '../../../lib/clipboard'
 import { cleanPdfCopiedText } from '../services/selectionText'
 import useFlomoComposerStore from '../../integrations/flomo/flomoComposerStore'
-import useLibraryStore from '../../../stores/libraryStore'
+import { useScopedLibrary } from '../../../stores/useScopedLibrary'
 import { defaultBookTag } from '../../integrations/flomo/flomoNoteBuilder'
+import { buildAiReaderTagLines } from '../../../lib/referenceTags'
 
 export type SelectionMenuState = {
   visible: boolean
@@ -31,7 +32,7 @@ const clearSelection = () => {
 
 export const useSelectionMenu = ({ container, activeBookId, addHighlight, onAction }: Args) => {
   const openFlomoComposer = useFlomoComposerStore((s) => s.open)
-  const activeItem = useLibraryStore((s) => s.items.find((item) => item.id === s.activeId))
+  const { activeItem } = useScopedLibrary('project')
   const [menu, setMenu] = useState<SelectionMenuState>({
     visible: false,
     x: 0,
@@ -89,12 +90,13 @@ export const useSelectionMenu = ({ container, activeBookId, addHighlight, onActi
     if (action === 'note') {
       if (!activeBookId || !menu.page || !menu.rects?.length) return
       const bookTitle = activeItem?.title?.trim() || 'Untitled'
+      const bookTags = activeItem?.tags ?? []
       openFlomoComposer({
         mode: 'reader',
         quote: menu.text,
         note: '',
         bookTitle,
-        tags: [defaultBookTag(bookTitle)],
+        tags: [defaultBookTag(bookTitle), ...buildAiReaderTagLines(bookTags)],
         source: { type: 'selection', bookId: activeBookId, page: menu.page, rects: menu.rects },
       })
       clearSelection()

@@ -1,4 +1,6 @@
 import { BookOpen, Trash2, Undo2 } from 'lucide-react'
+import TagEditorCard from '../../../shared/components/TagEditorCard'
+import ProjectAssignmentCard from '../../../shared/components/ProjectAssignmentCard'
 import type { LibraryItem } from '../services/libraryImport'
 import { formatSize } from '../lib/formatSize'
 
@@ -7,9 +9,13 @@ export type PendingDelete = null | { kind: 'remove' | 'delete'; id: string }
 type Props = {
   view: 'library' | 'trash'
   selectedItem: LibraryItem
+  projects: Array<{ id: string; title: string }>
+  projectIds: string[]
   openItemTitle?: string
   canOpenSelected: boolean
   isDesktop: boolean
+  onUpdateTags: (id: string, tags: string[]) => void
+  onUpdateProjects: (id: string, projectIds: string[]) => void
   pendingDelete: PendingDelete
   setPendingDelete: (next: PendingDelete) => void
   onOpenSelected: () => void
@@ -21,9 +27,13 @@ type Props = {
 const LibrarySelectionPanel = ({
   view,
   selectedItem,
+  projects,
+  projectIds,
   openItemTitle,
   canOpenSelected,
   isDesktop,
+  onUpdateTags,
+  onUpdateProjects,
   pendingDelete,
   setPendingDelete,
   onOpenSelected,
@@ -47,6 +57,26 @@ const LibrarySelectionPanel = ({
           ? 'This book is in Trash. Restore to show it in the Library again.'
           : 'Added PDFs are copied into app storage for offline use.'}
       </p>
+
+      {view === 'library' && (
+        <div className="space-y-2">
+          <ProjectAssignmentCard
+            title="Project membership"
+            description="Assign this book to projects. Removing here does not delete the book."
+            projects={projects}
+            selectedIds={projectIds}
+            containerClassName="rounded-none border-0 bg-transparent p-0"
+            onSave={(next) => onUpdateProjects(selectedItem.id, next)}
+          />
+          <TagEditorCard
+            title="Book tags"
+            description="Used as default tags for Flomo exports from this book."
+            tags={selectedItem.tags ?? []}
+            containerClassName="rounded-none border-0 bg-transparent p-0"
+            onSave={(next) => onUpdateTags(selectedItem.id, next)}
+          />
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         {view === 'library' && canOpenSelected && (

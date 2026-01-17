@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { defaultBaseUrl, defaultModel } from '../lib/constants'
 import { loadSettingsFromStore, persistSettings } from '../lib/db'
+import { defaultReferenceDefaultTags, type ReferenceDefaultTags } from '../lib/referenceTags'
+import {
+  defaultChatResponseSettings,
+  normalizeChatResponseSettings,
+  type ChatResponseSettings,
+} from '../lib/chatResponseSettings'
 import { defaultThemePreset, type ThemePreset } from '../lib/theme'
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
@@ -11,6 +17,8 @@ type SettingsState = {
   model: string
   themePreset: ThemePreset
   flomoWebhookUrl: string
+  referenceDefaultTags: ReferenceDefaultTags
+  chatResponseSettings: ChatResponseSettings
   status: Status
   error?: string
   setApiKey: (apiKey: string) => void
@@ -18,6 +26,9 @@ type SettingsState = {
   setModel: (model: string) => void
   setThemePreset: (theme: ThemePreset) => void
   setFlomoWebhookUrl: (url: string) => void
+  setReferenceDefaultTags: (tags: ReferenceDefaultTags) => void
+  setChatResponseSettings: (settings: ChatResponseSettings) => void
+  updateChatResponseSettings: (next: Partial<ChatResponseSettings>) => void
   hydrate: () => Promise<void>
   save: () => Promise<void>
 }
@@ -28,6 +39,8 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
   model: defaultModel,
   themePreset: defaultThemePreset,
   flomoWebhookUrl: '',
+  referenceDefaultTags: defaultReferenceDefaultTags,
+  chatResponseSettings: defaultChatResponseSettings,
   status: 'idle',
   error: undefined,
   setApiKey: (apiKey) => set({ apiKey }),
@@ -35,6 +48,12 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
   setModel: (model) => set({ model }),
   setThemePreset: (themePreset) => set({ themePreset }),
   setFlomoWebhookUrl: (flomoWebhookUrl) => set({ flomoWebhookUrl }),
+  setReferenceDefaultTags: (referenceDefaultTags) => set({ referenceDefaultTags }),
+  setChatResponseSettings: (chatResponseSettings) => set({ chatResponseSettings }),
+  updateChatResponseSettings: (next) =>
+    set((state) => ({
+      chatResponseSettings: normalizeChatResponseSettings({ ...state.chatResponseSettings, ...next }),
+    })),
   hydrate: async () => {
     set({ status: 'loading', error: undefined })
     const stored = await loadSettingsFromStore()
@@ -47,6 +66,8 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
       model: get().model,
       themePreset: get().themePreset,
       flomoWebhookUrl: get().flomoWebhookUrl,
+      referenceDefaultTags: get().referenceDefaultTags,
+      chatResponseSettings: get().chatResponseSettings,
     }
     try {
       await persistSettings(snapshot)

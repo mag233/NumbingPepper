@@ -1,4 +1,5 @@
 import type { WritingArtifactType, WritingReference } from './writingTypes'
+import { formatApaInTextCitation, formatApaReferenceList } from './writerCitations'
 
 export type ArtifactPromptInput = {
   artifactType: WritingArtifactType
@@ -14,18 +15,24 @@ const clampText = (text: string, maxChars: number) => {
   return `${text.slice(0, maxChars)}\n\n[...truncated...]`
 }
 
-const formatRefs = (refs: WritingReference[]) =>
+const formatReferenceEvidence = (refs: WritingReference[]) =>
   refs
     .map((ref, idx) => {
-      const label = `R${idx + 1}`
+      const label = `Source ${idx + 1}`
       const locParts: string[] = []
       if (ref.bookId) locParts.push(`bookId=${ref.bookId}`)
-      if (typeof ref.pageIndex === 'number') locParts.push(`page=${ref.pageIndex}`)
+      if (ref.pageLabel) locParts.push(`page=${ref.pageLabel}`)
+      if (!ref.pageLabel && typeof ref.pageIndex === 'number') locParts.push(`page=${ref.pageIndex}`)
       const loc = locParts.length ? ` (${locParts.join(', ')})` : ''
-      const title = ref.title?.trim() ? ` — ${ref.title.trim()}` : ''
-      return `[${label}]${title}${loc}\n${ref.snippetText.trim()}`
+      const sourceTitle = ref.sourceTitle?.trim() ? ref.sourceTitle.trim() : undefined
+      const fallbackTitle = ref.title?.trim() ? ref.title.trim() : undefined
+      const title = sourceTitle ?? fallbackTitle
+      const titlePart = title ? ` — ${title}` : ''
+      return `${label}${titlePart}${loc}\n${ref.snippetText.trim()}`
     })
     .join('\n\n')
+
+const formatApaRefs = (refs: WritingReference[]) => formatApaReferenceList(refs).join('\n')
 
 const defaultTitleForType = (type: WritingArtifactType) => {
   switch (type) {
@@ -88,7 +95,15 @@ export const buildWriterArtifactMessages = (input: ArtifactPromptInput) => {
   if (input.citationRequired) {
     systemParts.push(
       `All factual or specific claims must be supported by the provided references.`,
-      `Use citations in the format [R1], [R2], ... matching the reference list.`,
+      `Use APA 7 author-date citations (e.g., ${formatApaInTextCitation(input.references[0] ?? {
+        id: 'ref',
+        projectId: 'project',
+        sourceType: 'manual',
+        snippetText: 'Example',
+        createdAt: Date.now(),
+        title: 'Example Reference',
+      } as WritingReference)}).`,
+      `Include a References section formatted in APA 7.`,
       `If the references do not support a claim, explicitly say: "Not supported by provided references."`,
     )
   }
@@ -104,9 +119,10 @@ export const buildWriterArtifactMessages = (input: ArtifactPromptInput) => {
   }
 
   if (refs.length > 0) {
-    userParts.push(`\nReferences:\n${clampText(formatRefs(refs), 12000)}`)
+    userParts.push(`\nReference Evidence:\n${clampText(formatReferenceEvidence(refs), 12000)}`)
+    userParts.push(`\nAPA References:\n${clampText(formatApaRefs(refs), 4000)}`)
   } else if (input.citationRequired) {
-    userParts.push(`\nReferences:\n(none provided)`)
+    userParts.push(`\nAPA References:\n(none provided)`)
   }
 
   return {
@@ -115,4 +131,3 @@ export const buildWriterArtifactMessages = (input: ArtifactPromptInput) => {
     defaultTitle: defaultTitleForType(input.artifactType),
   }
 }
-

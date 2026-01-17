@@ -1,5 +1,8 @@
 import { defaultBaseUrl, defaultModel } from './constants'
 import { logEvent } from './logger'
+import type { ChatResponseSettings } from './chatResponseSettings'
+import { sendResponsesRequest } from './responsesClient'
+import type { ChatMessageInput, ChatResponse } from './chatApiTypes'
 
 export type ConnectionResult = {
   ok: boolean
@@ -9,23 +12,6 @@ export type ConnectionResult = {
 }
 
 const normalizeBase = (url: string) => url.replace(/\/+$/, '')
-
-export type ChatMessageInput = {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
-
-export type ChatResponse = {
-  ok: boolean
-  content?: string
-  error?: string
-  latencyMs?: number
-  usage?: {
-    promptTokens?: number
-    completionTokens?: number
-    totalTokens?: number
-  }
-}
 
 export const testConnection = async (
   baseUrl: string,
@@ -140,6 +126,19 @@ export const sendChatCompletion = async (
       latencyMs: Math.round(performance.now() - started),
     }
   }
+}
+
+export const sendChatRequest = async (
+  baseUrl: string,
+  apiKey: string,
+  model: string,
+  messages: ChatMessageInput[],
+  settings: ChatResponseSettings,
+): Promise<ChatResponse> => {
+  if (settings.apiMode === 'responses') {
+    return sendResponsesRequest(baseUrl, apiKey, model, messages, settings)
+  }
+  return sendChatCompletion(baseUrl, apiKey, model, messages)
 }
 
 const usageSafeNumber = (value: unknown): number | undefined =>

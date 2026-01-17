@@ -12,6 +12,7 @@ import useFlomoComposerStore from '../../integrations/flomo/flomoComposerStore'
 import useWriterProjectStore from '../stores/writerProjectStore'
 import useWriterContextStore from '../stores/writerContextStore'
 import { defaultProjectTag } from '../../integrations/flomo/flomoNoteBuilder'
+import { buildAiReaderTagLines } from '../../../lib/referenceTags'
 
 type Props = {
   editor: TipTapEditor
@@ -52,7 +53,9 @@ const WriterSelectionBubbleMenu = ({ editor, disabled, onQuickPrompt }: Props) =
   const openFlomoComposer = useFlomoComposerStore((s) => s.open)
   const contextText = useWriterContextStore((s) => s.contextText)
   const projectId = useWriterProjectStore((s) => s.activeProjectId)
-  const projectTitle = useWriterProjectStore((s) => s.projects.find((p) => p.id === s.activeProjectId)?.title ?? 'Untitled')
+  const project = useWriterProjectStore((s) => s.projects.find((p) => p.id === s.activeProjectId))
+  const projectTitle = project?.title ?? 'Untitled'
+  const projectTags = project?.tags ?? []
 
   const [rewriteOpen, setRewriteOpen] = useState(false)
   const [rect, setRect] = useState<Rect | null>(null)
@@ -239,7 +242,7 @@ const WriterSelectionBubbleMenu = ({ editor, disabled, onQuickPrompt }: Props) =
       selection: text,
       context: contextText,
       projectTitle,
-      tags: [defaultProjectTag(projectTitle)],
+      tags: [defaultProjectTag(projectTitle), ...buildAiReaderTagLines(projectTags)],
       source: projectId ? { type: 'writer-selection', projectId } : undefined,
     })
     setRewriteOpen(false)

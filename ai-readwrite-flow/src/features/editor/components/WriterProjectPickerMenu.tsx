@@ -54,6 +54,8 @@ const WriterProjectPickerMenu = ({ variant, startCreate, onClose }: Props) => {
     onClose()
   }
 
+  const globalActive = activeProjectId === null
+
   return (
     <div className={dropdownCls}>
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -109,6 +111,21 @@ const WriterProjectPickerMenu = ({ variant, startCreate, onClose }: Props) => {
       )}
 
       <div className="max-h-64 overflow-auto">
+        <div
+          className={`flex items-center gap-2 rounded-lg px-2 py-1 ${globalActive ? 'bg-surface-raised/70' : 'hover:bg-surface-raised/40'}`}
+        >
+          <button
+            className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm text-ink-primary"
+            onClick={() => {
+              selectProject(null)
+              closeMenu()
+            }}
+            title="Global scope (no project)"
+          >
+            <span className="truncate">Global (no project)</span>
+            {globalActive && <Check className="size-4 text-accent" />}
+          </button>
+        </div>
         {visibleProjects.length ? (
           visibleProjects.map((project) => {
             const active = project.id === activeProjectId

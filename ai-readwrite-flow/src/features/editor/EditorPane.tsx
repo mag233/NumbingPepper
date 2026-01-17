@@ -24,6 +24,10 @@ import WriterMarkdownPreview from './components/WriterMarkdownPreview'
 import WriterSelectionApplyNotice from './components/WriterSelectionApplyNotice'
 import WriterEditorActionBar from './components/WriterEditorActionBar'
 import WriterSearchModal from './components/WriterSearchModal'
+import useWriterContextStore from './stores/writerContextStore'
+import useFlomoComposerStore from '../integrations/flomo/flomoComposerStore'
+import { buildAiReaderTagLines } from '../../lib/referenceTags'
+import { defaultProjectTag } from '../integrations/flomo/flomoNoteBuilder'
 
 type Props = {
   onQuickPrompt: (prompt: { text: string; autoSend: boolean; meta?: unknown }) => void
@@ -41,6 +45,8 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
   const projects = useWriterProjectStore((s) => s.projects)
   const setProjectTags = useWriterProjectStore((s) => s.setProjectTags)
   const hydrateReferences = useWriterReferencesStore((s) => s.hydrate)
+  const contextText = useWriterContextStore((s) => s.contextText)
+  const openFlomoComposer = useFlomoComposerStore((s) => s.open)
   const pendingInsert = useWriterArtifactsStore((s) => s.pendingInsert)
   const consumeInsert = useWriterArtifactsStore((s) => s.consumeInsert)
   const setOutlineFromMarkdown = useWriterOutlineStore((s) => s.setFromMarkdown)
@@ -56,6 +62,7 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
   }, [activeProjectId, hydrateReferences])
   const activeProject = useMemo(() => projects.find((p) => p.id === activeProjectId) ?? null, [activeProjectId, projects])
   const effectiveProjectId = activeProject?.id ?? null
+  const projectTags = activeProject?.tags ?? []
   const draftId = useMemo(() => draftIdForProject(effectiveProjectId), [effectiveProjectId])
   const editor = useEditor(
     {
@@ -182,7 +189,7 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
 
   const previewSource = isPreview && editor ? tipTapDocToMarkdownSource(editor.getJSON()) : ''
 
-  const activeTitle = activeProject?.title ?? 'No project'
+  const activeTitle = activeProject?.title ?? 'Global'
 
   const saveLabel = useMemo(() => {
     if (saveStatus === 'saving') return 'Saving...'
@@ -191,6 +198,19 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
     const time = new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     return `Saved ${time}`
   }, [lastSavedAt, saveStatus])
+
+  const handleExportFlomo = () => {
+    if (!editor || !effectiveProjectId) return
+    const content = tipTapDocToMarkdownSource(editor.getJSON())
+    openFlomoComposer({
+      mode: 'writer-full',
+      content,
+      context: contextText,
+      projectTitle: activeProject?.title ?? 'Untitled',
+      tags: [defaultProjectTag(activeProject?.title ?? 'Untitled'), ...buildAiReaderTagLines(projectTags)],
+      source: { type: 'writer-project', projectId: effectiveProjectId },
+    })
+  }
 
   return (
     <Card
@@ -206,6 +226,7 @@ const EditorPane = forwardRef<{ editor: Editor | null }, Props>(
           onSave={() => void flushNow()}
           onTogglePreview={() => onIsPreviewChange(!isPreview)}
           onOpenSearch={() => setShowSearch(true)}
+          onExportFlomo={handleExportFlomo}
         />
       }
       className="flex h-full min-h-0 flex-col"

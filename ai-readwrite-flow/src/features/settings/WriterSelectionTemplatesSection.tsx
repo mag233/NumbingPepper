@@ -4,6 +4,7 @@ import useWriterSelectionTemplateStore, {
   type WriterSelectionTemplateId,
 } from '../../stores/writerSelectionTemplateStore'
 import WriterRewriteToneProfilesEditor from './WriterRewriteToneProfilesEditor'
+import WriterReferenceSettingsSection from './WriterReferenceSettingsSection'
 
 const inputClass =
   'w-full rounded-lg border border-chrome-border/80 bg-surface-raised/70 px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
@@ -149,6 +150,8 @@ const WriterSelectionTemplatesSection = () => {
       <div className="border-t border-chrome-border/70 pt-3">
         <WriterRewriteToneProfilesEditor />
       </div>
+
+      <WriterReferenceSettingsSection />
     </div>
   )
 }

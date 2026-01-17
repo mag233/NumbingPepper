@@ -1,6 +1,27 @@
 # Changelog
 
 ## Unreleased
+- 2026-01-17: Docs: defined Library hub (Books/Projects/Tags), project management centralization, and reader sidebar scope-only requirements.
+- 2026-01-17: Added project_books join table + local fallback, global project scope selector with persistent Global option, and Library/Reader project membership editor.
+- 2026-01-17: Docs: split project/library scope work into Tasks 56-60 with detailed breakdowns.
+- 2026-01-17: Docs: defined project-classifier scope (multi-project book assignment, scoped search, per-book reading position) and added Task 56/QA scaffolding.
+- 2026-01-17: Reader restores last position on view return (page + scroll), tag edit popovers clamp to the viewport, and references no longer clear on tab switches.
+- 2026-01-16: Reference tags now display title/author/year labels without the `ai_reader` prefix, References panel supports tag filtering with a system-tag toggle, system tags are styled as accent chips, user tags use action-positive chips, Reader To Ref prompts for optional tags with a clearer placeholder, and Context Clear offers context-only vs context+chat.
+- 2026-01-16: Added explicit project/book tags with Flomo defaults (optional save-back) and a Writer full export (Content + Context) in the action bar.
+- 2026-01-16: Tag editors now reset on project/book selection changes without effect-driven state updates; book tag persistence is exported through the DB barrel for consistency.
+- 2026-01-16: Fixed Writer References panel store selector stability to avoid a React update depth loop in dev.
+- 2026-01-16: Project/Book tags now display as chips with an Edit popover; references include toggle now uses a stable project id fallback.
+- 2026-01-16: Writer references can be sent to Flomo from the References panel; reference export prefixes user tags with `#ai_reader/`.
+- 2026-01-16: Removed Responses JSON output formatting control due to provider schema incompatibility; Responses settings now use text-only output.
+- 2026-01-16: Added GPT-5 Responses API settings (reasoning/verbosity/max output tokens) with a safe Chat Completions/Responses toggle; chat calls can route to Responses API.
+- 2026-01-16: Responses API input now sends plain text content for compatibility with providers that reject `input_text` content parts.
+- 2026-01-15: Writer references now capture book metadata snapshots, store page labels, support tag editing with default tag toggles, and include APA 7 citation formatting in Writer artifacts prompts.
+- 2026-01-15: Writer chat can include included reference snippets by default with a toggle; reference tags now support multi-line input and Source Info is shown separately.
+- 2026-01-15: Writer chat now strips stale Context/References from history; clearing Context also clears Writer chat; reference tags now use `ai_reader/...` system tags with `#` display and hidden system tags in the editor.
+- 2026-01-15: Reader To Ref now creates a Highlight before saving the Writer reference.
+- 2026-01-15: Docs: updated Task 50/51 specs and QA coverage for tag namespace + Reader To Ref auto-highlight.
+- 2026-01-15: Docs: define reference provenance metadata + APA 7 citation formatting, multimodal image chat support, and context image OCR flow with append/insert choice.
+- 2026-01-15: Docs: add reference tags with system default tag generation (configurable) and search expectations.
 - 2026-01-10: Matched mobile chat header button heights for Clear and Close.
 - 2026-01-10: Split App shell UI into header/main/footer/overlay components to keep App.tsx under the size limit.
 - 2026-01-10: Footer copy now reflects mobile chat overlay instead of a mobile chat tab.
@@ -11,6 +32,7 @@
 - 2026-01-10: Added action hover tokens and replaced FloatingMenu hard-coded hover colors.
 - 2026-01-10: Added highlight color tokens and replaced highlight popover/overlay hard-coded highlight colors.
 - 2026-01-10: Softened ocean/forest theme surfaces, borders, and accents for a lighter feel.
+- 2026-01-10: Updated app header icon and favicon to use the new `icon.png`.
 - 2026-01-09: Centralized chat textarea sizing constants for mobile/desktop.
 - 2026-01-09: Centralized chat form layout and submit controls to keep Reader/Writer consistent.
 - 2026-01-09: Added a shared chat template selection hook to unify dropdown state.

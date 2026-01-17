@@ -5,17 +5,27 @@ import { useMediaQuery } from '../../../../lib/hooks/useMediaQuery'
 import { MOBILE_MEDIA_QUERY } from '../../../../lib/constants'
 import useSettingsStore from '../../../../stores/settingsStore'
 import useHighlightStore from '../../../../stores/highlightStore'
+import useLibraryStore from '../../../../stores/libraryStore'
+import useWriterProjectStore from '../../../editor/stores/writerProjectStore'
 import { postToFlomo } from '../flomoClient'
-import { buildReaderFlomoContent, buildWriterFlomoContent } from '../flomoNoteBuilder'
+import {
+  buildReaderFlomoContent,
+  buildReferenceFlomoContent,
+  buildWriterFlomoContent,
+  buildWriterFlomoContentFull,
+} from '../flomoNoteBuilder'
 import type { FlomoComposerDraft } from '../flomoComposerStore'
 import {
   getFlomoLastSentAt,
   makeReaderHighlightSendKey,
   makeReaderSelectionSendKey,
+  makeWriterProjectSendKey,
+  makeWriterReferenceSendKey,
   makeWriterSelectionSendKey,
   markFlomoSentAt,
 } from '../flomoSendHistory'
 import { appendWriterSelectionOutbox } from '../flomoOutbox'
+import { parseFlomoTags } from '../flomoTagRules'
 
 type Props = {
   draft: FlomoComposerDraft
@@ -27,12 +37,6 @@ const webhookUrlSchema = z.string().trim().url()
 const textareaClass =
   'w-full rounded-xl border border-chrome-border/70 bg-surface-raised/60 p-3 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
 
-const tagLinesToArray = (raw: string) =>
-  raw
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-
 const FlomoComposer = ({ draft, onClose }: Props) => {
   const isMobile = useMediaQuery(MOBILE_MEDIA_QUERY)
   const flomoWebhookUrl = useSettingsStore((s) => s.flomoWebhookUrl)
@@ -40,11 +44,22 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
   const effectiveWebhookUrl = flomoWebhookUrl.trim() || envDefaultUrl
   const addHighlight = useHighlightStore((s) => s.add)
   const setHighlightNote = useHighlightStore((s) => s.setNote)
+  const updateBookTags = useLibraryStore((s) => s.updateBookTags)
+  const updateProjectTags = useWriterProjectStore((s) => s.updateProjectTags)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [note, setNote] = useState(draft.mode === 'reader' ? draft.note : '')
   const [tagsText, setTagsText] = useState(draft.tags.join('\n'))
   const [contextOpen, setContextOpen] = useState(!isMobile)
+  const [saveDefaults, setSaveDefaults] = useState(false)
+
+  const canSaveDefaults = useMemo(() => {
+    if (draft.mode === 'reader') return Boolean(draft.source)
+    if (draft.mode === 'writer') return draft.source?.type === 'writer-selection'
+    if (draft.mode === 'writer-full') return draft.source?.type === 'writer-project'
+    if (draft.mode === 'reference') return Boolean(draft.source?.bookId)
+    return false
+  }, [draft])
 
   const trimmedNote = note.trim()
   const canSaveReaderNote = draft.mode === 'reader' && Boolean(draft.source) && trimmedNote.length > 0 && !sending
@@ -59,13 +74,24 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
     }
     const source = draft.source
     if (!source) return ''
-    return makeWriterSelectionSendKey(source.projectId, draft.selection)
+    if (draft.mode === 'reference' && source.type === 'writer-reference') {
+      return makeWriterReferenceSendKey(source.projectId, source.referenceId)
+    }
+    if (draft.mode === 'writer' && source.type === 'writer-selection') {
+      return makeWriterSelectionSendKey(source.projectId, draft.selection)
+    }
+    if (draft.mode === 'writer-full' && source.type === 'writer-project') {
+      return makeWriterProjectSendKey(source.projectId)
+    }
+    return ''
   }, [draft])
 
   const lastSentAt = useMemo(() => (sendKey ? getFlomoLastSentAt(sendKey) : null), [sendKey])
 
+  const parsedTags = useMemo(() => parseFlomoTags(tagsText), [tagsText])
+
   const content = useMemo(() => {
-    const tags = tagLinesToArray(tagsText)
+    const tags = parsedTags.tagLines
     if (draft.mode === 'reader') {
       return buildReaderFlomoContent({
         quote: draft.quote,
@@ -74,13 +100,30 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
         tags,
       })
     }
-    return buildWriterFlomoContent({
-      selection: draft.selection,
-      context: draft.context,
-      projectTitle: draft.projectTitle,
+    if (draft.mode === 'writer') {
+      return buildWriterFlomoContent({
+        selection: draft.selection,
+        context: draft.context,
+        projectTitle: draft.projectTitle,
+        tags,
+      })
+    }
+    if (draft.mode === 'writer-full') {
+      return buildWriterFlomoContentFull({
+        content: draft.content,
+        context: draft.context,
+        projectTitle: draft.projectTitle,
+        tags,
+      })
+    }
+    return buildReferenceFlomoContent({
+      snippet: draft.snippet,
+      title: draft.title,
+      author: draft.author,
+      year: draft.year,
       tags,
     })
-  }, [draft, note, tagsText])
+  }, [draft, note, parsedTags.tagLines])
 
   const saveReaderNote = async () => {
     if (draft.mode !== 'reader') return
@@ -126,14 +169,26 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
       const now = Date.now()
       if (sendKey) markFlomoSentAt(sendKey, now)
       if (draft.mode === 'writer' && draft.source?.type === 'writer-selection') {
-        const tags = tagLinesToArray(tagsText)
-        const dedupedTags = Array.from(new Set(tags))
         appendWriterSelectionOutbox({
           projectId: draft.source.projectId,
           selectionText: draft.selection,
-          tags: dedupedTags,
+          tags: parsedTags.tagLines,
           sentAt: now,
         })
+      }
+      if (saveDefaults) {
+        if (draft.mode === 'reader' && draft.source) {
+          void updateBookTags(draft.source.bookId, parsedTags.explicitTags)
+        }
+        if (draft.mode === 'writer' && draft.source?.type === 'writer-selection') {
+          void updateProjectTags(draft.source.projectId, parsedTags.explicitTags)
+        }
+        if (draft.mode === 'writer-full' && draft.source?.type === 'writer-project') {
+          void updateProjectTags(draft.source.projectId, parsedTags.explicitTags)
+        }
+        if (draft.mode === 'reference' && draft.source?.type === 'writer-reference' && draft.source.bookId) {
+          void updateBookTags(draft.source.bookId, parsedTags.explicitTags)
+        }
       }
       onClose()
       return
@@ -152,7 +207,15 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
         <header className="flex items-center justify-between gap-3 border-b border-chrome-border/70 p-4">
           <div>
             <p className="text-sm font-semibold text-ink-primary">Send to Flomo</p>
-            <p className="text-xs text-ink-muted">{draft.mode === 'reader' ? 'Reader note' : 'Writer note'}</p>
+            <p className="text-xs text-ink-muted">
+              {draft.mode === 'reader'
+                ? 'Reader note'
+                : draft.mode === 'writer'
+                  ? 'Writer note'
+                  : draft.mode === 'writer-full'
+                    ? 'Writer export'
+                    : 'Writer reference'}
+            </p>
             {lastSentAt && (
               <p className="mt-1 text-[11px] text-ink-muted">Last sent: {new Date(lastSentAt).toLocaleString()}</p>
             )}
@@ -179,7 +242,7 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
                 <textarea className={textareaClass} value={note} onChange={(e) => setNote(e.target.value)} rows={4} />
               </div>
             </>
-          ) : (
+          ) : draft.mode === 'writer' ? (
             <>
               <div>
                 <p className="mb-1 text-xs uppercase tracking-wide text-ink-muted">Selection</p>
@@ -196,6 +259,46 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
                 {contextOpen && <textarea className={textareaClass} value={draft.context} readOnly rows={5} />}
               </div>
             </>
+          ) : draft.mode === 'writer-full' ? (
+            <>
+              <div>
+                <p className="mb-1 text-xs uppercase tracking-wide text-ink-muted">Content</p>
+                <textarea className={textareaClass} value={draft.content} readOnly rows={6} />
+              </div>
+              <div>
+                <button
+                  type="button"
+                  className="mb-1 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-ink-muted hover:text-ink-primary"
+                  onClick={() => setContextOpen((v) => !v)}
+                >
+                  Context {contextOpen ? '−' : '+'}
+                </button>
+                {contextOpen && <textarea className={textareaClass} value={draft.context} readOnly rows={5} />}
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <p className="mb-1 text-xs uppercase tracking-wide text-ink-muted">Reference</p>
+                <textarea className={textareaClass} value={draft.snippet} readOnly rows={4} />
+              </div>
+              <div>
+                <p className="mb-1 text-xs uppercase tracking-wide text-ink-muted">Source</p>
+                <textarea
+                  className={textareaClass}
+                  value={(() => {
+                    const lines = [
+                      draft.title ? `Title: ${draft.title}` : null,
+                      draft.author ? `Author: ${draft.author}` : null,
+                      typeof draft.year === 'number' ? `Year: ${draft.year}` : null,
+                    ].filter((line): line is string => Boolean(line))
+                    return (lines.length ? lines : ['Unknown']).join('\n')
+                  })()}
+                  readOnly
+                  rows={3}
+                />
+              </div>
+            </>
           )}
 
           <div>
@@ -208,6 +311,18 @@ const FlomoComposer = ({ draft, onClose }: Props) => {
               placeholder="#tag/a\n#tag/b"
             />
           </div>
+
+          {canSaveDefaults && (
+            <label className="flex items-center gap-2 text-xs text-ink-muted">
+              <input
+                type="checkbox"
+                checked={saveDefaults}
+                onChange={(e) => setSaveDefaults(e.target.checked)}
+                className="size-4 accent-accent"
+              />
+              Save as default tags
+            </label>
+          )}
 
           {error && (
             <p className="rounded-lg border border-status-warning/40 bg-status-warning/10 p-2 text-xs text-status-warning">

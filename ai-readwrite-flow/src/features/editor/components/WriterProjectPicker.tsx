@@ -29,7 +29,7 @@ const WriterProjectPicker = ({ className, variant = 'toolbar', onSnapshotActions
 
   const activeTitle = useMemo(() => {
     const active = projects.find((p) => p.id === activeProjectId)
-    return active?.title ?? 'No project'
+    return active?.title ?? 'Global'
   }, [activeProjectId, projects])
 
   const closeMenu = () => {

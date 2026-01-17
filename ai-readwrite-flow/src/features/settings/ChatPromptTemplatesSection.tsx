@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Plus, Save, Trash2 } from 'lucide-react'
 import useTemplateStore, { type PromptTemplate } from '../../stores/templateStore'
+import ChatResponseSettingsSection from './ChatResponseSettingsSection'
 
 const inputClass =
   'w-full rounded-lg border border-chrome-border/80 bg-surface-raised/70 px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none'
@@ -18,6 +19,7 @@ const ChatPromptTemplatesSection = () => {
 
   return (
     <div className="space-y-3">
+      <ChatResponseSettingsSection />
       <div>
         <p className="text-sm font-semibold text-ink-primary">Chat Prompt Templates</p>
         <p className="text-xs text-ink-muted">

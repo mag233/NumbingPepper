@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { BookCopy, ChevronLeft, ChevronRight, List, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react'
 import Card from '../../shared/components/Card'
 import useReaderStore from '../../stores/readerStore'
-import useLibraryStore from '../../stores/libraryStore'
+import { useScopedLibrary } from '../../stores/useScopedLibrary'
 import ReaderBookmarksPanel from './components/ReaderBookmarksPanel'
 import FindInDocument from './components/FindInDocument'
 import { formatPageForDisplay, resolveJumpTarget } from './services/pageLabels'
@@ -29,7 +29,7 @@ const ReaderNav = ({
 }: Props) => {
   const { currentPage, pageCount, pageLabels, requestJump, zoom, zoomIn, zoomOut, resetZoom, fitMode, setFitMode, outline, outlineStatus, outlineError } =
     useReaderStore()
-  const activeBookId = useLibraryStore((s) => s.activeId)
+  const { activeId: activeBookId } = useScopedLibrary('project')
   const [inputPage, setInputPage] = useState('')
 
   const tocLines = useMemo(() => outline.slice(0, 400), [outline])

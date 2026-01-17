@@ -15,10 +15,65 @@ export const parsePosition = (raw: unknown): LastReadPosition | undefined => {
   }
 }
 
+const normalizeKeyword = (value: string) => value.trim().replace(/\s+/g, ' ')
+
+export const parseKeywords = (raw: unknown): string[] | undefined => {
+  if (!raw) return undefined
+  if (Array.isArray(raw)) {
+    const next = raw.map((item) => (typeof item === 'string' ? normalizeKeyword(item) : '')).filter(Boolean)
+    return next.length ? next : undefined
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (!trimmed) return undefined
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) {
+        const next = parsed.map((item) => (typeof item === 'string' ? normalizeKeyword(item) : '')).filter(Boolean)
+        return next.length ? next : undefined
+      }
+    } catch {
+      // ignore JSON parse errors; fall back to string split
+    }
+    const parts = trimmed.split(/[;,]/).map(normalizeKeyword).filter(Boolean)
+    return parts.length ? parts : undefined
+  }
+  return undefined
+}
+
+export const parseTags = (raw: unknown): string[] | undefined => {
+  if (!raw) return undefined
+  if (Array.isArray(raw)) {
+    const next = raw.map((item) => (typeof item === 'string' ? normalizeKeyword(item) : '')).filter(Boolean)
+    return next.length ? next : undefined
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (!trimmed) return undefined
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) {
+        const next = parsed.map((item) => (typeof item === 'string' ? normalizeKeyword(item) : '')).filter(Boolean)
+        return next.length ? next : undefined
+      }
+    } catch {
+      // ignore JSON parse errors; fall back to string split
+    }
+    const parts = trimmed.split(/[;,]/).map(normalizeKeyword).filter(Boolean)
+    return parts.length ? parts : undefined
+  }
+  return undefined
+}
+
 export const mapRowToBook = (row: Record<string, unknown>): BookRecord => ({
   id: String(row.id),
   title: String(row.title ?? row.file_name ?? 'Untitled'),
   author: typeof row.author === 'string' ? row.author : undefined,
+  metadataTitle: typeof row.metadata_title === 'string' ? row.metadata_title : undefined,
+  metadataAuthor: typeof row.metadata_author === 'string' ? row.metadata_author : undefined,
+  metadataYear: typeof row.metadata_year === 'number' ? row.metadata_year : undefined,
+  metadataKeywords: parseKeywords(row.metadata_keywords),
+  tags: parseTags(row.tags_json),
   coverPath: typeof row.cover_path === 'string' ? row.cover_path : undefined,
   filePath: String(row.file_path),
   format: typeof row.format === 'string' ? row.format : 'pdf',
@@ -37,4 +92,3 @@ export const mapRowToBook = (row: Record<string, unknown>): BookRecord => ({
 
 export const sortByRecency = (books: BookRecord[]) =>
   [...books].sort((a, b) => (b.lastOpenedAt ?? b.addedAt) - (a.lastOpenedAt ?? a.addedAt))
-

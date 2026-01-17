@@ -4,6 +4,7 @@ import { type Highlight, type HighlightColor } from '../types'
 import useFlomoComposerStore from '../../integrations/flomo/flomoComposerStore'
 import useLibraryStore from '../../../stores/libraryStore'
 import { defaultBookTag } from '../../integrations/flomo/flomoNoteBuilder'
+import { buildAiReaderTagLines } from '../../../lib/referenceTags'
 
 type Props = {
   highlight: Highlight
@@ -43,7 +44,9 @@ const HighlightPopover = ({
   onSetNote,
 }: Props) => {
   const openFlomoComposer = useFlomoComposerStore((s) => s.open)
-  const bookTitle = useLibraryStore((s) => s.items.find((item) => item.id === highlight.bookId)?.title) ?? 'Untitled'
+  const bookItem = useLibraryStore((s) => s.items.find((item) => item.id === highlight.bookId))
+  const bookTitle = bookItem?.title ?? 'Untitled'
+  const bookTags = bookItem?.tags ?? []
   const [note, setNote] = useState(highlight.note ?? '')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [deleteArmed, setDeleteArmed] = useState(false)
@@ -159,7 +162,7 @@ const HighlightPopover = ({
                 quote: highlight.content,
                 note: note.trim(),
                 bookTitle,
-                tags: [defaultBookTag(bookTitle)],
+                tags: [defaultBookTag(bookTitle), ...buildAiReaderTagLines(bookTags)],
                 source: { type: 'highlight', bookId: highlight.bookId, highlightId: highlight.id },
               })
             }

@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { pdfjs } from 'react-pdf'
 import Card from '../../shared/components/Card'
 import useLibraryStore from '../../stores/libraryStore'
+import { useScopedLibrary } from '../../stores/useScopedLibrary'
 import FloatingMenu from './FloatingMenu'
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import useReaderStore from '../../stores/readerStore'
+import type { LastReadPosition } from '../../lib/db'
 import useHighlightStore from '../../stores/highlightStore'
 import { usePdfFileSource } from './hooks/usePdfFileSource'
 import SelectedHighlightPopover from './components/SelectedHighlightPopover'
@@ -22,6 +24,7 @@ import { usePdfDocumentMeta } from './hooks/usePdfDocumentMeta'
 import { useWriterHighlightActions } from './hooks/useWriterHighlightActions'
 import { useReaderScrollState } from './hooks/useReaderScrollState'
 import { usePagedKeyNav } from './hooks/usePagedKeyNav'
+import WriterReferenceTagPrompt from './components/WriterReferenceTagPrompt'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 
@@ -38,17 +41,17 @@ const ReaderPane = ({ onAction, showBottomToolbar = false }: Props) => {
   const [pageWidth, setPageWidth] = useState(720)
   const [docError, setDocError] = useState<{ src: string; message: string } | null>(null)
   const { currentPage, setPage, requestJump, jumpPage, jumpToken, setPageCount, pageCount, scrollMode, toggleScrollMode, zoom, fitMode, setFitMode, setZoomValue, findQuery, findToken, findActiveHit, resetOutline, setOutline, setOutlineLoading, setOutlineError, setPageLabels } = useReaderStore()
-  const { items, activeId, setLastPosition } = useLibraryStore()
+  const { activeId, activeItem } = useScopedLibrary('project')
+  const setLastPosition = useLibraryStore((s) => s.setLastPosition)
   const { byBookId, hydrate: hydrateHighlights, add: addHighlight, remove: removeHighlight, setColor: setHighlightColor, setNote: setHighlightNote } =
     useHighlightStore()
   const [renderedPages, setRenderedPages] = useState(3)
   const [scrollViewportHeight, setScrollViewportHeight] = useState(0)
-  const activeItem = useMemo(() => items.find((item) => item.id === activeId), [items, activeId])
-  const { fileSrc, blockedReason } = usePdfFileSource(activeItem)
+  const { fileSrc, blockedReason } = usePdfFileSource(activeItem ?? undefined)
   const selectionOverlay = useSelectionOverlay({ container: containerRef })
   const { onLoadError, onLoadSuccess, onSourceError } = usePdfDocumentMeta({
     fileSrc: fileSrc ?? null,
-    activeItem,
+    activeItem: activeItem ?? undefined,
     setPageCount,
     setRenderedPages,
     setDocError,
@@ -73,25 +76,53 @@ const ReaderPane = ({ onAction, showBottomToolbar = false }: Props) => {
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
-  const { menu, handleAction, dismissMenu } = useSelectionMenu({ container: containerRef, activeBookId: activeId, addHighlight, onAction })
+  const { menu, handleAction, dismissMenu } = useSelectionMenu({
+    container: containerRef,
+    activeBookId: activeId ?? undefined,
+    addHighlight,
+    onAction,
+  })
   useZoomShortcuts()
   useFindHighlight({ query: findQuery, page: currentPage, token: findToken, activeHitPage: findActiveHit?.page ?? null, activeHitOrdinal: findActiveHit?.ordinal ?? null, zoomKey: zoom, fitModeKey: fitMode })
+  const pendingRestoreRef = useRef<LastReadPosition | null>(null)
   useEffect(() => {
-    if (activeItem?.lastReadPosition?.page) {
-      const pos = activeItem.lastReadPosition
-      setPage(pos.page)
-      const storedScroll = pos.scroll_y
-      if (typeof storedScroll === 'number' && scrollRef.current) scrollRef.current.scrollTop = storedScroll
+    const pos = activeItem?.lastReadPosition
+    if (pos?.page) {
+      pendingRestoreRef.current = pos
       const restoredFit = pos.fit_mode
       if (restoredFit) setFitMode(restoredFit)
       if (typeof pos.zoom === 'number') setZoomValue(pos.zoom)
       if (!restoredFit) setFitMode(pos.zoom ? 'manual' : 'fitWidth')
+      requestJump(pos.page)
       return
     }
+    pendingRestoreRef.current = null
     setPage(1)
     setZoomValue(1)
     setFitMode('fitWidth')
-  }, [activeItem?.id, activeItem?.lastReadPosition, setFitMode, setPage, setZoomValue])
+  }, [activeItem?.id, activeItem?.lastReadPosition, requestJump, scrollMode, setFitMode, setPage, setRenderedPages, setZoomValue])
+
+  useEffect(() => {
+    const pending = pendingRestoreRef.current
+    if (!pending) return
+    if (!activeItem?.id) return
+    if (scrollMode !== 'continuous') {
+      pendingRestoreRef.current = null
+      return
+    }
+    if (renderedPages < pending.page) return
+    const raf = window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => {
+        const el = scrollRef.current
+        if (!el) return
+        if (typeof pending.scroll_y === 'number' && pending.scroll_y > 0) {
+          el.scrollTo({ top: pending.scroll_y, behavior: 'auto' })
+        }
+        pendingRestoreRef.current = null
+      }),
+    )
+    return () => window.cancelAnimationFrame(raf)
+  }, [activeItem?.id, pageCount, renderedPages, scrollMode])
   useEffect(() => {
     resetOutline()
   }, [activeItem?.id, resetOutline])
@@ -129,7 +160,7 @@ const ReaderPane = ({ onAction, showBottomToolbar = false }: Props) => {
     setNote,
     remove,
   } = useHighlightPopover({
-    activeId,
+    activeId: activeId ?? undefined,
     highlights,
     highlightsForPage,
     container: containerRef,
@@ -174,8 +205,9 @@ const ReaderPane = ({ onAction, showBottomToolbar = false }: Props) => {
       </header>
       <div ref={containerRef} className="relative flex min-h-0 flex-1 flex-col bg-surface-raised/30">
         <WriterToast />
+        <WriterReferenceTagPrompt />
         <SelectedHighlightPopover
-          activeId={activeId}
+          activeId={activeId ?? undefined}
           selectedHighlight={selectedHighlight}
           popover={highlightPopover}
           onClose={closeHighlightPopover}
@@ -226,7 +258,7 @@ const ReaderPane = ({ onAction, showBottomToolbar = false }: Props) => {
             text={menu.text}
             page={menu.page}
             rects={menu.rects}
-            activeBookId={activeId}
+            activeBookId={activeId ?? undefined}
             copyStatus={menu.copyStatus}
             onAction={handleAction}
             onDismiss={dismissMenu}

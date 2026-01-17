@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 import type { WritingProject } from '../services/writingTypes'
 import { deleteWritingProject, loadWritingProjects, upsertWritingProject } from '../services/writingRepo'
-import { generateProjectId, readActiveProjectId, writeActiveProjectId } from '../services/writingProjectIds'
+import { generateProjectId, readActiveProjectSelection, writeActiveProjectId } from '../services/writingProjectIds'
 import { loadDraft } from '../services/draftRepo'
 import { draftIdForProject } from '../services/draftIds'
 import { extractTagPathsFromTipTapDoc } from '../services/writerTags'
+import { normalizeExplicitTags } from '../../../lib/referenceTags'
+import useProjectBooksStore from '../../../stores/projectBooksStore'
 
 export type WriterProjectsStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -17,12 +19,13 @@ type State = {
   allTags: string[]
   tagsByProjectId: Record<string, string[]>
   hydrate: () => Promise<void>
-  selectProject: (id: string) => void
+  selectProject: (id: string | null) => void
   createProject: (title?: string) => Promise<WritingProject | null>
   renameProject: (id: string, title: string) => Promise<boolean>
   deleteProject: (id: string) => Promise<boolean>
   setTagFilter: (tag: string | null) => void
   setProjectTags: (projectId: string, tags: string[]) => void
+  updateProjectTags: (projectId: string, tags: string[]) => Promise<void>
 }
 
 const pickDefaultActive = (projects: WritingProject[]) => {
@@ -62,27 +65,38 @@ const useWriterProjectStore = create<State>((set, get) => ({
     set({ status: 'loading', error: null })
     try {
       const projects = await loadWritingProjects()
-      const stored = readActiveProjectId()
-      const activeFromStorage = stored && projects.some((p) => p.id === stored) ? stored : null
-      const activeProjectId = activeFromStorage ?? pickDefaultActive(projects)
+      const selection = readActiveProjectSelection()
+      const activeFromStorage =
+        selection.id && projects.some((p) => p.id === selection.id) ? selection.id : null
+      const activeProjectId = selection.explicitNone ? null : activeFromStorage ?? pickDefaultActive(projects)
       const { tagsByProjectId, allTags } = await hydrateTags(projects)
       set({ projects, activeProjectId, status: 'ready', error: null, tagsByProjectId, allTags })
-      writeActiveProjectId(activeProjectId)
+      writeActiveProjectId(activeProjectId, selection.explicitNone && !activeProjectId)
     } catch (error) {
       set({ status: 'error', error: error instanceof Error ? error.message : 'Failed to load projects' })
     }
   },
   selectProject: (id) => {
-    if (!id) return
-    if (!get().projects.some((p) => p.id === id)) return
-    set({ activeProjectId: id })
-    writeActiveProjectId(id)
+    if (id) {
+      if (!get().projects.some((p) => p.id === id)) return
+      set({ activeProjectId: id })
+      writeActiveProjectId(id)
+      return
+    }
+    set({ activeProjectId: null })
+    writeActiveProjectId(null, true)
   },
   createProject: async (title) => {
     const now = Date.now()
     const normalized = title?.trim() ?? ''
     const projectTitle = normalized.length ? normalized : 'Untitled'
-    const project: WritingProject = { id: generateProjectId(), title: projectTitle, createdAt: now, updatedAt: now }
+    const project: WritingProject = {
+      id: generateProjectId(),
+      title: projectTitle,
+      tags: [],
+      createdAt: now,
+      updatedAt: now,
+    }
     const ok = await upsertWritingProject(project)
     if (!ok) return null
     set((state) => ({
@@ -120,6 +134,7 @@ const useWriterProjectStore = create<State>((set, get) => ({
       const tagFilter = state.tagFilter && allTags.includes(state.tagFilter) ? state.tagFilter : null
       return { projects, activeProjectId, tagsByProjectId: rest, allTags, tagFilter }
     })
+    void useProjectBooksStore.getState().hydrate()
     return true
   },
   setTagFilter: (tag) => {
@@ -135,6 +150,21 @@ const useWriterProjectStore = create<State>((set, get) => ({
       const tagFilter = state.tagFilter && allTags.includes(state.tagFilter) ? state.tagFilter : null
       return { tagsByProjectId, allTags, tagFilter }
     })
+  },
+  updateProjectTags: async (projectId, tags) => {
+    if (!projectId) return
+    const normalized = normalizeExplicitTags(tags)
+    const existing = get().projects.find((p) => p.id === projectId)
+    if (!existing) return
+    const now = Date.now()
+    const nextProject = { ...existing, tags: normalized, updatedAt: now }
+    const ok = await upsertWritingProject(nextProject)
+    if (!ok) return
+    set((state) => ({
+      projects: updateProjectTitle(state.projects, projectId, nextProject.title, now).map((p) =>
+        p.id === projectId ? { ...p, tags: normalized, updatedAt: now } : p,
+      ),
+    }))
   },
 }))
 

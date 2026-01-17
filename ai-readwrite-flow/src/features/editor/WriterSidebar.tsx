@@ -3,6 +3,7 @@ import Card from '../../shared/components/Card'
 import WriterProjectPicker from './components/WriterProjectPicker'
 import WriterOutlinePanel from './components/WriterOutlinePanel'
 import WriterReferencesPanel from './components/WriterReferencesPanel'
+import WriterProjectSettingsPanel from './components/WriterProjectSettingsPanel'
 import WriterSnapshotSaveDialog from './components/WriterSnapshotSaveDialog'
 import WriterSnapshotModal from './components/WriterSnapshotModal'
 import useWriterSnapshotsStore from './stores/writerSnapshotsStore'
@@ -23,6 +24,11 @@ const WriterSidebar = ({ isPreview, editor, flushNow }: Props) => {
   const [showHistory, setShowHistory] = useState(false)
 
   const activeProjectId = useWriterProjectStore((s) => s.activeProjectId)
+  const activeProjectTagKey = useWriterProjectStore((s) => {
+    const project = s.projects.find((item) => item.id === s.activeProjectId)
+    if (!project) return 'project-none'
+    return `${project.id}:${(project.tags ?? []).join('|')}`
+  })
   const snapshots = useWriterSnapshotsStore((s) => s.snapshots)
   const hydrateSnapshots = useWriterSnapshotsStore((s) => s.hydrate)
   const createSnapshot = useWriterSnapshotsStore((s) => s.createSnapshot)
@@ -54,18 +60,23 @@ const WriterSidebar = ({ isPreview, editor, flushNow }: Props) => {
     await duplicateSnapshot(snapshot.id, newTitle, newNote)
   }
 
+  const snapshotActions = activeProjectId
+    ? {
+        onSaveSnapshot: () => setShowSaveDialog(true),
+        onShowHistory: () => setShowHistory(true),
+      }
+    : undefined
+
   return (
     <Card title="Writer" className="flex h-full flex-col">
       <div className="mb-3">
         <WriterProjectPicker
           variant="sidebar"
-          onSnapshotActions={{
-            onSaveSnapshot: () => setShowSaveDialog(true),
-            onShowHistory: () => setShowHistory(true),
-          }}
+          onSnapshotActions={snapshotActions}
         />
       </div>
       <div className="min-h-0 flex-1 overflow-auto space-y-3">
+        <WriterProjectSettingsPanel key={activeProjectTagKey} />
         <WriterOutlinePanel noTopMargin isPreview={isPreview} />
         <WriterReferencesPanel noTopMargin listClassName="max-h-none overflow-visible" />
       </div>

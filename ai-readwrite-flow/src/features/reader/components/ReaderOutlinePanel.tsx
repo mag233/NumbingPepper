@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, List } from 'lucide-react'
 import useReaderStore from '../../../stores/readerStore'
-import useLibraryStore from '../../../stores/libraryStore'
+import { useScopedLibrary } from '../../../stores/useScopedLibrary'
 import ReaderBookmarksPanel from './ReaderBookmarksPanel'
 import { formatPageForDisplay } from '../services/pageLabels'
 
@@ -11,7 +11,7 @@ type Props = {
 
 const ReaderOutlinePanel = ({ onJump }: Props) => {
   const { outline, outlineStatus, outlineError, pageLabels, requestJump, currentPage } = useReaderStore()
-  const activeBookId = useLibraryStore((s) => s.activeId)
+  const { activeId: activeBookId } = useScopedLibrary('project')
   const tocLines = useMemo(() => outline.slice(0, 400), [outline])
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
     const next = new Set<string>()

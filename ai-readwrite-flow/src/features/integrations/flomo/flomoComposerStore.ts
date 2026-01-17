@@ -19,7 +19,26 @@ type WriterDraft = {
   source?: { type: 'writer-selection'; projectId: string }
 }
 
-export type FlomoComposerDraft = ReaderDraft | WriterDraft
+type WriterFullDraft = {
+  mode: 'writer-full'
+  content: string
+  context: string
+  projectTitle: string
+  tags: string[]
+  source?: { type: 'writer-project'; projectId: string }
+}
+
+type ReferenceDraft = {
+  mode: 'reference'
+  snippet: string
+  title?: string
+  author?: string
+  year?: number
+  tags: string[]
+  source?: { type: 'writer-reference'; projectId: string; referenceId: string; bookId?: string }
+}
+
+export type FlomoComposerDraft = ReaderDraft | WriterDraft | WriterFullDraft | ReferenceDraft
 
 type State = {
   draft: FlomoComposerDraft | null

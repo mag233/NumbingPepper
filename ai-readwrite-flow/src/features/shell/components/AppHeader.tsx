@@ -1,7 +1,8 @@
-import { Bot, Settings, Sparkles } from 'lucide-react'
+import { Settings, Sparkles } from 'lucide-react'
 import LayoutControls from './LayoutControls'
 import { appTitle } from '../../../lib/constants'
 import type { LayoutDensity } from '../appDensity'
+import ProjectScopeSelector from './ProjectScopeSelector'
 
 type Props = {
   isMobile: boolean
@@ -29,7 +30,12 @@ const AppHeader = ({
   <header className="border-b border-chrome-border/70 bg-surface-base/70 backdrop-blur">
     <div className="mx-auto flex w-full max-w-screen-3xl items-center justify-between px-[var(--app-pad-x,1.5rem)] py-[var(--app-header-py,0.75rem)]">
       <div className="flex items-center gap-2 text-sm font-semibold text-ink-primary">
-        <Bot className="size-5 text-accent" />
+        <img
+          src="/icon.png"
+          alt=""
+          className="size-6 rounded"
+          aria-hidden
+        />
         <span>{appTitle}</span>
         <span className="rounded-full bg-surface-raised/80 px-2 py-1 text-[11px] font-medium text-ink-muted">
           Tauri v2 / React / Tailwind
@@ -37,6 +43,7 @@ const AppHeader = ({
       </div>
       <div className="flex items-center gap-3 text-xs text-ink-muted">
         <Sparkles className="size-4 text-status-warning" />
+        <ProjectScopeSelector compact={isMobile} />
         <span>Default model: {model}</span>
         {!isMobile && (
           <span className="rounded-full border border-chrome-border/70 bg-surface-raised/50 px-2 py-1 text-[11px] text-ink-primary">

@@ -1,4 +1,5 @@
 import { ensureClient } from './client'
+import { removeProjectBooksForBook } from './projectBooks'
 import { hasNoColumn, mapRowToBook, sortByRecency } from './booksHelpers'
 import { readLocalBooks, writeLocalBooks } from './booksLocalStore'
 
@@ -13,6 +14,11 @@ export type BookRecord = {
   id: string
   title: string
   author?: string
+  metadataTitle?: string
+  metadataAuthor?: string
+  metadataYear?: number
+  metadataKeywords?: string[]
+  tags?: string[]
   coverPath?: string
   filePath: string
   format: string
@@ -32,7 +38,7 @@ export const loadBooks = async (): Promise<BookRecord[]> => {
   try {
     const rows =
       (await db.select<Record<string, unknown>[]>(
-        'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NULL ORDER BY COALESCE(last_opened_at, added_at) DESC',
+        'SELECT id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords, tags_json, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NULL ORDER BY COALESCE(last_opened_at, added_at) DESC',
       )) || []
     return rows.map(mapRowToBook)
   } catch (error) {
@@ -40,11 +46,35 @@ export const loadBooks = async (): Promise<BookRecord[]> => {
       try {
         const rows =
           (await db.select<Record<string, unknown>[]>(
-            'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NULL ORDER BY added_at DESC',
+            'SELECT id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords, tags_json, cover_path, file_path, format, file_hash, file_size, mtime, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NULL ORDER BY added_at DESC',
           )) || []
         return sortByRecency(rows.map(mapRowToBook))
       } catch (fallbackError) {
         console.warn('SQLite books read failed (no last_opened_at), falling back to local', fallbackError)
+        return sortByRecency(readLocalBooks().filter((b) => !b.deletedAt))
+      }
+    }
+    if (hasNoColumn(error, 'tags_json')) {
+      try {
+        const rows =
+          (await db.select<Record<string, unknown>[]>(
+            'SELECT id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NULL ORDER BY COALESCE(last_opened_at, added_at) DESC',
+          )) || []
+        return rows.map(mapRowToBook)
+      } catch (fallbackError) {
+        console.warn('SQLite books read failed (no tags_json), falling back to local', fallbackError)
+        return sortByRecency(readLocalBooks().filter((b) => !b.deletedAt))
+      }
+    }
+    if (hasNoColumn(error, 'metadata_title')) {
+      try {
+        const rows =
+          (await db.select<Record<string, unknown>[]>(
+            'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NULL ORDER BY COALESCE(last_opened_at, added_at) DESC',
+          )) || []
+        return rows.map(mapRowToBook)
+      } catch (fallbackError) {
+        console.warn('SQLite books read failed (no metadata columns), falling back to local', fallbackError)
         return sortByRecency(readLocalBooks().filter((b) => !b.deletedAt))
       }
     }
@@ -59,7 +89,7 @@ export const loadDeletedBooks = async (): Promise<BookRecord[]> => {
   try {
     const rows =
       (await db.select<Record<string, unknown>[]>(
-        'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC',
+        'SELECT id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords, tags_json, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC',
       )) || []
     return rows.map(mapRowToBook)
   } catch (error) {
@@ -79,14 +109,20 @@ export const persistBook = async (book: BookRecord) => {
     await db.execute(
       `
       INSERT OR REPLACE INTO books (
-        id, title, author, cover_path, file_path, format, file_hash, file_size, mtime,
+        id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords,
+        tags_json, cover_path, file_path, format, file_hash, file_size, mtime,
         last_opened_at, deleted_at, last_read_position, processed_for_search, added_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       [
         book.id,
         book.title,
         book.author ?? null,
+        book.metadataTitle ?? null,
+        book.metadataAuthor ?? null,
+        book.metadataYear ?? null,
+        book.metadataKeywords ? JSON.stringify(book.metadataKeywords) : null,
+        book.tags ? JSON.stringify(book.tags) : null,
         book.coverPath ?? null,
         book.filePath,
         book.format,
@@ -113,7 +149,7 @@ export const findBookByHash = async (hash: string): Promise<BookRecord | undefin
   if (!db) return readLocalBooks().find((book) => book.fileHash === hash)
   try {
     const row = await db.select<Record<string, unknown>[]>(
-      'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE file_hash = ? LIMIT 1',
+      'SELECT id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords, tags_json, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE file_hash = ? LIMIT 1',
       [hash],
     )
     if (!row || row.length === 0) return undefined
@@ -122,7 +158,7 @@ export const findBookByHash = async (hash: string): Promise<BookRecord | undefin
     if (hasNoColumn(error, 'last_opened_at')) {
       try {
         const row = await db.select<Record<string, unknown>[]>(
-          'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE file_hash = ? LIMIT 1',
+          'SELECT id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords, tags_json, cover_path, file_path, format, file_hash, file_size, mtime, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE file_hash = ? LIMIT 1',
           [hash],
         )
         if (!row || row.length === 0) return undefined
@@ -132,7 +168,50 @@ export const findBookByHash = async (hash: string): Promise<BookRecord | undefin
         return undefined
       }
     }
+    if (hasNoColumn(error, 'metadata_title')) {
+      try {
+        const row = await db.select<Record<string, unknown>[]>(
+          'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE file_hash = ? LIMIT 1',
+          [hash],
+        )
+        if (!row || row.length === 0) return undefined
+        return mapRowToBook(row[0])
+      } catch (fallbackError) {
+        console.warn('SQLite books hash lookup failed (no metadata columns)', fallbackError)
+        return undefined
+      }
+    }
     console.warn('SQLite books hash lookup failed', error)
+    return undefined
+  }
+}
+
+export const findBookById = async (bookId: string): Promise<BookRecord | undefined> => {
+  if (!bookId) return undefined
+  const db = await ensureClient()
+  if (!db) return readLocalBooks().find((book) => book.id === bookId)
+  try {
+    const rows = await db.select<Record<string, unknown>[]>(
+      'SELECT id, title, author, metadata_title, metadata_author, metadata_year, metadata_keywords, tags_json, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE id = ? LIMIT 1',
+      [bookId],
+    )
+    if (!rows || rows.length === 0) return undefined
+    return mapRowToBook(rows[0])
+  } catch (error) {
+    if (hasNoColumn(error, 'metadata_title')) {
+      try {
+        const rows = await db.select<Record<string, unknown>[]>(
+          'SELECT id, title, author, cover_path, file_path, format, file_hash, file_size, mtime, last_opened_at, deleted_at, last_read_position, processed_for_search, added_at FROM books WHERE id = ? LIMIT 1',
+          [bookId],
+        )
+        if (!rows || rows.length === 0) return undefined
+        return mapRowToBook(rows[0])
+      } catch (fallbackError) {
+        console.warn('SQLite book lookup failed (no metadata columns)', fallbackError)
+        return undefined
+      }
+    }
+    console.warn('SQLite book lookup failed', error)
     return undefined
   }
 }
@@ -207,6 +286,7 @@ export const removeBook = async (bookId: string) => {
   const db = await ensureClient()
   if (!db) {
     writeLocalBooks(readLocalBooks().filter((book) => book.id !== bookId))
+    void removeProjectBooksForBook(bookId)
     return
   }
   try {
@@ -215,5 +295,22 @@ export const removeBook = async (bookId: string) => {
     await db.execute('DELETE FROM drafts WHERE id = ?', [`book:${bookId}`])
   } catch (error) {
     console.warn('SQLite remove book failed', error)
+  }
+}
+
+export const updateBookTags = async (bookId: string, tags: string[]) => {
+  if (!bookId) return
+  const db = await ensureClient()
+  const payload = JSON.stringify(tags)
+  if (!db) {
+    const books = readLocalBooks()
+    const updated = books.map((book) => (book.id === bookId ? { ...book, tags } : book))
+    writeLocalBooks(updated)
+    return
+  }
+  try {
+    await db.execute('UPDATE books SET tags_json = ? WHERE id = ?', [payload, bookId])
+  } catch (error) {
+    console.warn('SQLite tags_json update failed', error)
   }
 }

@@ -1,7 +1,7 @@
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Search } from 'lucide-react'
 import useReaderStore from '../../../stores/readerStore'
-import useLibraryStore from '../../../stores/libraryStore'
+import { useScopedLibrary } from '../../../stores/useScopedLibrary'
 import { usePdfFileSource } from '../hooks/usePdfFileSource'
 import { extractPageText, loadPdfDocument, type PdfDocumentProxyLike } from '../services/pdfText'
 import { searchPageText, type PdfSearchHit } from '../services/pdfSearch'
@@ -17,9 +17,8 @@ const navButton =
 
 const FindInDocument = ({ scrollMode, onToggleScrollMode, onJump }: Props) => {
   const { pageCount, requestJump, setFindQuery, bumpFindToken, setFindActiveHit } = useReaderStore()
-  const { items, activeId } = useLibraryStore()
-  const activeItem = useMemo(() => items.find((item) => item.id === activeId), [items, activeId])
-  const { fileSrc } = usePdfFileSource(activeItem)
+  const { activeItem } = useScopedLibrary('project')
+  const { fileSrc } = usePdfFileSource(activeItem ?? undefined)
   const [query, setQuery] = useState('')
   const [hits, setHits] = useState<PdfSearchHit[]>([])
   const [activeHitIdx, setActiveHitIdx] = useState(0)

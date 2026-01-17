@@ -21,10 +21,9 @@ describe('buildWriterArtifactMessages', () => {
       citationRequired: true,
     })
 
-    expect(out.system).toContain('Use citations in the format [R1]')
+    expect(out.system).toContain('APA 7')
     expect(out.user).toContain('Artifact: Explanation')
-    expect(out.user).toContain('[R1]')
+    expect(out.user).toContain('APA References')
     expect(out.user).toContain('Snippet one.')
   })
 })
-

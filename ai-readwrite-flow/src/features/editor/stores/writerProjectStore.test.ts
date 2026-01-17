@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import useWriterProjectStore from './writerProjectStore'
+import { ACTIVE_PROJECT_NONE } from '../services/writingProjectIds'
 
 const resetStore = () => {
   useWriterProjectStore.setState({ status: 'idle', error: null, projects: [], activeProjectId: null })
@@ -32,6 +33,20 @@ describe('writerProjectStore', () => {
     localStorage.removeItem('ai-readwrite-flow-writing-active-project')
     await useWriterProjectStore.getState().hydrate()
     expect(useWriterProjectStore.getState().activeProjectId).toBe('p2')
+  })
+
+  it('respects explicit global selection', async () => {
+    resetStore()
+    localStorage.setItem(
+      'ai-readwrite-flow-writing-projects',
+      JSON.stringify([
+        { id: 'p1', title: 'A', createdAt: 1, updatedAt: 10 },
+        { id: 'p2', title: 'B', createdAt: 1, updatedAt: 20 },
+      ]),
+    )
+    localStorage.setItem('ai-readwrite-flow-writing-active-project', ACTIVE_PROJECT_NONE)
+    await useWriterProjectStore.getState().hydrate()
+    expect(useWriterProjectStore.getState().activeProjectId).toBe(null)
   })
 
   it('creates, renames, deletes projects', async () => {

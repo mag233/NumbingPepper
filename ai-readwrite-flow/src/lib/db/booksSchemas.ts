@@ -12,6 +12,11 @@ export const bookRecordSchema: z.ZodType<BookRecord> = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   author: z.string().optional(),
+  metadataTitle: z.string().optional(),
+  metadataAuthor: z.string().optional(),
+  metadataYear: z.coerce.number().int().nonnegative().optional(),
+  metadataKeywords: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
   coverPath: z.string().optional(),
   filePath: z.string().min(1),
   format: z.string().min(1),
@@ -24,4 +29,3 @@ export const bookRecordSchema: z.ZodType<BookRecord> = z.object({
   addedAt: z.coerce.number().int().nonnegative(),
   lastReadPosition: lastReadPositionSchema.optional(),
 })
-

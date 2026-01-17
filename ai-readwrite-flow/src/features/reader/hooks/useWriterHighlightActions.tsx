@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import useWriterProjectStore from '../../editor/stores/writerProjectStore'
-import { appendContextText, buildReferenceFromHighlight } from '../../editor/services/writerIntegration'
-import {
-  loadWritingContext,
-  setWritingReferenceIncluded,
-  upsertWritingContext,
-  upsertWritingReference,
-} from '../../editor/services/writingRepo'
-import { generateReferenceId } from '../../editor/services/writingReferenceIds'
+import { appendContextText } from '../../editor/services/writerIntegration'
+import useWriterReferenceTagPromptStore from '../stores/writerReferenceTagPromptStore'
+import { loadWritingContext, upsertWritingContext } from '../../editor/services/writingRepo'
 import useWriterToastStore from '../../editor/stores/writerToastStore'
 import type { Highlight } from '../types'
 
@@ -19,6 +14,7 @@ type Args = {
 export const useWriterHighlightActions = ({ highlight, onClosePopover }: Args) => {
   const activeProjectId = useWriterProjectStore((s) => s.activeProjectId)
   const hydrateWriterProjects = useWriterProjectStore((s) => s.hydrate)
+  const openTagPrompt = useWriterReferenceTagPromptStore((s) => s.open)
   const toast = useWriterToastStore((s) => s.toast)
   const pending = useWriterToastStore((s) => s.pending)
   const showToast = useWriterToastStore((s) => s.show)
@@ -45,20 +41,13 @@ export const useWriterHighlightActions = ({ highlight, onClosePopover }: Args) =
     onClosePopover()
   }, [highlight, onClosePopover, showToast])
 
-  const doAddReference = useCallback(async (projectId: string) => {
-    if (!highlight) return
-    const now = Date.now()
-    const referenceId = generateReferenceId()
-    const ref = buildReferenceFromHighlight({ projectId, highlight, now, referenceId })
-    const ok = await upsertWritingReference(ref)
-    if (!ok) {
-      showToast('Failed to add Reference.')
-      return
-    }
-    await setWritingReferenceIncluded(projectId, referenceId, false, now)
-    showToast('Added as Reference')
-    onClosePopover()
-  }, [highlight, onClosePopover, showToast])
+  const doAddReference = useCallback(
+    async (projectId: string) => {
+      if (!highlight) return
+      openTagPrompt({ projectId, highlight, onClosePopover })
+    },
+    [highlight, onClosePopover, openTagPrompt],
+  )
 
   const addToWritingContext = useCallback(async () => {
     const projectId = useWriterProjectStore.getState().activeProjectId

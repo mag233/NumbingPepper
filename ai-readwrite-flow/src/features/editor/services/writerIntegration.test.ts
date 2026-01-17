@@ -25,11 +25,25 @@ describe('writerIntegration', () => {
       contextRange: { page: 3, rects: [{ x: 0.1, y: 0.2, width: 0.3, height: 0.01, normalized: true }], zoom: null },
       createdAt: 1,
     }
-    const ref = buildReferenceFromHighlight({ projectId: 'p1', highlight, now: 10, referenceId: 'r1' })
+    const ref = buildReferenceFromHighlight({
+      projectId: 'p1',
+      highlight,
+      now: 10,
+      referenceId: 'r1',
+      sourceTitle: 'Book Title',
+      sourceAuthor: 'Author',
+      sourceYear: 2024,
+      sourceFileHash: 'hash',
+      pageLabel: 'iii',
+      tags: ['book:Book Title'],
+    })
     expect(ref.projectId).toBe('p1')
     expect(ref.sourceType).toBe('highlight')
     expect(ref.bookId).toBe('b1')
     expect(ref.pageIndex).toBe(3)
+    expect(ref.pageLabel).toBe('iii')
     expect(ref.rects?.length).toBe(1)
+    expect(ref.sourceTitle).toBe('Book Title')
+    expect(ref.tags?.length).toBe(1)
   })
 })

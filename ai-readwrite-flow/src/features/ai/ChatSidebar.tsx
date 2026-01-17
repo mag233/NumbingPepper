@@ -9,7 +9,8 @@ import { buildChatBubbleClass } from '../../shared/components/chatBubble'
 import { READER_CHAT_SCOPE, type ReaderChatScope } from '../../shared/chatScope'
 import useChatStore from '../../stores/chatStore'
 import useSettingsStore from '../../stores/settingsStore'
-import { sendChatCompletion, type ChatMessageInput } from '../../lib/apiClient'
+import { sendChatRequest } from '../../lib/apiClient'
+import type { ChatMessageInput } from '../../lib/chatApiTypes'
 import useTemplateStore from '../../stores/templateStore'
 import useMetricsStore from '../../stores/metricsStore'
 import useLibraryStore from '../../stores/libraryStore'
@@ -33,7 +34,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, variant = 'default', o
     throw new Error('ChatSidebar must be used with READER_CHAT_SCOPE')
   }
   const { messages, addMessage, clear, hydrate } = useChatStore()
-  const { model, apiKey, baseUrl } = useSettingsStore()
+  const { model, apiKey, baseUrl, chatResponseSettings } = useSettingsStore()
   const { templates } = useTemplateStore()
   const { setMetrics } = useMetricsStore()
   const { activeId } = useLibraryStore()
@@ -73,10 +74,10 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, variant = 'default', o
       setLastPrompt(userMessage)
       await addMessage({ id: '', role: 'user', content: userMessage, createdAt: Date.now(), referenceHighlightId: null })
 
-      const response = await sendChatCompletion(baseUrl, apiKey, model, [
+      const response = await sendChatRequest(baseUrl, apiKey, model, [
         ...historyMessages,
         { role: 'user', content: userMessage },
-      ])
+      ], chatResponseSettings)
 
       if (response.ok && response.content) {
         setMetrics({
@@ -101,7 +102,7 @@ const ChatSidebar = ({ quickPrompt, onConsumeQuickPrompt, variant = 'default', o
       }
       setSending(false)
     },
-    [addMessage, apiKey, baseUrl, historyMessages, model, sending, setMetrics],
+    [addMessage, apiKey, baseUrl, chatResponseSettings, historyMessages, model, sending, setMetrics],
   )
 
   const handleSend = (event: FormEvent) => {

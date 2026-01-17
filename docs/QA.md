@@ -225,3 +225,154 @@
 | -- | -------- | ----- | -------- | ------ | ----- |
 | 39-QA-001 | Replace/Insert shows flash highlight | In Writer: create a suggestion card → click `Replace selection` or `Insert below` | Newly inserted text shows a slow flashing highlight; highlight clears on next user input or after 7s | Pass | Verified by user. |
 | 39-QA-002 | Undo and normal typing behavior | After `Replace/Insert`, press `Ctrl+Z` once; then type normally | Undo restores the pre-apply content in one step and no highlight remains; normal typing does not create flash highlights | Pass | Verified by user. |
+
+## 2026-01-15 – Reference metadata + citations (Task 46)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 46-QA-001 | Import metadata capture | Import a PDF with metadata and one without | Book metadata fields populate when available; fallback to filename when absent | Pending | Implementation done 2026-01-15; manual QA pending. |
+| 46-QA-002 | Reference snapshot stability | Create a reference, then edit the book title/author | Reference still shows the original snapshot values | Pending | Implementation done 2026-01-15; manual QA pending. |
+| 46-QA-003 | Manual metadata refresh | Click "Update metadata" on a reference after editing book metadata | Reference snapshot updates to the latest book metadata | Pending | Implementation done 2026-01-15; manual QA pending. |
+| 46-QA-004 | APA 7 formatting + fallback | Generate output using references with missing author/year | Citations follow APA 7; missing author uses title; missing year shows `n.d.` | Pending | Implementation done 2026-01-15; manual QA pending. |
+| 46-QA-005 | Reference tags | Create a reference and add tags; edit and remove tags | Tags persist and can be edited safely | Pending | Implementation done 2026-01-15; manual QA pending. |
+| 46-QA-006 | System default tags | Create a reference with defaults enabled | Tags include `#ai_reader/title/<title>` and optional `#ai_reader/author/<author>`/`#ai_reader/year/<year>` | Pending | Implementation done 2026-01-15; manual QA pending. |
+
+## 2026-01-15 – Multimodal chat images (Task 47)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 47-QA-001 | Image input supported | Send an image with a supported model | Response describes the image; no errors | Pending | Use a simple icon image for smoke. |
+| 47-QA-002 | Image input unsupported | Send an image with an unsupported model | Clear unsupported message shown; no crash | Pending | Ensure failure message is user-facing. |
+| 47-QA-003 | Image persistence | Send an image, refresh/restart | Image still renders in the chat history | Pending | Storage is local-only. |
+
+## 2026-01-15 – Context image DnD + local OCR (Task 48)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 48-QA-001 | Drop image + OCR | Drag/drop an image into Context | OCR runs locally and produces text | Pending | Thumbnail/status are visible during OCR. |
+| 48-QA-002 | Post-OCR choice | After OCR completes, choose Append vs Insert at cursor | Append adds to end; Insert places at cursor | Pending | Choice prompt should appear every time. |
+| 48-QA-003 | OCR cache | Drop the same image twice | Second drop uses cache without re-running OCR | Pending | Hash-based cache key. |
+| 48-QA-004 | OCR failure recovery | Drop an unsupported/corrupt image | Error is shown and user can retry | Pending | No crash. |
+
+## 2026-01-15 – Writer chat refs + tag UX (Task 49)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 49-QA-001 | Writer chat includes references | Include one reference in Context; send a chat message | Prompt includes a References block with the included snippet | Pending | Toggle should default on. |
+| 49-QA-002 | Toggle references off | Turn off Include References; send a chat message | Prompt omits References block | Pending | Toggle is per-chat session. |
+| 49-QA-003 | Tag multi-line wrap | Add a long tag (newline separated) | Tags wrap and remain readable | Pending | Multi-line input should preserve tags. |
+| 49-QA-004 | Source Info separate | Expand a reference card | Source Info displays title/author/year separately from tags | Pending | Tags remain user-editable. |
+
+## 2026-01-15 - Writer chat sanitization + tag namespace (Task 50)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 50-QA-001 | Chat history sanitization | Send a chat with Context; clear Context; send another chat | Response should not reflect cleared Context content | Pending | History should only keep prior Instruction text. |
+| 50-QA-002 | Hidden system tags | Create reference from book metadata | Tag editor shows only user tags; system tags not editable | Pending | System tags remain stored. |
+| 50-QA-003 | Tag search still works | Search by book title/author/year | Reference is still found via system tags | Pending | Uses `ai_reader/...` tags. |
+| 50-QA-004 | Flomo tag prefixing | Writer → References → expand → Flomo → send with user tags | Flomo tags include `#ai_reader/...` for user tags (system tags preserved) | Pending | Verify no double-prefix. |
+
+## 2026-01-15 - Reader To Ref auto-highlight (Task 51)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 51-QA-001 | To Ref creates highlight | In Reader, select text and choose To Ref | Highlight is created and visible; Writer reference is created | Pending | Ensure highlight persists after reload. |
+
+## 2026-01-16 - Reference tag UX polish (Task 52)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 52-QA-001 | System tag display | Writer → References: expand a card with system tags | System tags show as `title/author/year` (no prefix/colon), each on its own line, truncated when long | Pending | - |
+| 52-QA-002 | Tag filter toggle | Writer → References: select user tags; toggle Include system; select a system tag | Reference list filters by selected tags; system tags only appear when Include system is on | Pending | - |
+| 52-QA-003 | To Ref tag prompt | Reader: select text → To Ref; open highlight popover → To Ref | Tag prompt appears both times; Skip saves without user tags; Save adds user tags | Pending | - |
+
+## 2026-01-16 - Writer Context clear prompt
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| WTR-QA-CTX-001 | Clear context choices | Writer → Context → Clear | Prompt offers “Clear context only” and “Clear context + chat”; Cancel closes | Pending | - |
+| WTR-QA-CTX-002 | Clear context only | Writer → Context → Clear → “Clear context only” | Context clears; Writer chat history remains | Pending | - |
+| WTR-QA-CTX-003 | Clear context + chat | Writer → Context → Clear → “Clear context + chat” | Context clears and Writer chat history clears | Pending | - |
+
+## 2026-01-16 - GPT-5 Responses API settings (Task 53)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 53-QA-001 | Settings persistence | Settings → Chat → update Responses controls → Save → restart | Values persist across reload | Pass (2026-01-16) | - |
+| 53-QA-002 | GPT-5 gating | Set model to non-GPT-5 → open Chat settings | Controls are disabled and show a hint | Pass (2026-01-16) | - |
+| 53-QA-003 | Responses API call | Set model to GPT-5 → enable Responses API → send chat | Response returns; usage/latency recorded | Pass (2026-01-16) | Text-only output. |
+
+## 2026-01-16 - Explicit tags + Flomo defaults + full export (Task 54)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 54-QA-001 | Project tags default | Writer → Project settings → set tags; open Writer selection Flomo | Composer pre-fills `#ai_reader/<tag>` + `#写作/<project>` | Pending | Save defaults unchecked by default. |
+| 54-QA-002 | Book tags default | Library side panel → set book tags; open Reader selection/highlight Flomo | Composer pre-fills `#ai_reader/<tag>` + `#books/<book>` | Pending | - |
+| 54-QA-003 | Save defaults | In Flomo composer, edit tags → check “Save as default tags” → Send | Project/book tags update only when checked | Pending | - |
+| 54-QA-004 | Writer full export | Writer action bar → Flomo | Flomo note includes Content + Context + Tags sections | Pending | - |
+| 54-QA-005 | Tag popover edit (Project) | Writer → Project tags → Edit → Save/Cancel | Chips render; Save updates tags; Cancel does not change tags | Pending | Popover only, no inline textarea. |
+| 54-QA-006 | Tag popover edit (Book) | Library → Book tags → Edit → Save/Cancel | Chips render; Save updates tags; Cancel does not change tags | Pending | Popover only, no inline textarea. |
+| 54-QA-007 | Reference include toggle | Writer → References → toggle checkbox | Included count updates; toggle persists across refresh | Pending | Guard against null projectId. |
+
+## 2026-01-17 - Project ↔ Library scope alignment (Task 56)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 56-QA-001 | Project assignment | Library → assign a book to two projects | Book appears in both project lists | Pending | Multi-project membership. |
+| 56-QA-002 | Remove from project | Project view → remove book from project | Book disappears from that project but remains in Library | Pending | Must not delete the book. |
+| 56-QA-003 | Project scope sync | Switch active project while in Reader/Writer | Reader list and Writer scope update together | Pending | Scope indicator shown. |
+| 56-QA-004 | Search scope | Library search vs Project search | Library search is global; project search is scoped | Pending | Show scope hint in UI. |
+| 56-QA-005 | Reader position | Read a book in project A, switch to project B, return to A | Reading position remains per book | Pending | Not per-project. |
+
+## 2026-01-17 - Active project selector + scope indicator (Task 57)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 57-QA-001 | Scope selector | Header: switch Scope between Global and a Project while in Reader/Writer | Scope label updates; Reader list reflects scope; Writer shows correct project title | Pending | - |
+| 57-QA-002 | Persist scope | Select Global; restart app | Scope remains Global after restart | Pending | Requires `ACTIVE_PROJECT_NONE` persistence. |
+
+## 2026-01-17 - Library hub (Task 61)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 61-QA-001 | Library tab | Top nav: open Library tab | Library opens; Reader/Writer unchanged | Pending | - |
+| 61-QA-002 | Page tabs | Library: switch Books/Projects/Tags | Each page renders; state persists | Pending | - |
+| 61-QA-003 | Remove global mgmt from Reader | Reader sidebar | No global Library management controls present | Pending | - |
+
+## 2026-01-17 - Library Projects page (Task 62)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 62-QA-001 | Create/edit/delete | Library > Projects: create/rename/delete | Project list updates; persists | Pending | - |
+| 62-QA-002 | Membership | Assign books to project; remove | Membership changes reflect in scoped lists | Pending | - |
+
+## 2026-01-17 - Library Tags page (Task 63)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 63-QA-001 | Tag CRUD | Create/rename/delete/merge tags | Tags update; no crashes | Pending | - |
+| 63-QA-002 | Multi-filter | Apply include/exclude with AND/OR | Filtered list matches rules | Pending | - |
+| 63-QA-003 | Saved views | Save a filter; reload | Saved view persists and applies | Pending | - |
+
+## 2026-01-17 - Reader sidebar scope-only (Task 64)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 64-QA-001 | Project-only sidebar | Reader: switch to a project | Sidebar shows only project books + reader nav | Pending | - |
+| 64-QA-002 | Empty project state | Project with zero books | Empty state references project (not global import) | Pending | - |
+
+## 2026-01-17 - Project book assignment UX (Task 58)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 58-QA-001 | Assign projects | Library (or Reader sidebar): select a book -> Project membership -> Edit -> choose 2 projects -> Save | Chips update; book appears in both projects' scoped lists | Pending | - |
+| 58-QA-002 | Remove vs delete | In a project scope, open Project membership and remove the project; then use Delete/Trash actions | Removal only affects membership; book remains in Library; delete/trash still works | Pending | - |
+| 58-QA-003 | Empty project list | Scope to a project with no books | Library panel shows "No books assigned" hint | Pending | - |
+
+## 2026-01-17 - Reader restore + tag popover layout + references stability (Task 55)
+
+| ID | Scenario | Steps | Expected | Result | Notes |
+| -- | -------- | ----- | -------- | ------ | ----- |
+| 55-QA-001 | Reader restore | Open PDF → scroll to mid-page → switch to Writer tab → return to Reader | Restores to last page/scroll position (not page 1) | Pending | Continuous mode should restore scrollY. |
+| 55-QA-002 | Tag popover bounds | Open Project/Book tags popover near the left edge | Popover stays within viewport; no off-screen overflow | Pending | Edit panel clamps horizontally. |
+| 55-QA-003 | References persistence | Writer → References list visible → switch to Reader tab and back | Reference list remains loaded (no unexpected empty list) | Pending | No hydrate-null clearing. |
